@@ -7,13 +7,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from email.utils import formatdate
 from urllib.parse import urljoin
-from xml.etree.ElementTree import (
-    Element,
-    SubElement,
-    ElementTree,
-    indent,
-    fromstring,
-)
+from xml.etree.ElementTree import Element, SubElement, ElementTree, indent
 
 from playwright.sync_api import (
     sync_playwright,
@@ -91,143 +85,6 @@ def clean_text(value):
     ).strip()
 
 
-def clean_article_title(value):
-    """
-    Supprime les informations techniques ajoutées
-    par DOFUS à la fin du titre.
-    """
-
-    text = clean_text(value)
-
-    text = re.sub(
-        r"\s+(?:Info|Shop|Event)\s+-\s+"
-        r"\d{1,2}/\d{1,2}/\d{4}"
-        r"\s+-\s+\d{1,2}h(?:\d{2})?\s*$",
-        "",
-        text,
-        flags=re.IGNORECASE,
-    )
-
-    return text.strip(" -")
-
-
-def parse_dofus_publication_text(value):
-    """
-    Extrait UNIQUEMENT la date de publication
-    affichée par DOFUS dans l'en-tête.
-
-    Formats attendus :
-
-        20/08/2026 - 17h00
-        23/07/2026 - 16h30
-        11/08/2026 - 16h00
-        09/07/2026 - 18h00
-    """
-
-    if not value:
-        return None
-
-    text = clean_text(value)
-
-    match = re.search(
-        r"\b(\d{1,2})/(\d{1,2})/(\d{4})"
-        r"\s*-\s*"
-        r"(\d{1,2})h(?:(\d{2}))?\b",
-        text,
-    )
-
-    if not match:
-        return None
-
-    try:
-        return datetime(
-            int(match.group(3)),
-            int(match.group(2)),
-            int(match.group(1)),
-            int(match.group(4)),
-            int(match.group(5) or 0),
-            tzinfo=timezone.utc,
-        )
-
-    except ValueError:
-        return None
-
-
-def extract_dofus_header_date(page):
-    """
-    Cherche la date dans la zone de titre de l'article.
-
-    IMPORTANT :
-    on ne scanne jamais tout le body pour trouver
-    la date de publication.
-    """
-
-    selectors = [
-        "h1",
-        "article h1",
-        "main h1",
-        '[data-testid="article-title"]',
-    ]
-
-    for selector in selectors:
-
-        try:
-
-            locator = page.locator(
-                selector
-            ).first
-
-            if locator.count() == 0:
-                continue
-
-            text = clean_text(
-                locator.inner_text(
-                    timeout=3000
-                )
-            )
-
-            dt = parse_dofus_publication_text(
-                text
-            )
-
-            if dt is not None:
-                return dt, "ARTICLE HEADER"
-
-            ########################################
-            # CONTENEURS PARENTS
-            ########################################
-
-            for level in range(1, 5):
-
-                try:
-
-                    ancestor = locator
-
-                    for _ in range(level):
-                        ancestor = ancestor.locator("..")
-
-                    parent_text = clean_text(
-                        ancestor.inner_text(
-                            timeout=3000
-                        )
-                    )
-
-                    dt = parse_dofus_publication_text(
-                        parent_text
-                    )
-
-                    if dt is not None:
-                        return dt, "ARTICLE HEADER"
-
-                except Exception:
-                    pass
-
-        except Exception:
-            pass
-
-    return None, None
-
-
 def parse_date(value):
 
     if not value:
@@ -241,6 +98,24 @@ def parse_date(value):
             value = value[:-1] + "+00:00"
 
         dt = datetime.fromisoformat(value)
+
+        if dt.tzinfo is None:
+            dt = dt.replace(
+                tzinfo=timezone.utc
+            )
+
+        return dt.astimezone(
+            timezone.utc
+        )
+
+    except Exception:
+        pass
+
+    try:
+
+        from email.utils import parsedate_to_datetime
+
+        dt = parsedate_to_datetime(value)
 
         if dt.tzinfo is None:
             dt = dt.replace(
@@ -291,7 +166,8 @@ def parse_french_date(value):
             pass
 
     match = re.search(
-        r"\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b",
+        r"\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})"
+        r"(?:\s*(?:-|–|—)?\s*(\d{1,2})(?::|h)(\d{2}))?\b",
         text,
     )
 
@@ -303,6 +179,8 @@ def parse_french_date(value):
                 int(match.group(3)),
                 int(match.group(2)),
                 int(match.group(1)),
+                int(match.group(4) or 0),
+                int(match.group(5) or 0),
                 tzinfo=timezone.utc,
             )
 
@@ -344,9 +222,7 @@ def format_pubdate(dt):
 
 def load_cache():
 
-    if not os.path.exists(
-        CACHE_FILE
-    ):
+    if not os.path.exists(CACHE_FILE):
 
         print(
             "Cache Actualités Dofus chargé : "
@@ -365,11 +241,7 @@ def load_cache():
 
             data = json.load(f)
 
-        if not isinstance(
-            data,
-            dict
-        ):
-
+        if not isinstance(data, dict):
             data = {}
 
         print(
@@ -410,10 +282,7 @@ def save_cache(cache):
 
 def load_discord_state():
 
-    if not os.path.exists(
-        DISCORD_STATE_FILE
-    ):
-
+    if not os.path.exists(DISCORD_STATE_FILE):
         return {}
 
     try:
@@ -426,11 +295,7 @@ def load_discord_state():
 
             data = json.load(f)
 
-        if not isinstance(
-            data,
-            dict
-        ):
-
+        if not isinstance(data, dict):
             return {}
 
         return data
@@ -460,150 +325,6 @@ def save_discord_state(state):
         )
 
 
-def save_discord_state_atomic(state):
-    """
-    Écriture atomique de l'état Discord.
-
-    Le fichier temporaire est écrit complètement
-    avant de remplacer l'ancien fichier.
-
-    Cela évite qu'un timeout laisse un JSON
-    partiellement écrit.
-    """
-
-    temp_file = (
-        f"{DISCORD_STATE_FILE}.tmp"
-    )
-
-    with open(
-        temp_file,
-        "w",
-        encoding="utf-8"
-    ) as f:
-
-        json.dump(
-            state,
-            f,
-            ensure_ascii=False,
-            indent=2
-        )
-
-        f.flush()
-
-        try:
-
-            os.fsync(
-                f.fileno()
-            )
-
-        except Exception:
-            pass
-
-    os.replace(
-        temp_file,
-        DISCORD_STATE_FILE
-    )
-
-
-def load_last_discord_feed_article():
-    """
-    Sécurité supplémentaire.
-
-    Si le JSON d'état Discord n'existe plus,
-    on regarde directement le dernier article
-    présent dans le flux Discord.
-
-    Cela permet d'éviter de renvoyer deux fois
-    le même article après un timeout ou une perte
-    du fichier d'état.
-    """
-
-    if not os.path.exists(
-        DISCORD_OUTPUT
-    ):
-
-        return None
-
-    try:
-
-        with open(
-            DISCORD_OUTPUT,
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            raw_xml = f.read()
-
-        root = fromstring(
-            raw_xml
-        )
-
-        item = root.find(
-            "./channel/item"
-        )
-
-        if item is None:
-            return None
-
-        link_node = item.find(
-            "link"
-        )
-
-        pubdate_node = item.find(
-            "pubDate"
-        )
-
-        title_node = item.find(
-            "title"
-        )
-
-        description_node = item.find(
-            "description"
-        )
-
-        url = clean_text(
-            link_node.text
-            if link_node is not None
-            else ""
-        )
-
-        pubdate = clean_text(
-            pubdate_node.text
-            if pubdate_node is not None
-            else ""
-        )
-
-        if not url:
-            return None
-
-        return {
-            "url": url,
-
-            "pubDate": pubdate,
-
-            "title": clean_text(
-                title_node.text
-                if title_node is not None
-                else ""
-            ),
-
-            "description": clean_text(
-                description_node.text
-                if description_node is not None
-                else ""
-            ),
-        }
-
-    except Exception as exc:
-
-        print(
-            "⚠️ Impossible de lire l'ancien "
-            f"flux Discord : {exc}"
-        )
-
-        return None
-
-
 ########################################
 # VALIDATION URL
 ########################################
@@ -626,22 +347,10 @@ def is_valid_news_url(url):
 def collect_news_listing():
 
     print("")
-
-    print(
-        "========================================"
-    )
-
-    print(
-        "Ouverture avec Playwright :"
-    )
-
-    print(
-        SOURCE_URL
-    )
-
-    print(
-        "========================================"
-    )
+    print("========================================")
+    print("Ouverture avec Playwright :")
+    print(SOURCE_URL)
+    print("========================================")
 
     listing = {}
 
@@ -653,9 +362,7 @@ def collect_news_listing():
 
         page = browser.new_page(
             locale="fr-FR",
-            user_agent=HEADERS[
-                "User-Agent"
-            ],
+            user_agent=HEADERS["User-Agent"],
         )
 
         try:
@@ -666,86 +373,221 @@ def collect_news_listing():
                 timeout=60000,
             )
 
-            page.wait_for_timeout(
-                5000
-            )
+            page.wait_for_timeout(5000)
 
         except Exception as exc:
 
             print(
-                f"❌ Erreur ouverture page : "
-                f"{exc}"
+                f"❌ Erreur ouverture page : {exc}"
             )
 
             browser.close()
-
             return {}
 
-        def collect_visible_listing():
+        def extract_listing_entry(link):
+
+            href = link.get_attribute("href")
+
+            if not href:
+                return None
+
+            full_url = (
+                urljoin(BASE_URL, href)
+                .split("#", 1)[0]
+                .rstrip("/")
+            )
+
+            if not is_valid_news_url(full_url):
+                return None
+
+            title = clean_text(
+                link.inner_text(timeout=2000)
+            )
+
+            listing_date = None
+            card_text = ""
+
+            for level in range(1, 7):
+
+                try:
+
+                    node = link
+
+                    for _ in range(level):
+                        node = node.locator("..")
+
+                    text = clean_text(
+                        node.inner_text(timeout=2000)
+                    )
+
+                    if len(text) > len(card_text):
+                        card_text = text
+
+                    candidate_date = parse_french_date(text)
+
+                    if candidate_date is not None:
+
+                        listing_date = candidate_date
+
+                        for selector in (
+                            "h1",
+                            "h2",
+                            "h3",
+                            "h4"
+                        ):
+
+                            try:
+
+                                headings = node.locator(
+                                    selector
+                                )
+
+                                for j in range(
+                                    headings.count()
+                                ):
+
+                                    candidate_title = clean_text(
+                                        headings.nth(j).inner_text(
+                                            timeout=1000
+                                        )
+                                    )
+
+                                    if candidate_title:
+
+                                        title = (
+                                            candidate_title
+                                        )
+
+                                        break
+
+                                if title:
+                                    break
+
+                            except Exception:
+                                pass
+
+                        break
+
+                except Exception:
+                    pass
+
+            if (
+                not title
+                or title.lower().startswith("http")
+                or title.lower().startswith("loading")
+            ):
+
+                for level in range(1, 7):
+
+                    try:
+
+                        node = link
+
+                        for _ in range(level):
+                            node = node.locator("..")
+
+                        for selector in (
+                            "h1",
+                            "h2",
+                            "h3",
+                            "h4"
+                        ):
+
+                            headings = node.locator(
+                                selector
+                            )
+
+                            for j in range(
+                                headings.count()
+                            ):
+
+                                candidate_title = clean_text(
+                                    headings.nth(j).inner_text(
+                                        timeout=1000
+                                    )
+                                )
+
+                                if candidate_title:
+
+                                    title = (
+                                        candidate_title
+                                    )
+
+                                    break
+
+                            if title:
+                                break
+
+                        if title:
+                            break
+
+                    except Exception:
+                        pass
+
+            if listing_date is None:
+
+                listing_date = parse_french_date(
+                    card_text
+                )
+
+            if not title:
+                return None
+
+            return {
+                "title": title,
+                "url": full_url,
+                "date": listing_date,
+            }
+
+        def collect_visible():
 
             links = page.locator(
                 'a[href*="/fr/mmorpg/actualites/news/"]'
             )
 
+            before = len(listing)
+
             for i in range(
                 links.count()
             ):
 
-                if len(listing) >= LISTING_TARGET:
-                    break
-
                 try:
 
-                    link = links.nth(i)
-
-                    href = link.get_attribute(
-                        "href"
+                    entry = extract_listing_entry(
+                        links.nth(i)
                     )
 
-                    if not href:
+                    if not entry:
                         continue
 
-                    full_url = urljoin(
-                        BASE_URL,
-                        href,
-                    )
+                    url = entry["url"]
 
-                    full_url = (
-                        full_url
-                        .split("#", 1)[0]
-                        .rstrip("/")
-                    )
-
-                    if not is_valid_news_url(
-                        full_url
+                    if (
+                        url not in listing
+                        or (
+                            entry["date"]
+                            and (
+                                listing[url]["date"]
+                                is None
+                                or entry["date"]
+                                > listing[url]["date"]
+                            )
+                        )
                     ):
-                        continue
 
-                    if full_url not in listing:
-
-                        listing[
-                            full_url
-                        ] = None
+                        listing[url] = entry
 
                 except Exception:
                     pass
 
-        links = page.locator(
-            'a[href*="/fr/mmorpg/actualites/news/"]'
-        )
+            return len(listing) - before
 
-        initial_count = links.count()
-
-        collect_visible_listing()
+        collect_visible()
 
         print(
             f"Premier lot : "
-            f"{initial_count} actualités détectées."
+            f"{len(listing)} actualités détectées."
         )
-
-        ########################################
-        # VOIR PLUS
-        ########################################
 
         for click_number in range(
             1,
@@ -756,48 +598,23 @@ def collect_news_listing():
                 break
 
             print(
-                f"🔄 Recherche du bouton "
-                f"VOIR PLUS "
-                f"({click_number}/"
-                f"{MAX_LOAD_MORE_CLICKS})..."
+                f"🔄 Recherche du bouton VOIR PLUS "
+                f"({click_number}/{MAX_LOAD_MORE_CLICKS})..."
             )
 
-            buttons = page.get_by_text(
+            button = page.get_by_text(
                 "VOIR PLUS",
-                exact=True,
+                exact=True
             )
 
-            clicked = False
+            if button.count() == 0:
 
-            for i in range(
-                buttons.count()
-            ):
+                button = page.get_by_text(
+                    "Voir plus",
+                    exact=True
+                )
 
-                try:
-
-                    button = buttons.nth(i)
-
-                    if not button.is_visible():
-                        continue
-
-                    button.scroll_into_view_if_needed()
-
-                    button.click(
-                        timeout=10000
-                    )
-
-                    clicked = True
-
-                    print(
-                        "🟢 VOIR PLUS cliqué."
-                    )
-
-                    break
-
-                except Exception:
-                    pass
-
-            if not clicked:
+            if button.count() == 0:
 
                 print(
                     "ℹ️ Plus de bouton VOIR PLUS."
@@ -805,122 +622,56 @@ def collect_news_listing():
 
                 break
 
-            page.wait_for_timeout(
-                2500
-            )
-
             try:
 
-                page.wait_for_load_state(
-                    "networkidle",
-                    timeout=10000,
+                button.last.scroll_into_view_if_needed(
+                    timeout=3000
                 )
 
-            except PlaywrightTimeoutError:
-                pass
+                button.last.click(
+                    timeout=5000
+                )
 
-            before = len(listing)
+                page.wait_for_timeout(
+                    2500
+                )
 
-            collect_visible_listing()
+                added = collect_visible()
 
-            added = (
-                len(listing) - before
-            )
+                print(
+                    f"   ➕ {added} nouvelles actualités."
+                )
 
-            print(
-                f"Actualités actuellement "
-                f"trouvées : "
-                f"{len(listing)} "
-                f"(+{added})"
-            )
+                if added == 0:
+                    break
 
-            if added == 0:
+            except Exception as exc:
+
+                print(
+                    f"⚠️ Impossible de cliquer "
+                    f"sur VOIR PLUS : {exc}"
+                )
+
                 break
 
         browser.close()
-
-    print(
-        f"🟢 Total actualités récupérées : "
-        f"{len(listing)}"
-    )
 
     return listing
 
 
 ########################################
-# PARSING JSON-LD
+# EXTRACTION ARTICLE
 ########################################
 
-def parse_jsonld_date(data):
+def extract_date_from_html(html):
 
-    objects = (
-        data
-        if isinstance(data, list)
-        else [data]
+    if not html:
+        return None, "aucune donnée"
+
+    soup = BeautifulSoup(
+        html,
+        "html.parser"
     )
-
-    for obj in objects:
-
-        if not isinstance(
-            obj,
-            dict
-        ):
-            continue
-
-        ########################################
-        # DATE DE PUBLICATION PRIORITAIRE
-        ########################################
-
-        for key in (
-            "datePublished",
-            "dateCreated",
-            "dateModified",
-        ):
-
-            value = obj.get(
-                key
-            )
-
-            dt = (
-                parse_date(value)
-                or parse_french_date(value)
-            )
-
-            if dt is not None:
-
-                return (
-                    dt,
-                    f"ARTICLE JSON-LD/{key}"
-                )
-
-        ########################################
-        # JSON-LD AVEC @graph
-        ########################################
-
-        graph = obj.get(
-            "@graph"
-        )
-
-        if isinstance(
-            graph,
-            list
-        ):
-
-            result = parse_jsonld_date(
-                graph
-            )
-
-            if result[0] is not None:
-                return result
-
-    return None, None
-
-
-########################################
-# EXTRACTION DATE HTML FALLBACK
-########################################
-
-def extract_date_from_html_soup(soup):
 
     ########################################
     # JSON-LD
@@ -928,12 +679,11 @@ def extract_date_from_html_soup(soup):
 
     for script in soup.find_all(
         "script",
-        type="application/ld+json",
+        type="application/ld+json"
     ):
 
-        raw = (
-            script.string
-            or script.get_text()
+        raw = script.string or script.get_text(
+            strip=True
         )
 
         if not raw:
@@ -941,75 +691,69 @@ def extract_date_from_html_soup(soup):
 
         try:
 
-            data = json.loads(
-                raw
+            data = json.loads(raw)
+
+            objects = (
+                data
+                if isinstance(data, list)
+                else [data]
             )
+
+            for obj in objects:
+
+                if not isinstance(obj, dict):
+                    continue
+
+                for key in (
+                    "datePublished",
+                    "dateCreated",
+                    "dateModified"
+                ):
+
+                    value = obj.get(key)
+
+                    if not value:
+                        continue
+
+                    dt = (
+                        parse_date(value)
+                        or parse_french_date(value)
+                    )
+
+                    if dt:
+                        return (
+                            dt,
+                            f"JSON-LD/{key}"
+                        )
 
         except Exception:
-            continue
-
-        dt, source = parse_jsonld_date(
-            data
-        )
-
-        if dt is not None:
-
-            return (
-                dt,
-                source
-            )
+            pass
 
     ########################################
     # META
     ########################################
 
     selectors = [
-
         (
             "property",
             "article:published_time"
         ),
-
         (
             "property",
             "og:published_time"
         ),
-
-        (
-            "name",
-            "datePublished"
-        ),
-
-        (
-            "name",
-            "published"
-        ),
-
         (
             "name",
             "date"
         ),
-
-        (
-            "property",
-            "og:date"
-        ),
-
-        (
-            "property",
-            "article:modified_time"
-        ),
-
-        (
-            "property",
-            "og:updated_time"
-        ),
-
         (
             "name",
-            "dateModified"
+            "published"
         ),
-
+        (
+            "name",
+            "datePublished"
+        ),
     ]
 
     for attr, value in selectors:
@@ -1018,27 +762,25 @@ def extract_date_from_html_soup(soup):
             "meta",
             attrs={
                 attr: value
-            },
+            }
         )
 
-        if not meta:
-            continue
+        if meta:
 
-        raw_value = meta.get(
-            "content"
-        )
-
-        dt = (
-            parse_date(raw_value)
-            or parse_french_date(raw_value)
-        )
-
-        if dt is not None:
-
-            return (
-                dt,
-                f"META/{value}"
+            raw = meta.get(
+                "content"
             )
+
+            dt = (
+                parse_date(raw)
+                or parse_french_date(raw)
+            )
+
+            if dt:
+                return (
+                    dt,
+                    f"meta/{attr}={value}"
+                )
 
     ########################################
     # TIME
@@ -1048,535 +790,224 @@ def extract_date_from_html_soup(soup):
         "time"
     ):
 
-        values = [
-
-            node.get(
-                "datetime"
-            ),
-
-            node.get(
-                "data-date"
-            ),
-
-            node.get(
-                "data-datetime"
-            ),
-
-            node.get_text(
-                " ",
-                strip=True
-            ),
-
-        ]
-
-        dt = parse_any_date_candidates(
-            values
+        raw = node.get(
+            "datetime"
         )
 
-        if dt is not None:
+        dt = (
+            parse_date(raw)
+            or parse_french_date(raw)
+        )
 
+        if dt:
             return (
                 dt,
-                "TIME"
+                "time/datetime"
             )
 
-    return None, None
-
-
-########################################
-# EXTRACTION ARTICLE PLAYWRIGHT
-########################################
-
-def extract_article_with_playwright(
-    page,
-    url
-):
-
-    try:
-
-        page.goto(
-            url,
-            wait_until="domcontentloaded",
-            timeout=60000,
+        visible = node.get_text(
+            " ",
+            strip=True
         )
 
-        page.wait_for_timeout(
-            1800
+        dt = (
+            parse_french_date(visible)
+            or parse_date(visible)
         )
 
-        ########################################
-        # TITRE
-        ########################################
+        if dt:
+            return (
+                dt,
+                "time/text"
+            )
 
-        title = ""
+    ########################################
+    # TEXTE VISIBLE
+    ########################################
 
-        title_selectors = [
+    body = soup.find(
+        "body"
+    )
 
-            "h1",
+    if body:
 
-            "article h1",
+        visible_text = clean_text(
+            body.get_text(
+                " ",
+                strip=True
+            )
+        )
 
-            "main h1",
+        patterns = [
+            r"(?:publié|publication|mis à jour|actualit[ée])"
+            r"[^.]{0,120}",
 
-            '[data-testid="article-title"]',
-
+            r"(?:le|du)\s+\d{1,2}\s+"
+            r"(?:janvier|février|fevrier|mars|avril|mai|juin|"
+            r"juillet|août|aout|septembre|octobre|novembre|"
+            r"décembre|decembre)"
+            r"\s+\d{4}[^.]{0,80}",
         ]
 
-        for selector in title_selectors:
+        for pattern in patterns:
 
-            try:
+            for chunk in re.findall(
+                pattern,
+                visible_text,
+                flags=re.IGNORECASE
+            ):
 
-                loc = (
-                    page
-                    .locator(selector)
-                    .first
+                dt = parse_french_date(
+                    chunk
                 )
 
-                if loc.count() == 0:
-                    continue
-
-                if not loc.is_visible():
-                    continue
-
-                text = clean_text(
-                    loc.inner_text(
-                        timeout=3000
+                if dt:
+                    return (
+                        dt,
+                        "texte publication"
                     )
-                )
 
-                if text and len(text) > 4:
-
-                    title = text
-
-                    break
-
-            except Exception:
-                pass
-
-        ########################################
-        # FALLBACK OG TITLE
-        ########################################
-
-        if not title:
-
-            try:
-
-                title = clean_text(
-                    page
-                    .locator(
-                        'meta[property="og:title"]'
-                    )
-                    .get_attribute(
-                        "content"
-                    )
-                )
-
-            except Exception:
-                pass
-
-        ########################################
-        # FALLBACK PAGE TITLE
-        ########################################
-
-        if not title:
-
-            try:
-
-                title = clean_text(
-                    page.title()
-                )
-
-            except Exception:
-                pass
-
-        if not title:
-
-            print(
-                "   ⚠️ Titre introuvable."
-            )
-
-            return None
-
-        ########################################
-        # NETTOYAGE DU TITRE
-        ########################################
-
-        title = clean_article_title(
-            title
+        dt = parse_french_date(
+            visible_text
         )
 
-        ########################################
-        # DATE
-        ########################################
-
-        article_date = None
-
-        article_date_source = None
-
-        ########################################
-        # DATE DOFUS DANS L'EN-TÊTE
-        #
-        # PRIORITÉ MAXIMALE
-        ########################################
-
-        (
-            article_date,
-            article_date_source
-        ) = extract_dofus_header_date(
-            page
-        )
-
-        ########################################
-        # JSON-LD RENDU
-        ########################################
-
-        if article_date is None:
-
-            try:
-
-                scripts = page.locator(
-                    'script[type="application/ld+json"]'
-                ).all_text_contents()
-
-                for raw in scripts:
-
-                    try:
-
-                        data = json.loads(
-                            raw
-                        )
-
-                    except Exception:
-                        continue
-
-                    dt, source = parse_jsonld_date(
-                        data
-                    )
-
-                    if dt is not None:
-
-                        article_date = dt
-
-                        article_date_source = source
-
-                        break
-
-            except Exception:
-                pass
-
-        ########################################
-        # META RENDU
-        ########################################
-
-        if article_date is None:
-
-            meta_selectors = [
-
-                (
-                    'meta[property="article:published_time"]',
-                    "ARTICLE META/article:published_time",
-                ),
-
-                (
-                    'meta[property="og:published_time"]',
-                    "ARTICLE META/og:published_time",
-                ),
-
-                (
-                    'meta[name="datePublished"]',
-                    "ARTICLE META/datePublished",
-                ),
-
-                (
-                    'meta[name="published"]',
-                    "ARTICLE META/published",
-                ),
-
-                (
-                    'meta[name="date"]',
-                    "ARTICLE META/date",
-                ),
-
-                (
-                    'meta[property="og:date"]',
-                    "ARTICLE META/og:date",
-                ),
-
-                (
-                    'meta[property="article:modified_time"]',
-                    "ARTICLE META/article:modified_time",
-                ),
-
-                (
-                    'meta[property="og:updated_time"]',
-                    "ARTICLE META/og:updated_time",
-                ),
-
-                (
-                    'meta[name="dateModified"]',
-                    "ARTICLE META/dateModified",
-                ),
-
-            ]
-
-            for selector, source in meta_selectors:
-
-                try:
-
-                    locator = (
-                        page
-                        .locator(selector)
-                        .first
-                    )
-
-                    if locator.count() == 0:
-                        continue
-
-                    raw = locator.get_attribute(
-                        "content"
-                    )
-
-                    dt = (
-                        parse_date(raw)
-                        or parse_french_date(raw)
-                    )
-
-                    if dt is not None:
-
-                        article_date = dt
-
-                        article_date_source = source
-
-                        break
-
-                except Exception:
-                    pass
-
-        ########################################
-        # TIME RENDU
-        ########################################
-
-        if article_date is None:
-
-            try:
-
-                times = page.locator(
-                    "time"
-                )
-
-                for i in range(
-                    times.count()
-                ):
-
-                    node = times.nth(i)
-
-                    values = [
-
-                        node.get_attribute(
-                            "datetime"
-                        ),
-
-                        node.get_attribute(
-                            "data-date"
-                        ),
-
-                        node.get_attribute(
-                            "data-datetime"
-                        ),
-
-                        node.inner_text(
-                            timeout=2000
-                        ),
-
-                    ]
-
-                    dt = parse_any_date_candidates(
-                        values
-                    )
-
-                    if dt is not None:
-
-                        article_date = dt
-
-                        article_date_source = (
-                            "ARTICLE TIME"
-                        )
-
-                        break
-
-            except Exception:
-                pass
-
-        ########################################
-        # DERNIER FALLBACK
-        #
-        # UNIQUEMENT LE TEXTE PROCHE DU TITRE.
-        #
-        # JAMAIS TOUT LE BODY.
-        ########################################
-
-        if article_date is None:
-
-            try:
-
-                heading = (
-                    page
-                    .locator("h1")
-                    .first
-                )
-
-                if heading.count() > 0:
-
-                    for level in range(
-                        1,
-                        5
-                    ):
-
-                        try:
-
-                            ancestor = heading
-
-                            for _ in range(level):
-                                ancestor = ancestor.locator("..")
-
-                            nearby_text = clean_text(
-                                ancestor.inner_text(
-                                    timeout=3000
-                                )
-                            )
-
-                            dt = parse_dofus_publication_text(
-                                nearby_text
-                            )
-
-                            if dt is not None:
-
-                                article_date = dt
-
-                                article_date_source = (
-                                    "ARTICLE HEADER FALLBACK"
-                                )
-
-                                break
-
-                        except Exception:
-                            pass
-
-            except Exception:
-                pass
-
-        ########################################
-        # VALIDATION DATE
-        ########################################
-
-        if article_date is None:
-
-            print(
-                "   ⚠️ Date article "
-                "introuvable."
+        if dt:
+            return (
+                dt,
+                "texte visible"
             )
 
-            return None
+    ########################################
+    # HTML BRUT
+    ########################################
 
-        ########################################
-        # DESCRIPTION
-        ########################################
+    dt = parse_french_date(
+        html
+    )
 
-        description = ""
+    if dt:
+        return (
+            dt,
+            "HTML brut"
+        )
+
+    return (
+        None,
+        "introuvable"
+    )
+
+
+def extract_article(
+    url,
+    listing_entry,
+    cache
+):
+
+    print(
+        "   🔎 Ouverture article avec Playwright..."
+    )
+
+    html = ""
+
+    title = clean_text(
+        listing_entry.get(
+            "title"
+        )
+    )
+
+    listing_date = listing_entry.get(
+        "date"
+    )
+
+    with sync_playwright() as p:
+
+        browser = p.chromium.launch(
+            headless=True
+        )
+
+        page = browser.new_page(
+            locale="fr-FR",
+            user_agent=HEADERS["User-Agent"],
+        )
 
         try:
 
-            description = clean_text(
-                page
-                .locator(
-                    'meta[name="description"]'
-                )
-                .get_attribute(
-                    "content"
-                )
+            page.goto(
+                url,
+                wait_until="domcontentloaded",
+                timeout=60000,
             )
 
-        except Exception:
-            pass
-
-        if not description:
+            page.wait_for_timeout(
+                2500
+            )
 
             try:
 
-                description = clean_text(
-                    page
-                    .locator(
-                        'meta[property="og:description"]'
-                    )
-                    .get_attribute(
-                        "content"
-                    )
+                page.wait_for_load_state(
+                    "networkidle",
+                    timeout=10000
                 )
 
-            except Exception:
+            except PlaywrightTimeoutError:
                 pass
 
-        if not description:
-            description = title
+            html = page.content()
 
-        ########################################
-        # RESULTAT
-        ########################################
+        except Exception as exc:
 
-        return {
+            print(
+                f"⚠️ Playwright impossible à charger : "
+                f"{exc}"
+            )
 
-            "title": title,
+        finally:
 
-            "title_source": "PLAYWRIGHT",
+            browser.close()
 
-            "url": url,
+    ########################################
+    # FALLBACK REQUESTS
+    ########################################
 
-            "description": description,
+    if not html:
 
-            "date": article_date,
+        try:
 
-            "date_source": article_date_source,
+            response = requests.get(
+                url,
+                headers=HEADERS,
+                timeout=30
+            )
 
-        }
+            response.raise_for_status()
 
-    except Exception as exc:
+            html = response.text
 
-        print(
-            f"⚠️ Impossible de charger "
-            f"l'article : {exc}"
-        )
+        except Exception as exc:
 
-        return None
+            print(
+                f"⚠️ Impossible de charger l'article : "
+                f"{exc}"
+            )
 
+            html = ""
 
-########################################
-# FALLBACK REQUESTS
-########################################
+    ########################################
+    # PARSING
+    ########################################
 
-def extract_article_requests_fallback(
-    url
-):
+    soup = BeautifulSoup(
+        html,
+        "html.parser"
+    )
 
-    try:
+    ########################################
+    # TITRE
+    #
+    # Le listing reste prioritaire.
+    ########################################
 
-        response = requests.get(
-            url,
-            headers=HEADERS,
-            timeout=30,
-        )
-
-        response.raise_for_status()
-
-        soup = BeautifulSoup(
-            response.text,
-            "html.parser"
-        )
-
-        ########################################
-        # TITRE
-        ########################################
-
-        title = ""
+    if not title:
 
         h1 = soup.find(
             "h1"
@@ -1591,261 +1022,142 @@ def extract_article_requests_fallback(
                 )
             )
 
-        if not title:
-
-            meta = soup.find(
-                "meta",
-                attrs={
-                    "property": "og:title"
-                },
-            )
-
-            if meta:
-
-                title = clean_text(
-                    meta.get("content")
-                )
-
-        title = clean_article_title(
-            title
-        )
-
-        ########################################
-        # DATE
-        ########################################
-
-        article_date = None
-
-        source = None
-
-        ########################################
-        # DATE DE L'EN-TÊTE
-        ########################################
-
-        if h1:
-
-            header_text = clean_text(
-                h1.get_text(
-                    " ",
-                    strip=True
-                )
-            )
-
-            article_date = (
-                parse_dofus_publication_text(
-                    header_text
-                )
-            )
-
-            if article_date is not None:
-
-                source = (
-                    "REQUESTS ARTICLE HEADER"
-                )
-
-            ########################################
-            # CONTENEURS PARENTS
-            ########################################
-
-            if article_date is None:
-
-                current = h1
-
-                for _ in range(4):
-
-                    current = current.parent
-
-                    if current is None:
-                        break
-
-                    parent_text = clean_text(
-                        current.get_text(
-                            " ",
-                            strip=True
-                        )
-                    )
-
-                    article_date = (
-                        parse_dofus_publication_text(
-                            parent_text
-                        )
-                    )
-
-                    if article_date is not None:
-
-                        source = (
-                            "REQUESTS ARTICLE HEADER"
-                        )
-
-                        break
-
-        ########################################
-        # FALLBACK HTML
-        ########################################
-
-        if article_date is None:
-
-            (
-                article_date,
-                source
-            ) = extract_date_from_html_soup(
-                soup
-            )
-
-        if not title:
-            return None
-
-        if article_date is None:
-            return None
-
-        ########################################
-        # DESCRIPTION
-        ########################################
-
-        description = ""
+    if not title:
 
         meta = soup.find(
             "meta",
             attrs={
-                "name": "description"
-            },
+                "property": "og:title"
+            }
+        )
+
+        if meta:
+
+            title = clean_text(
+                meta.get(
+                    "content"
+                )
+            )
+
+    if not title:
+
+        title = (
+            url.rstrip("/")
+            .split("/")[-1]
+            .replace("-", " ")
+            .strip()
+            .title()
+        )
+
+    ########################################
+    # DATE
+    #
+    # IMPORTANT :
+    # La date du listing est prioritaire.
+    ########################################
+
+    if listing_date:
+
+        dt = listing_date
+
+        date_source = (
+            "LISTING"
+        )
+
+    else:
+
+        dt, date_source = (
+            extract_date_from_html(
+                html
+            )
+        )
+
+        if not dt and url in cache:
+
+            dt = parse_date(
+                cache[url].get(
+                    "pubDate"
+                )
+            )
+
+            if dt:
+                date_source = "cache"
+
+    if not dt:
+
+        print(
+            "⚠️ Date introuvable."
+        )
+
+        return None
+
+    ########################################
+    # DESCRIPTION
+    ########################################
+
+    description = ""
+
+    meta = soup.find(
+        "meta",
+        attrs={
+            "name": "description"
+        }
+    )
+
+    if meta:
+
+        description = clean_text(
+            meta.get(
+                "content"
+            )
+        )
+
+    if not description:
+
+        meta = soup.find(
+            "meta",
+            attrs={
+                "property":
+                "og:description"
+            }
         )
 
         if meta:
 
             description = clean_text(
-                meta.get("content")
+                meta.get(
+                    "content"
+                )
             )
 
-        if not description:
-            description = title
+    if not description:
 
-        ########################################
-        # RESULTAT
-        ########################################
-
-        return {
-
-            "title": title,
-
-            "title_source": "REQUESTS",
-
-            "url": url,
-
-            "description": description,
-
-            "date": article_date,
-
-            "date_source": (
-                f"REQUESTS {source}"
-            ),
-
-        }
-
-    except Exception:
-        return None
-
-
-########################################
-# ARTICLE COMPLET
-########################################
-
-def extract_article(
-    page,
-    url,
-    cache
-):
-
-    ########################################
-    # 1. PLAYWRIGHT
-    ########################################
-
-    article = (
-        extract_article_with_playwright(
-            page,
-            url
-        )
-    )
-
-    if article is not None:
-        return article
-
-    ########################################
-    # 2. FALLBACK HTTP
-    ########################################
+        description = title
 
     print(
-        "   ⚠️ Playwright article incomplet, "
-        "tentative fallback HTTP..."
+        f"   🏷️ Titre : {title}"
     )
 
-    article = (
-        extract_article_requests_fallback(
-            url
-        )
+    print(
+        f"   📅 Date trouvée via : "
+        f"{date_source}"
     )
 
-    if article is not None:
-        return article
+    return {
 
-    ########################################
-    # 3. CACHE
-    #
-    # Dernier recours uniquement.
-    ########################################
+        "title": title,
 
-    if url in cache:
+        "url": url,
 
-        cached = cache[url]
+        "description": description,
 
-        if not isinstance(
-            cached,
-            dict
-        ):
-            return None
+        "date": dt,
 
-        dt = parse_date(
-            cached.get(
-                "pubDate"
-            )
-        )
-
-        title = clean_article_title(
-            cached.get(
-                "title"
-            )
-        )
-
-        if dt is not None and title:
-
-            return {
-
-                "title": title,
-
-                "title_source": "CACHE",
-
-                "url": url,
-
-                "description": (
-                    clean_text(
-                        cached.get(
-                            "description"
-                        )
-                    )
-                    or title
-                ),
-
-                "date": dt,
-
-                "date_source": "CACHE",
-
-            }
-
-    return None
+    }
 
 
 ########################################
-# CREATION RSS
+# CRÉATION RSS
 ########################################
 
 def create_rss(
@@ -1854,6 +1166,13 @@ def create_rss(
     description,
     articles
 ):
+
+    now = formatdate(
+        datetime.now(
+            timezone.utc
+        ).timestamp(),
+        usegmt=True
+    )
 
     rss = Element(
         "rss",
@@ -1882,9 +1201,10 @@ def create_rss(
         "description"
     ).text = description
 
-    ########################################
-    # ITEMS
-    ########################################
+    SubElement(
+        channel,
+        "lastBuildDate"
+    ).text = now
 
     for article in articles:
 
@@ -1907,26 +1227,16 @@ def create_rss(
             "url"
         ]
 
-        ########################################
-        # GUID STABLE
-        ########################################
-
         SubElement(
             item,
             "guid",
             {
-                "isPermaLink": "true"
+                "isPermaLink":
+                "true"
             }
         ).text = article[
             "url"
         ]
-
-        ########################################
-        # PUBDATE STABLE
-        #
-        # Date réelle de publication.
-        # JAMAIS la date d'exécution.
-        ########################################
 
         SubElement(
             item,
@@ -1962,612 +1272,399 @@ def create_rss(
 # MAIN
 ########################################
 
-def main():
+cache = load_cache()
+
+discord_state = load_discord_state()
+
+listing = collect_news_listing()
+
+print("")
+print(
+    "########################################"
+)
+print(
+    f"# URLs Actualités Dofus trouvées : "
+    f"{len(listing)}"
+)
+print(
+    "########################################"
+)
+
+articles = []
+
+########################################
+# EXTRACTION
+########################################
+
+for index, (
+    url,
+    listing_entry
+) in enumerate(
+    listing.items(),
+    start=1
+):
 
     print("")
-
     print(
-        "########################################"
+        f"[{index}/{len(listing)}] "
+        f"{url}"
     )
 
-    print(
-        "# Tensho Dofus"
-    )
-
-    print(
-        "# ACTUALITÉS FRANÇAISES"
-    )
-
-    print(
-        "########################################"
-    )
-
-    ########################################
-    # CACHE
-    ########################################
-
-    cache = load_cache()
-
-    ########################################
-    # ÉTAT DISCORD
-    ########################################
-
-    discord_state = load_discord_state()
-
-    ########################################
-    # HISTORIQUE DISCORD
-    #
-    # On conserve l'historique des URLs déjà
-    # envoyées uniquement pour savoir si LE
-    # dernier article actuel a déjà été envoyé.
-    #
-    # IMPORTANT :
-    # On ne parcourt jamais cet historique pour
-    # rechercher un ancien article à envoyer.
-    ########################################
-
-    sent_discord_urls = discord_state.get(
-        "sent_urls",
-        []
-    )
-
-    if not isinstance(
-        sent_discord_urls,
-        list
-    ):
-
-        sent_discord_urls = []
-
-    legacy_url = discord_state.get(
-        "last_sent_url"
-    )
-
-    if (
-        legacy_url
-        and legacy_url not in sent_discord_urls
-    ):
-
-        sent_discord_urls.append(
-            legacy_url
-        )
-
-    ########################################
-    # SÉCURITÉ XML DISCORD
-    #
-    # Si le JSON d'état a disparu mais que le
-    # flux Discord précédent existe toujours,
-    # son article est automatiquement considéré
-    # comme déjà envoyé.
-    ########################################
-
-    previous_feed_article = (
-        load_last_discord_feed_article()
-    )
-
-    if previous_feed_article:
-
-        previous_feed_url = (
-            previous_feed_article[
-                "url"
-            ]
-        )
-
-        if (
-            previous_feed_url
-            and previous_feed_url
-            not in sent_discord_urls
-        ):
-
-            sent_discord_urls.append(
-                previous_feed_url
-            )
-
-            print(
-                "🛡️ Article déjà présent dans "
-                "dofus-news-discord.xml "
-                "considéré comme déjà envoyé :"
-            )
-
-            print(
-                f"   {previous_feed_url}"
-            )
-
-    ########################################
-    # LISTING
-    ########################################
-
-    listing = collect_news_listing()
-
-    print("")
-
-    print(
-        "########################################"
-    )
-
-    print(
-        f"# URLs Actualités Dofus trouvées : "
-        f"{len(listing)}"
-    )
-
-    print(
-        "########################################"
-    )
-
-    ########################################
-    # ARTICLES
-    ########################################
-
-    articles = []
-
-    urls = list(
-        listing.keys()
-    )
-
-    ########################################
-    # UN SEUL NAVIGATEUR PLAYWRIGHT
-    ########################################
-
-    with sync_playwright() as p:
-
-        browser = p.chromium.launch(
-            headless=True
-        )
-
-        page = browser.new_page(
-            locale="fr-FR",
-            user_agent=HEADERS[
-                "User-Agent"
-            ],
-        )
-
-        for index, url in enumerate(
-            urls,
-            start=1
-        ):
-
-            print(
-                f"[{index}/{len(urls)}] "
-                f"{url}"
-            )
-
-            article = extract_article(
-                page,
-                url,
-                cache
-            )
-
-            if article is not None:
-
-                articles.append(
-                    article
-                )
-
-                print(
-                    f"   🏷️ Titre trouvé via "
-                    f"{article['title_source']}: "
-                    f"{article['title']}"
-                )
-
-                print(
-                    f"   📅 Date trouvée via "
-                    f"{article['date_source']}: "
-                    f"{format_pubdate(article['date'])}"
-                )
-
-                print(
-                    f"🟢 "
-                    f"{format_pubdate(article['date'])}"
-                    f" - "
-                    f"{article['title']}"
-                )
-
-            else:
-
-                print(
-                    "   ❌ Article ignoré : "
-                    "titre ou date introuvable."
-                )
-
-        browser.close()
-
-    ########################################
-    # UNE URL = UN ARTICLE
-    ########################################
-
-    unique_articles = {
-        article["url"]: article
-        for article in articles
-    }
-
-    articles = list(
-        unique_articles.values()
-    )
-
-    ########################################
-    # PLUS RÉCENT EN PREMIER
-    ########################################
-
-    articles.sort(
-        key=lambda article: article["date"],
-        reverse=True
-    )
-
-    ########################################
-    # MAXIMUM 20
-    ########################################
-
-    articles = articles[
-        :MAX_ARTICLES
-    ]
-
-    ########################################
-    # AFFICHAGE
-    ########################################
-
-    print("")
-
-    print(
-        "########################################"
-    )
-
-    print(
-        f"# {len(articles)} "
-        f"Actualités Dofus retenues"
-    )
-
-    print(
-        "########################################"
-    )
-
-    for index, article in enumerate(
-        articles,
-        start=1
-    ):
-
-        print(
-            f"{index:02d}. "
-            f"{format_pubdate(article['date'])}"
-            f" - "
-            f"{article['title']}"
-        )
-
-    ########################################
-    # CACHE
-    ########################################
-
-    for article in articles:
-
-        cache[
-            article["url"]
-        ] = {
-
-            "title": article[
-                "title"
-            ],
-
-            "description": article[
-                "description"
-            ],
-
-            "pubDate": format_pubdate(
-                article["date"]
-            ),
-
-        }
-
-    save_cache(
+    article = extract_article(
+        url,
+        listing_entry,
         cache
     )
 
-    ########################################
-    # RSS COMPLET
-    ########################################
+    if not article:
+        continue
+
+    articles.append(
+        article
+    )
+
+    print(
+        f"🟢 "
+        f"{format_pubdate(article['date'])} "
+        f"- "
+        f"{article['title']}"
+    )
+
+
+########################################
+# DÉDOUBLONNAGE
+########################################
+
+unique = {}
+
+for article in articles:
+
+    url = article[
+        "url"
+    ]
+
+    if (
+        url not in unique
+        or article["date"]
+        > unique[url]["date"]
+    ):
+
+        unique[url] = article
+
+
+articles = list(
+    unique.values()
+)
+
+
+########################################
+# TRI DU PLUS RÉCENT AU PLUS ANCIEN
+########################################
+
+articles.sort(
+    key=lambda article:
+    article["date"],
+    reverse=True
+)
+
+
+articles = articles[
+    :MAX_ARTICLES
+]
+
+
+########################################
+# AFFICHAGE
+########################################
+
+print("")
+print(
+    "########################################"
+)
+print(
+    f"# {len(articles)} "
+    f"Actualités Dofus retenues"
+)
+print(
+    "########################################"
+)
+print("")
+
+for index, article in enumerate(
+    articles,
+    start=1
+):
+
+    print(
+        f"{index:02d}. "
+        f"{format_pubdate(article['date'])} "
+        f"- "
+        f"{article['title']}"
+    )
+
+
+########################################
+# CACHE
+########################################
+
+for article in articles:
+
+    cache[
+        article["url"]
+    ] = {
+
+        "title":
+        article["title"],
+
+        "description":
+        article["description"],
+
+        "pubDate":
+        format_pubdate(
+            article["date"]
+        ),
+
+    }
+
+
+save_cache(
+    cache
+)
+
+
+########################################
+# RSS COMPLET
+########################################
+
+print("")
+print(
+    "Génération de dofus-news.xml..."
+)
+
+create_rss(
+    OUTPUT,
+
+    "DOFUS — Actualités",
+
+    "Actualités officielles françaises "
+    "de DOFUS.",
+
+    articles
+)
+
+print(
+    "🟢 dofus-news.xml généré."
+)
+
+
+########################################
+# RSS DISCORD
+########################################
+
+print("")
+print(
+    "Génération de "
+    "dofus-news-discord.xml..."
+)
+
+discord_articles = []
+
+last_sent_url = (
+    discord_state.get(
+        "last_sent_url"
+    )
+)
+
+
+########################################
+# DERNIÈRE ACTUALITÉ
+########################################
+
+if articles:
+
+    latest_article = articles[0]
+
+    latest_url = latest_article[
+        "url"
+    ]
 
     print("")
-
     print(
-        "Génération de dofus-news.xml..."
-    )
-
-    create_rss(
-        OUTPUT,
-
-        "DOFUS — Actualités",
-
-        "Actualités officielles françaises "
-        "de DOFUS.",
-
-        articles
+        "🔎 Dernière actualité actuellement "
+        "publiée sur DOFUS :"
     )
 
     print(
-        "🟢 dofus-news.xml généré."
+        f"   {latest_article['title']}"
     )
-
-    ########################################
-    # RSS DISCORD
-    ########################################
-
-    print("")
 
     print(
-        "Génération de "
-        "dofus-news-discord.xml..."
+        f"   {latest_url}"
+    )
+
+    print(
+        f"   "
+        f"{format_pubdate(latest_article['date'])}"
     )
 
     ########################################
-    # IMPORTANT
-    #
-    # ON NE CHERCHE PAS UN ANCIEN ARTICLE
-    # NON ENVOYÉ.
-    #
-    # Discord doit uniquement regarder le
-    # tout dernier article publié actuellement
-    # sur DOFUS.
-    #
-    # Si ce dernier article a déjà été envoyé :
-    # RIEN.
-    #
-    # Sinon :
-    # ENVOI DE CELUI-LÀ UNIQUEMENT.
+    # NOUVELLE ACTUALITÉ
     ########################################
 
-    discord_articles = []
+    if latest_url != last_sent_url:
 
-    selected_discord_article = None
+        print("")
+        print(
+            "🆕 Nouvelle actualité Discord."
+        )
 
-    if articles:
-
-        ########################################
-        # DERNIER ARTICLE PUBLIÉ UNIQUEMENT
-        ########################################
-
-        latest_article = articles[0]
-
-        latest_url = latest_article[
-            "url"
+        discord_articles = [
+            latest_article
         ]
 
-        if latest_url in sent_discord_urls:
-
-            print(
-                "ℹ️ Le dernier article DOFUS "
-                "a déjà été envoyé."
-            )
-
-            print(
-                f"   {latest_article['title']}"
-            )
-
-            print(
-                f"   {latest_url}"
-            )
-
-        else:
-
-            selected_discord_article = (
-                latest_article
-            )
-
-            discord_articles = [
-                selected_discord_article
-            ]
-
-            print(
-                "🆕 Nouvelle actualité Discord :"
-            )
-
-            print(
-                f"   "
-                f"{selected_discord_article['title']}"
-            )
-
-            print(
-                f"   "
-                f"{latest_url}"
-            )
-
-            ########################################
-            # ENREGISTREMENT IMMÉDIAT
-            #
-            # On mémorise uniquement cet article.
-            # Il sera considéré comme envoyé au
-            # prochain run.
-            ########################################
-
-            sent_discord_urls.append(
-                latest_url
-            )
-
-            ########################################
-            # LIMITE HISTORIQUE
-            ########################################
-
-            sent_discord_urls = (
-                sent_discord_urls[
-                    -200:
-                ]
-            )
-
-            discord_state = {
+        save_discord_state(
+            {
 
                 "last_sent_url":
-                    latest_url,
+                latest_url,
 
                 "last_sent_pubDate":
-                    format_pubdate(
-                        selected_discord_article[
-                            "date"
-                        ]
-                    ),
+                format_pubdate(
+                    latest_article[
+                        "date"
+                    ]
+                ),
 
                 "last_sent_title":
-                    selected_discord_article[
-                        "title"
-                    ],
+                latest_article[
+                    "title"
+                ],
 
                 "last_sent_description":
-                    selected_discord_article[
-                        "description"
-                    ],
-
-                "sent_urls":
-                    sent_discord_urls,
+                latest_article[
+                    "description"
+                ],
 
             }
-
-            ########################################
-            # ÉCRITURE ATOMIQUE
-            ########################################
-
-            save_discord_state_atomic(
-                discord_state
-            )
-
-    ########################################
-    # SI RIEN DE NOUVEAU
-    #
-    # IMPORTANT :
-    # On NE VIDE PAS le flux Discord.
-    #
-    # On conserve le dernier article envoyé.
-    ########################################
-
-    if not discord_articles:
-
-        last_sent_url = (
-            discord_state.get(
-                "last_sent_url"
-            )
         )
 
-        ########################################
-        # LE DERNIER ARTICLE EST ENCORE
-        # DANS LES 20 ARTICLES
-        ########################################
-
-        if last_sent_url:
-
-            for article in articles:
-
-                if (
-                    article["url"]
-                    == last_sent_url
-                ):
-
-                    discord_articles = [
-                        article
-                    ]
-
-                    break
-
-        ########################################
-        # SI L'ARTICLE EST SORTI DES 20
-        #
-        # On reconstruit l'item depuis l'état.
-        ########################################
-
-        if not discord_articles:
-
-            last_pubdate = parse_date(
-                discord_state.get(
-                    "last_sent_pubDate"
-                )
-            )
-
-            if (
-                last_sent_url
-                and last_pubdate
-            ):
-
-                discord_articles = [
-
-                    {
-
-                        "title": (
-                            discord_state.get(
-                                "last_sent_title"
-                            )
-                            or "Actualité DOFUS"
-                        ),
-
-                        "url": last_sent_url,
-
-                        "description": (
-                            discord_state.get(
-                                "last_sent_description"
-                            )
-                            or "Actualité officielle DOFUS."
-                        ),
-
-                        "date": last_pubdate,
-
-                    }
-
-                ]
-
-    ########################################
-    # GENERATION DU FLUX DISCORD
-    ########################################
-
-    create_rss(
-        DISCORD_OUTPUT,
-
-        "DOFUS — Actualités",
-
-        "Dernière actualité officielle "
-        "française de DOFUS.",
-
-        discord_articles
-    )
-
-    ########################################
-    # LOG FINAL DISCORD
-    ########################################
-
-    if selected_discord_article is not None:
-
         print(
-            "🟢 dofus-news-discord.xml généré "
-            "avec 1 nouvel article."
-        )
-
-    elif discord_articles:
-
-        print(
-            "🟢 dofus-news-discord.xml généré "
-            "avec le dernier article déjà envoyé."
+            "🟢 État Discord sauvegardé."
         )
 
     else:
 
+        print("")
         print(
-            "🟢 dofus-news-discord.xml généré "
-            "sans article disponible."
+            "ℹ️ La dernière actualité "
+            "a déjà été envoyée."
         )
 
-    ########################################
-    # FIN
-    ########################################
 
-    print("")
+########################################
+# CONSERVATION DU DERNIER ITEM
+#
+# Le flux Discord ne doit JAMAIS être vide.
+########################################
 
-    print(
-        "########################################"
+if not discord_articles:
+
+    state = load_discord_state()
+
+    previous_url = state.get(
+        "last_sent_url"
     )
 
-    print(
-        "# DOFUS ACTUALITÉS RSS TERMINÉ"
+    previous_date = parse_date(
+        state.get(
+            "last_sent_pubDate"
+        )
     )
 
+    if (
+        previous_url
+        and previous_date
+    ):
+
+        discord_articles = [
+
+            {
+
+                "title":
+                state.get(
+                    "last_sent_title"
+                )
+                or "Actualité DOFUS",
+
+                "url":
+                previous_url,
+
+                "description":
+                state.get(
+                    "last_sent_description"
+                )
+                or
+                "Actualité officielle "
+                "française de DOFUS.",
+
+                "date":
+                previous_date,
+
+            }
+
+        ]
+
+
+########################################
+# GÉNÉRATION FLUX DISCORD
+########################################
+
+create_rss(
+    DISCORD_OUTPUT,
+
+    "DOFUS — Actualités",
+
+    "Dernière actualité officielle "
+    "française de DOFUS.",
+
+    discord_articles[:1]
+)
+
+
+if (
+    discord_articles
+    and articles
+    and discord_articles[0]["url"]
+    == articles[0]["url"]
+    and articles[0]["url"]
+    != last_sent_url
+):
+
     print(
-        "########################################"
+        "🟢 dofus-news-discord.xml "
+        "généré avec 1 nouvelle actualité."
+    )
+
+else:
+
+    print(
+        "🟢 dofus-news-discord.xml "
+        "généré sans nouvel envoi."
     )
 
 
 ########################################
-# EXECUTION
+# FIN
 ########################################
 
-if __name__ == "__main__":
-    main()
+print("")
+print(
+    "########################################"
+)
+print(
+    "# DOFUS ACTUALITÉS RSS TERMINÉ"
+)
+print(
+    "########################################"
+)
+print("")
