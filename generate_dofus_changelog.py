@@ -1496,10 +1496,7 @@ def main():
     )
 
     print(
-        f"   "
-        f"{format_datetime("
-        f"parse_date(latest['date'])"
-        f")}"
+        f"   {format_datetime(parse_date(latest['date']))}"
     )
 
     # ========================================================
