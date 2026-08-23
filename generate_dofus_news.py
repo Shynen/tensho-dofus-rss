@@ -176,16 +176,15 @@ def extract_date_from_html(html):
         if not raw:
             continue
 
-        # Direct regex first: robust against malformed JSON-LD
-            for key in ("datePublished", "dateCreated", "dateModified"):
-                    dt = (
-                        parse_date(obj.get(key))
-                        or parse_french_date(obj.get(key))
-                    ) if obj.get(key) else None
-            
-                if dt:
-                    return dt, f"JSON-LD/{key}"
+          # Direct regex first: robust against malformed JSON-LD
+        for key in ("datePublished", "dateCreated", "dateModified"):
+            dt = (
+                parse_date(obj.get(key))
+                or parse_french_date(obj.get(key))
+            ) if obj.get(key) else None
 
+            if dt:
+                return dt, f"JSON-LD/{key}"
         # Then attempt actual JSON parsing
         try:
             data = json.loads(raw)
