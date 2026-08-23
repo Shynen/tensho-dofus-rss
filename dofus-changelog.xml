@@ -1,9 +1,44 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
-  <channel>
-    <title>DOFUS — Changelogs</title>
-    <link>https://www.dofus.com/fr/mmorpg/actualites/maj</link>
-    <description>Notes de mise à jour officielles françaises de DOFUS.</description>
-    <lastBuildDate>Sun, 23 Aug 2026 20:17:50 GMT</lastBuildDate>
-  </channel>
+<channel>
+<title>DOFUS Changelogs</title>
+<link>https://www.dofus.com/fr/mmorpg/actualites/maj</link>
+<description>Changelogs DOFUS</description>
+<lastBuildDate>Sun, 23 Aug 2026 20:23:03 GMT</lastBuildDate>
+<item>
+<title>MÀJ 3.6 - Raid is not dead 23 Juin 2026</title>
+<link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</link>
+<guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</guid>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026</description>
+<pubDate>Tue, 18 Aug 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+<title>MÀJ 3.6 - Raid is not dead 23 Juin 2026</title>
+<link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771222-patch-notes-3-6-9-9-04-08-2026</link>
+<guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771222-patch-notes-3-6-9-9-04-08-2026</guid>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026</description>
+<pubDate>Tue, 04 Aug 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+<title>MÀJ 3.6 - Raid is not dead 23 Juin 2026</title>
+<link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771109-patch-notes-3-6-6-7-21-07-2026</link>
+<guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771109-patch-notes-3-6-6-7-21-07-2026</guid>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026</description>
+<pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+<title>MÀJ 3.6 - Raid is not dead 23 Juin 2026</title>
+<link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770949-patch-notes-3-6-6-5-07-07-2026</link>
+<guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770949-patch-notes-3-6-6-5-07-07-2026</guid>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026</description>
+<pubDate>Tue, 07 Jul 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+<title>MÀJ 3.6 - Raid is not dead 23 Juin 2026</title>
+<link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770776-patch-notes-3-6-5-4-30-06-2026</link>
+<guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770776-patch-notes-3-6-5-4-30-06-2026</guid>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026</description>
+<pubDate>Tue, 30 Jun 2026 00:00:00 GMT</pubDate>
+</item>
+</channel>
 </rss>
