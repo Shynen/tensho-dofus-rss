@@ -1408,9 +1408,7 @@ def main():
 
         print(
             f"{i:02d}. "
-            f"{format_datetime("
-            f"parse_date(item['date'])"
-            f")} - "
+            f"{format_datetime(parse_date(item['date']))} - "
             f"{item['title']}"
         )
 
