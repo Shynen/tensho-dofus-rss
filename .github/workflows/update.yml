@@ -96,14 +96,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add \
+           git add \
             dofus-news.xml \
             dofus-news-discord.xml \
             dofus_news_cache.json \
             dofus_discord_state.json \
             dofus-changelog.xml \
             dofus-changelog-discord.xml \
-            dofus_changelog_cache.json
+            dofus_changelog_cache.json \
+            dofus_changelog_discord_state.json
 
           # ----------------------------------------------------
           # Aucun changement
