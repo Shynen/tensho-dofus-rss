@@ -134,7 +134,93 @@ def is_valid_news_url(url):
         and "/fr/mmorpg/actualites/news/" in value
         and value.rstrip("/") != SOURCE_URL.rstrip("/")
     )
+def collect_news_urls_google_news():
+    """
+    Fallback lorsque Dofus bloque le rendu de la page des actualités.
+    Utilise Google News RSS pour retrouver les dernières URLs
+    officielles Dofus.
+    """
+    google_rss = (
+        "https://news.google.com/rss/search"
+        "?q=site%3Adofus.com%2Ffr%2Fmmorpg%2Factualites%2Fnews%2F"
+        "&hl=fr&gl=FR&ceid=FR%3Afr"
+    )
 
+    urls = set()
+
+    try:
+        print("")
+        print("🔎 Fallback Google News RSS...")
+        print(google_rss)
+
+        response = requests.get(
+            google_rss,
+            headers=HEADERS,
+            timeout=30,
+        )
+        response.raise_for_status()
+
+        soup = BeautifulSoup(
+            response.text,
+            "xml",
+        )
+
+        items = soup.find_all("item")
+
+        print(
+            f"📰 Google News : {len(items)} résultats trouvés."
+        )
+
+        for item in items:
+            link_node = item.find("link")
+
+            if not link_node:
+                continue
+
+            google_url = clean_text(
+                link_node.get_text()
+            )
+
+            if not google_url:
+                continue
+
+            try:
+                article_response = requests.get(
+                    google_url,
+                    headers=HEADERS,
+                    timeout=20,
+                    allow_redirects=True,
+                )
+
+                final_url = (
+                    article_response.url
+                    .split("#", 1)[0]
+                    .rstrip("/")
+                )
+
+                if is_valid_news_url(final_url):
+                    urls.add(final_url)
+
+            except Exception as e:
+                print(
+                    f"⚠️ Impossible de résoudre "
+                    f"le lien Google News : {e}"
+                )
+
+            if len(urls) >= MAX_ARTICLES:
+                break
+
+        print(
+            f"🟢 Google News : "
+            f"{len(urls)} URLs Dofus récupérées."
+        )
+
+    except Exception as e:
+        print(
+            f"❌ Google News RSS indisponible : {e}"
+        )
+
+    return list(urls)
 
 def collect_news_urls():
     print("")
@@ -233,7 +319,20 @@ def collect_news_urls():
                 break
 
         browser.close()
+    # Fallback si Dofus bloque la récupération directe.
+    if len(urls) == 0:
+        print("")
+        print(
+            "⚠️ Aucune actualité trouvée directement."
+        )
+        print(
+            "➡️ Activation du fallback Google News..."
+        )
 
+        fallback_urls = collect_news_urls_google_news()
+
+        for fallback_url in fallback_urls:
+            urls.add(fallback_url)
     print(f"🟢 Total actualités récupérées : {len(urls)}")
     return sorted(urls)
 
@@ -245,18 +344,6 @@ def extract_date_from_soup(soup):
 
         if not raw:
             continue
-
-        # Regex directe : fonctionne même si le JSON-LD est imparfait.
-        for key in ("datePublished", "dateCreated", "dateModified"):
-            pattern = rf'"{key}"\s*:\s*"([^"]+)"'
-            values = re.findall(pattern, raw, flags=re.IGNORECASE)
-
-            for value in values:
-                dt = parse_date(value)
-                if dt is None:
-                    dt = parse_french_date(value)
-                if dt is not None:
-                    return dt, f"JSON-LD/{key}"
 
         # JSON-LD valide.
         try:
