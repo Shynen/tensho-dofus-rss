@@ -1,7 +1,7 @@
 {
   "https://www.dofus.com/fr/mmorpg/actualites/news/1770807-saison-ocre-prenez-temps-souvenir": {
-    "title": "Saison Ocre : prenez le temps de vous souvenir…",
-    "description": "Saison Ocre : prenez le temps de vous souvenir…",
+    "title": "Audience et Publicité",
+    "description": "Audience et Publicité",
     "pubDate": "Thu, 20 Aug 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771404-ankama-live-equipe-ankama-face-terrakourial": {
@@ -103,5 +103,10 @@
     "title": "Ankama Convention 25 ans : Ankama Shop",
     "description": "Il y a les aventuriers qui partent à l'aventure pour réunir les six Dofus… et les autres qui savent que les véritables trésors se cachent au stand Ankama Shop. Entre nouveautés en avant-première, offres exclusives et les beaux yeux de votre staff...",
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
+  },
+  "_discord_last_sent": {
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771404-ankama-live-equipe-ankama-face-terrakourial",
+    "title": "Ankama Live : l’équipe Ankama face à Terrakourial !",
+    "pubDate": "Thu, 20 Aug 2026 00:00:00 GMT"
   }
 }
