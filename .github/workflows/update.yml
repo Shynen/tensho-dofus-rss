@@ -8,6 +8,12 @@ on:
 permissions:
   contents: write
 
+# Empêche deux exécutions du même workflow
+# de générer et pousser les fichiers en même temps.
+concurrency:
+  group: update-dofus-rss
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -15,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -47,9 +55,23 @@ jobs:
             dofus-news.xml \
             dofus-news-discord.xml \
             dofus_news_cache.json \
+            dofus_discord_state.json \
             dofus-changelog.xml \
             dofus-changelog-discord.xml \
             dofus_changelog_cache.json
 
-          git diff --cached --quiet || git commit -m "Update Dofus RSS feeds"
-          git push
+          if git diff --cached --quiet; then
+            echo "Aucun changement à commit."
+            exit 0
+          fi
+
+          git commit -m "Update Dofus RSS feeds"
+
+          echo "Récupération des éventuels commits distants..."
+          git fetch origin main
+
+          echo "Rebase sur origin/main..."
+          git rebase origin/main
+
+          echo "Push vers GitHub..."
+          git push origin HEAD:main
