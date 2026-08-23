@@ -4,82 +4,506 @@
 <title>DOFUS Changelogs</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj</link>
 <description>Changelogs DOFUS</description>
-<lastBuildDate>Sun, 23 Aug 2026 21:39:24 GMT</lastBuildDate>
+<lastBuildDate>Sun, 23 Aug 2026 22:03:43 GMT</lastBuildDate>
 <item>
 <title>MÀJ - Patch notes 3.6.10.10 du 18/08/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</guid>
-<description>MÀJ - Patch notes 3.6.10.10 du 18/08/2026</description>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
+Retour à la liste
+Présentation
+3.6
+Patch Notes
++
+Vous regardez le :
+Patch notes 3.6.10.10 du 18/08/2026
+Patch notes 3.6.9.9 du 04/08/2026
+Patch notes 3.6.6.7 du 21/07/2026
+Patch Notes 3.6.6.5 du 07/07/2026
+Patch Notes 3.6.5.4 du 30/06/2026
+Patch Notes 3.6.4.3 du 24/06/2026
+Corrections de bugs
+Les bugs suivants sont corrigés
+Songes
+En songes, les statistiques des Krokilles invoquées par Grasmera sont trop élevées.
+En songes, l&#x27;effet réduisant la portée minimale des sorts (bonus &quot;Souplesse&quot;) affiche anormalement &quot;???&quot;.
+Divers
+Dans certains cas, il arrive qu&#x27;un joueur soit téléporté devant le boss d&#x27;anomalie après l&#x27;avoir vaincu.
+Partager
+Tweet</description>
 <pubDate>Tue, 18 Aug 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ - Patch notes 3.6.9.9 du 04/08/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771222-patch-notes-3-6-9-9-04-08-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771222-patch-notes-3-6-9-9-04-08-2026</guid>
-<description>MÀJ - Patch notes 3.6.9.9 du 04/08/2026</description>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
+Retour à la liste
+Présentation
+3.6
+Patch Notes
++
+Vous regardez le :
+Patch notes 3.6.10.10 du 18/08/2026
+Patch notes 3.6.9.9 du 04/08/2026
+Patch notes 3.6.6.7 du 21/07/2026
+Patch Notes 3.6.6.5 du 07/07/2026
+Patch Notes 3.6.5.4 du 30/06/2026
+Patch Notes 3.6.4.3 du 24/06/2026
+Corrections de bugs
+Les bugs suivants sont corrigés
+Raids
+Sur l&#x27;interface de récompense de Raid, la barre permettant de faire défiler horizontalement la frise ne fonctionne pas.
+En étant capitaine d&#x27;un raid en constitution, si la guilde est supprimée, il est nécessaire de se reconnecter pour que la suppression du raid soit bien prise en compte.
+Dans le Sanctuaire des Jardins éternels, la Floracle entraîne des latences une fois passée sous un certain seuil de points de vie.
+Classes / Compagnons
+L&#x27;état Chariot de l&#x27;Écaflip obtenu via la compétence Tarot d&#x27;Écaflip n&#x27;accorde pas le bonus de 100 dommages de poussée.
+Songes
+En Songes infinis, le sort Excursion du Féca, couplé à des augmentations de lancers par tour, peut générer des effets de bord indésirables pouvant aller jusqu&#x27;à bloquer le combat.
+Cartes
+Dans certains cas, changer de personnage en jeu et reproduire l&#x27;action pour se reconnecter sur le personnage initial a pour effet d&#x27;appliquer un filtre bleu sur la mini-carte. De plus, cette dernière n&#x27;a que les icônes d&#x27;affichées.
+Objet
+Le Domakuro augmente anormalement les Dommages des invocations qui ne sont pas du porteur.
+Les dégâts déclenchés à la mort de la Mégabombe ne déclenchent pas les effets du bouclier miroir d&#x27;un porteur touché.
+Visuels / Son
+Les couleurs de plusieurs versions de la cape et de la coiffe cosmétique Parabiote sont inversées dans certaines vues.
+Le monstre Statulipe produit un son en continu durant tout le combat tant qu&#x27;il est en vie.
+L&#x27;attitude &quot;S&#x27;abriter sous un parapluie&quot; n&#x27;est pas colorable.
+L&#x27;aura Spiritite ne fonctionne pas.
+Kolizéum
+6 matchs de placement sont nécessaires au lieu de 5 en file Kolizéum pour l&#x27;attribution de sa ligue.
+Combat
+En combat, écrire dans le chat en utilisant le caractère associé au raccourci des barres de vie a pour effet de les afficher.
+Divers
+Dans le bestiaire, rechercher textuellement une ressource par son nom n&#x27;affiche pas la liste des monstres permettant de l&#x27;obtenir.
+Modifications
+Raids
+Dans le Sanctuaire des Jardins Eternels, la Fleur maudite se désenvoûte à présent avant de se soigner.
+Objets
+Les cautions des dragodindes n&#x27;étant plus fabricables, elles mentionnent à présent leur suppression du jeu lors de la mise à jour 3.7.
+Partager
+Tweet</description>
 <pubDate>Tue, 04 Aug 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ - Patch notes 3.6.6.7 du 21/07/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771109-patch-notes-3-6-6-7-21-07-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771109-patch-notes-3-6-6-7-21-07-2026</guid>
-<description>MÀJ - Patch notes 3.6.6.7 du 21/07/2026</description>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
+Retour à la liste
+Présentation
+3.6
+Patch Notes
++
+Vous regardez le :
+Patch notes 3.6.10.10 du 18/08/2026
+Patch notes 3.6.9.9 du 04/08/2026
+Patch notes 3.6.6.7 du 21/07/2026
+Patch Notes 3.6.6.5 du 07/07/2026
+Patch Notes 3.6.5.4 du 30/06/2026
+Patch Notes 3.6.4.3 du 24/06/2026
+Corrections de bugs
+Les bugs suivants sont corrigés
+Performances / Crashs
+Depuis la mise à jour 3.6, il arrive parfois que le client ait des pertes de FPS. Le problème vient d&#x27;une refonte technique du chat. Une seconde modification est apportée pour tenter de corriger le problème.
+Raids
+Lors d&#x27;une déconnexion en raid, le personnage est anormalement expulsé du raid.
+Lors du combat contre la Reine écarlate :
+Il arrive que le joueur se fasse tuer anormalement. Le boss est retiré du raid le temps de corriger le problème.
+Le FX du sort &quot;Châtiment Royal&quot; se joue anormalement sur tous les joueurs à chaque début de tour de la Reine écarlate.
+Dans la liste des participants à un raid, le niveau Omega affiché n&#x27;est pas le bon.
+Dans certains cas, les actions rapides sur les miniatures des personnages sur l&#x27;interface de suivi de raids ne fonctionnent pas correctement.
+Combat
+Les nouvelles conditions de lancer (lancer par tour global ...) ne sont pas correctement prises en compte pour griser les sorts.
+Monstres
+Nileza : Le renvoi de dégâts à distance ne s&#x27;exécute pas correctement après l&#x27;échange de positions.
+Songes
+Apres utilisation du sort &quot;Refus de la mort&quot;, certains sorts ne sont pas utilisables alors qu&#x27;ils devraient.
+Dans certains cas, si le joueur perd le combat final en Songes alors qu&#x27;il n&#x27;est pas propriétaire du Songe, il peut se retrouver bloqué sur la carte finale sans pouvoir en partir.
+Page personnage
+Dans l&#x27;onglet &quot;Classement&quot; des pages personnages, l&#x27;ordre des classements est anormalement aléatoire.
+Si un joueur n&#x27;est pas allé au moins 1 fois sur la même carte qu&#x27;un membre de sa guilde alors, il ne peut pas accéder à son profil.
+L&#x27;infobulle au survol du niveau omega ne fonctionne pas bien
+Les flèches pour tourner le personnage ne fonctionnent pas sur l&#x27;onglet général
+L&#x27;option &quot;Verrouiller dans l&#x27;inventaire&quot;, accessible après un clic droit sur un objet, est présente même dans des contextes où elle est inutile.
+Les menus ne sont pas fermés si le joueur ferme la fenêtre via echap (options métier / options dans le header).
+Quêtes
+Quête &quot;Éternelle moisson&quot; : dans certains cas, lorsque le joueur donne des âmes à une étape en mélangeant des pierres de l&#x27;ancien et du nouveau format, il arrive que trop de pierres lui soit retirées.
+Quête &quot;Avis de tempête&quot; : l&#x27;évolution des statistiques des monstres de la vague 2 du combat se fait en fonction du nombre de combattants alliés (dont invocations) au lieu de se faire sur le nombre d&#x27;alliés (joueurs).
+Objet
+L&#x27;option &quot;Cours du marché&quot; est anormalement affichée sur les objets non vendables.
+Classes / Compagnons
+Roublard : Le sort roublardise au rang 3 n&#x27;a pas le bon niveau de déblocage.
+Cra : Flèche Fulminante : le sort n&#x27;occasionne pas correctement des dommages sur un allié ciblé.
+Cra : Tirs Puissants : Le malus PO aux rangs 1 et 2 sont anormalement à 3 (au lieu de 1 et 2).
+Chat
+Le défilement du chat vers le bas n&#x27;est plus disponible après avoir réduit puis agrandi des sections de ce dernier.
+Visuels / Sons
+Certaines armes du pack de la convention ne s&#x27;affichent pas dans les mains de familier Krozti.
+Dans certains cas, les bordures blanches des éléments interactifs sont déformées.
+Le costume &quot;exterminateur&quot; fait anormalement disparaître la barbe/bouche/cache œil du personnage.
+Divers
+Dans de très rares cas, l&#x27;interface de cosmétique ne s&#x27;ouvre pas sur certains personnages.
+Modifications
+Raids
+Ajout de marqueurs sur la carte du Gouffre du Gigalodon pour bien voir les points de passage.
+Le titre obtenable dans les succès &quot;Gouffre du Gigalodon&quot; n&#x27;est obtenable que par le premier personnage à valider le succès alors qu&#x27;il devrait être déblocable par tous.
+Objets
+Les critères d&#x27;équipement des ornements de guilde sont retirés (une fois qu&#x27;ils ont été débloqués, ils peuvent être équipés sans condition).
+Partager
+Tweet</description>
 <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.6 - Patch Notes 3.6.6.5 du 07/07/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770949-patch-notes-3-6-6-5-07-07-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770949-patch-notes-3-6-6-5-07-07-2026</guid>
-<description>MÀJ 3.6 - Patch Notes 3.6.6.5 du 07/07/2026</description>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
+Retour à la liste
+Présentation
+3.6
+Patch Notes
++
+Vous regardez le :
+Patch notes 3.6.10.10 du 18/08/2026
+Patch notes 3.6.9.9 du 04/08/2026
+Patch notes 3.6.6.7 du 21/07/2026
+Patch Notes 3.6.6.5 du 07/07/2026
+Patch Notes 3.6.5.4 du 30/06/2026
+Patch Notes 3.6.4.3 du 24/06/2026
+Corrections de bugs
+Les bugs suivants sont corrigés
+Raids
+Dans le raid du Gouffre du Gigalodon, l&#x27;animation de dépôt de trésor se joue même si le personnage n&#x27;a rien à déposer.
+Si le joueur équipe un compagnon en combat alors, il arrive que les drop à 100% du Gouffre du Gigalodon ne se fassent pas.
+Dans l&#x27;interface de lancement de raid, le statut des joueurs inscrits n&#x27;est pas mis à jour.
+Lors du raid Sanctuaire des Jardins éternels, si le Muguégide pose son effet &quot;Massiflore&quot; sur la Princesse lui octroyant un bonus de vitalité et que celle-ci se fait delock alors qu&#x27;elle a toujours ce bonus, deux Volontés de la Reine vont apparaître.
+Le lancement d&#x27;un nouveau raid est parfois bloqué sur tout un serveur.
+Muguégide du Sanctuaire des Jardins éternels : le sort Massiflore peut anormalement etre lancé sur les Obélisques.
+Reine Écarlate : certains problèmes peuvent apparaitre lorsqu&#x27;un personnage est lancé par un Pandawa dans une prison.
+Lorsqu&#x27;un membre extérieur à la guilde est invité dans un raid, il arrive que les actions liées à la gestion du raid soient accessibles alors qu&#x27;elles ne devraient pas.
+Il est anormalement possible de quitter un raid en utilisant une potion de hall de guilde.
+Recherche de groupe
+Lorsqu&#x27;une annonce est partagée dans le chat et qu&#x27;elle contient des caractères spéciaux (ex : œ), le caractère n&#x27;est pas correctement affiché.
+Il est anormalement possible de fermer l&#x27;interface de file d&#x27;attente avec la touche Echap.
+Objets
+Suppryus : dans certains cas, les effets de l&#x27;objet restent en combat 1 tour de trop.
+Monstres
+Expédition de Dazak Martegel : les bonus donnés aux joueurs lorsqu&#x27;ils attaquent un Nimbos ne dépendent pas correctement de l&#x27;état du Nimbos.
+HDV / Achat PNJ
+Il est impossible d&#x27;acheter dans un magasin de PNJ si le joueur possède 2 piles de la monnaie nécessaire.
+Songes
+Le Tengu Givrefouxe est retiré des monstres de l&#x27;épreuve SINJSONJ.
+Combat
+L&#x27;option pour afficher les barres de vie au dessus des personnages n&#x27;est pas conservée d&#x27;un combat à l&#x27;autre.
+Visuels / Son
+Le casque d&#x27;apparat Heaume de Sohrond ne s&#x27;affiche pas correctement en combat en fonction de l&#x27;orientation du personnage.
+Un element gris apparait anormalement dans l&#x27;animation des bouftous d&#x27;incarnam.
+Dans les profondeurs, l&#x27;aura draconique s&#x27;affiche à la place de l&#x27;aura définie dans l&#x27;interface de cosmétique du personnage.
+Options
+Une option de combat est ajoutée afin de permettre de retirer le pourcentage de points de vie des monstres au survol, juxtaposé à leur valeur réelle.
+Classes / Compagnons
+Sur le Forgelance, l&#x27;animation d&#x27;impact à la retombée du sort Éclipse est absente. Concernant le sort Jormun, l&#x27;animation autour du personnage est également absente.
+Dans les profondeurs, lancer le sort Sentinelle sur le Cra ne change pas son apparence mais lui confère une aura de dragon.
+Cra : le retour de la Flèche Boomerang ne tape pas correctement la cible initiale si elle est collée au lanceur à la fin du tour de ce dernier. La flèche Explosive n&#x27;occasionne pas des dégâts aux alliés (dont le lanceur) alors qu&#x27;elle devrait.
+Eniripsa : Mot vampyrique : Le transfert de vie n&#x27;est pas correctement à 14% en coup critique au rang 3.
+Osamodas : Martinet : Le sort lancé par le Craquolosse via Martinet n&#x27;est pas Fronde Rocheuse alors qu&#x27;il devrait.
+Songes
+La description du sort actif Absolution disponible dans le Puits des Songes Infinis, mentionne encore un lancer unique par combat, cette mention est retirée.
+Social (Amis, Guilde et Alliance)
+Le hall de guilde frigostien possède le PNJ &quot;Intendant San Lavalss&quot; au lieu de l&#x27;Intendante de guilde, ce qui empêche d&#x27;obtenir les ornements dans ce cas spécifique.
+Quête
+Certaines quêtes ne sont pas dans les bonnes catégories (&quot;L&#x27;étrange créature de l&#x27;étang bleu&quot;, &quot;Un rayon de soleil&quot;, &quot;Les paroles s&#x27;envolent, les aigris restent&quot;, &quot;Chacun cherche son chacha&quot;, &quot;Question de réputation&quot;, &quot;Matou vu&quot;, &quot;Dévotion au Roi-Dieu&quot;, &quot;Dévotion à la Lance Originelle&quot;).
+Divers
+Le ladder Gargandyas n&#x27;est pas correctement trié par équipe (les 4 membres du combat sont censés avoir la même place).
+Dans l&#x27;interface de choix de personnage, le bouton pour changer de serveur redirige anormalement au bouton &quot;jouer.&quot;
+Modifications
+Recherche de groupe
+Un message chat est ajouté lorsque le groupe est complet et qu&#x27;il n&#x27;accepte plus de candidatures.
+Dans le tableau d&#x27;annonce, ajout du texte par défaut lorsque l&#x27;annonce ne contient aucune description.
+Tutoriel
+Il est désormais possible d&#x27;abandonner dans le combat de Maître Darm.
+Objets
+L&#x27;utilisation multiple sur les coffres du mercenaire est retirée.
+Cartes
+Ajout sur la carte d&#x27;une icone spécifique à l&#x27;atelier pyrotechnique du village des Brigantins.
+Partager
+Tweet</description>
 <pubDate>Tue, 07 Jul 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.6 - Patch Notes 3.6.5.4 du 30/06/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770776-patch-notes-3-6-5-4-30-06-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770776-patch-notes-3-6-5-4-30-06-2026</guid>
-<description>MÀJ 3.6 - Patch Notes 3.6.5.4 du 30/06/2026</description>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
+Retour à la liste
+Présentation
+3.6
+Patch Notes
++
+Vous regardez le :
+Patch notes 3.6.10.10 du 18/08/2026
+Patch notes 3.6.9.9 du 04/08/2026
+Patch notes 3.6.6.7 du 21/07/2026
+Patch Notes 3.6.6.5 du 07/07/2026
+Patch Notes 3.6.5.4 du 30/06/2026
+Patch Notes 3.6.4.3 du 24/06/2026
+Corrections de bugs
+Les bugs suivants sont corrigés
+Performances / Crashs
+Depuis la mise à jour 3.6, il arrive parfois que le client ait des pertes de FPS.
+Raids
+Dans certains cas, il arrive que des personnages soient exclus d&#x27;un raid à la fin de combat.
+La ladder des raids sont anormalement réinitialisés apres un redémarrage du serveur.
+Il est anormalement possible de mettre les éléments en transparence sur la carte de combat contre Willorque.
+Lors de l&#x27;invitation à rejoindre un raid d&#x27;un joueur extérieur à la guilde, il arrive que l&#x27;invitation échoue, un message chat indique alors que le personnage invité est déconnecté bien qu&#x27;il ne le soit pas.
+Il est possible de lancer un combat de Kolizéum pendant un raid.
+Les icônes des ornements #2 et #3 des raids sont dorées au lieu d&#x27;être de bronze et d&#x27;argent comme le suggèrent ces positions.
+Accepter la notification d&#x27;invitation de raid lorsque le personnage est occupé n&#x27;entraîne aucune prise en compte de la réponse.
+Recherche de groupe
+Même avec tous les droits de guilde nécessaires, il n&#x27;est pas possible de créer une annonce d&#x27;un raid fraîchement acheté pour les ayants droit.
+L&#x27;édition d&#x27;une annonce entraine la suppression de la description libre préalablement inscrite.
+Dans le formulaire de création d&#x27;annonce de la recherche de groupe, le composant permettant de définir le niveau minimum des personnages a été modifié afin d&#x27;en faciliter l&#x27;édition.
+Les succès observés pour des activités de donjon dans le tableau d&#x27;annonce (validés ou non) ainsi qu&#x27;au survol d&#x27;un donjon en recherche automatique sont configurés au compte et non au personnage.
+Les tranches de niveaux sélectionnées dans l&#x27;interface de recherche aléatoire sont modifiées si le joueur consulte le tableau d&#x27;annonce.
+Dans la recherche de groupes les informations des donjons : Brasserie du roi Dazak et le Bastion des Marteaux-Aigris sont inversées.
+Certains donjons événementiels sont accessibles via la recherche de groupe sans que leur événement soit en cours.
+Il n&#x27;est pas possible de voter pour l&#x27;exclusion d&#x27;un personnage s&#x27;il s&#x27;agit de la deuxième tentative d&#x27;exclusion sur ce dernier.
+Dans la recherche de groupe, les informations du Souvenir d&#x27;Imagiro et de la Mémoire d&#x27;Orukam sont inversées.
+Il n&#x27;est pas possible de sortir du donjon de l&#x27;Aquadôme de Merkator en raison des conditions d&#x27;accès à la zone si ce dernier a été réalisé via la recherche de groupe.
+Lors de la création d&#x27;une annonce dans le tableau d&#x27;annonce, choisir l&#x27;activité de raid et changer à nouveau d&#x27;activité permet d&#x27;outrepasser les champs obligatoires des formulaires.
+Page personnage
+Lors de la consultation de la page personnage d&#x27;un autre joueur, les titres et ornements ne s&#x27;affichent pas correctement.
+Certains éléments des pages personnages disparaissent lorsque le personnage dont on consulte la page n&#x27;est pas présent sur la même carte.
+Dans l&#x27;onglet classement des pages personnages, le nom du niveau de difficulté des songes n&#x27;est pas correctement représenté.
+Dans le classement, les informations au survol du niveau de personnage cumulent le niveau classique et le niveau oméga au lieu de séparer les informations.
+Depuis sa page personnage, ouvrir une autre interface via les accès rapides de cette dernière entraîne la disparition de tous les éléments composant la page personnage.
+Dans la page personnage, le niveau affiché dans l&#x27;onglet classement est systématiquement 200, même si le personnage possède un niveau inférieur.
+Classes / Compagnons
+Le sort Mot alchimique de l&#x27;Eniripsa permet d&#x27;invoquer une fiole même avec le nombre maximum d&#x27;invocations atteint.
+Options
+Dans certains cas, l&#x27;assignation de nouveaux raccourcis ne fonctionne pas.
+Songes
+Dans certains cas, avoir utilisé le sort Domi Reversi sur un ennemi et observer le dernier personnage joueur mourir avant le tour de jeu du monstre sous cet effet entraîne le crash du combat.
+Inventaires / Ensembles / Tenues
+Lors de l&#x27;achat en HDV d&#x27;objets déjà possédés en banque ou havre-sac, la pile dans l&#x27;inventaire ne s&#x27;actualise pas. De plus, si un objet est présent à la fois dans l&#x27;inventaire du personnage ainsi que dans sa banque ou son havre-sac, il n&#x27;est pas possible d&#x27;enchaîner les ventes de ce dernier une fois la pile de l&#x27;inventaire vidée.
+Social (Amis, Guide et Alliance)
+Seul le propriétaire d&#x27;une épreuve de Songe peut valider une mission de guilde y étant associé, même si d&#x27;autres membres du groupe possèdent cette mission.
+Objets
+L&#x27;option &quot;Verrouiller dans l&#x27;inventaire&quot;, accessible après un clic droit sur un objet, est présente même dans des contextes où elle est inutile.
+Songes
+Dans les Songes Infinis, les informations du passif &quot;Cravache d&#x27;Osamodas&quot; ne sont plus visibles après avoir infligé des dégâts en zone à plusieurs invocations.
+Chat
+L&#x27;auto-scroll du chat ne s&#x27;effectue parfois plus.
+En kolizéum aucun message ne s&#x27;affiche dans le chat.
+Visuels / Son
+Obtenir une transformation sur un montilier conserve le montilier actif.
+Divers
+Dans l&#x27;onglet Statistiques de fin de combat, la flèche de gauche permettant de naviguer entre les personnages n&#x27;est plus présente.
+Les informations du niveau Omega des personnages ne sont plus visibles dans les classements.
+Modifications
+Raids
+Dans l&#x27;interface de raid, ajout d&#x27;une emphase avec un raccourci invitant le personnage à récupérer des récompenses disponibles. Une notification supplémentaire se déclenchant 24 heures avant la fin du temps imparti pour obtenir les récompenses est également ajoutée dans la même optique.
+Recherche de groupe
+Les objectifs de quêtes qui nécessitent d&#x27;entrer dans la première salle d&#x27;un donjon sont correctement validés quand les joueurs sont téléportés avec la recherche de groupe pour les donjons suivants : Dojo du vent, Atelier du Tanukouï San, Vallée de la Dame des eaux, Manoir des Katrepat, Chambre de Tal Kasha, Boyau du Père Ver, Temple de Koutoulou, Vaisseau du Capitaine Meno, Palais de Dantinéa, Pyramide d&#x27;Ombre, Nid du Kwakwa, Village Kanniboul.
+La recherche de groupe permet à présent de lancer automatiquement les quêtes initiées par des portiers lorsque le personnage remplit les prérequis. Liste des donjons concernés : Royalmouth, Mansot Royal, Ben le Ripate, Obsidiantre, Tengu Givrefoux, Korriandre, Kolosso, Glourséleste, Nileza, Sylargh, Klime, Missiz Frizz, Comte Harebourg, Merkator, Chateau du Wa Wabbit.
+Lors de la consultation du détail d&#x27;une annonce dans le tableau d&#x27;annonce, le nom du créateur de l&#x27;annonce est à présent cliquable.
+Objets
+La quantité de Larmes de Givrefoux est réduite pour les recettes les nécessitant : les objets de niveau 190 et plus nécessitent à présent 5 larmes par recette, les objets de niveau inférieur à 190 passent à 3 larmes par recette.
+La tourmaline repasse à 0 pod.
+Options
+Une nouvelle option de notifications est ajoutée, retrouvable dans la section &quot;Notifications internes : Quêtes et succès&quot;, permettant d&#x27;administrer les notifications pour les missions de guilde terminées.
+Chat
+Mise en place d&#x27;un bouton permettant de déplier ou replier tous les contenus pliables dans le chat d&#x27;un coup.
+Partager
+Tweet</description>
 <pubDate>Tue, 30 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.6 - Raid is not dead 23 Juin 2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead</guid>
-<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026</description>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
+Retour à la liste
+Présentation
+3.6
+Patch Notes
++
+Sommaire
+La mise à jour 3.6 &quot;Raid is not dead&quot; est en ligne !
+Préparez votre arc, rassemblez votre guilde, faites un peu de place dans votre emploi du temps et connectez-vous dès maintenant : la nouvelle mise à jour de DOFUS est arrivée, avec de nombreuses nouveautés pour tous les amateurs de stratégie, de coopération, de progression et de confort de jeu !
+Visez de nouveaux horizons !
+Refonte du Crâ
+L&#x27;une des classes les plus emblématiques de DOFUS a fait l&#x27;objet d&#x27;une refonte en profondeur.
+L&#x27;objectif : conserver son identité de spécialiste du combat à distance, tout en proposant un gameplay plus fluide, plus varié et plus gratifiant à maîtriser.
+Découvrez la refonte du Crâ
+L&#x27;outil de Recherche de Groupe
+Donjons, quêtes, objectifs précis… Il est désormais plus facile de trouver d&#x27;autres aventuriers qui ont les mêmes projets que vous.
+La recherche de groupe est là pour faciliter la constitution de groupes grâce à des outils adaptés à différentes manières de jouer. Trouvez votre équipe et partez explorer le Monde des Douze !
+Trouver des alliés est désormais plus simple.
+Jetez un œil à la Recherche de Groupe
+L&#x27;union fait la force !
+Les Raids de Guilde
+Les guildes disposent désormais d&#x27;un nouveau type de défi coopératif. La coordination, l&#x27;organisation et l&#x27;esprit d&#x27;équipe seront essentiels pour progresser, améliorer votre score et remporter des récompenses.
+Raid is not dead. Et si ça ne tient qu&#x27;à vous et à votre guilde, ça va donner lieu à de sacrées batailles !
+Explorez les Raids de Guilde
+Les Pages Persos
+Les pages personnelles font leur retour dans un nouveau format, directement dans le jeu. Mettez votre personnage en avant, parcourez les profils des autres joueurs, partagez des informations et choisissez ce que vous souhaitez afficher.
+Un équipement légendaire, un look impeccable ou des exploits mémorables : chaque aventurier a sa propre façon de faire tourner les têtes.
+Votre identité compte !
+Allez voir les Pages Persos
+Plus de clarté, plus de conseils, plus de confort !
+Accompagnement des nouveaux joueurs
+Cette mise à jour apporte également des améliorations visant à rendre votre aventure plus claire et plus accessible : des ajustements pour une meilleure lisibilité des combats, un tutoriel repensé, le Dofusdex, de nouveaux marqueurs de quêtes et diverses améliorations de l&#x27;interface.
+Découvrez les améliorations
+Et ce n&#x27;est pas tout...
+Les Songes Infinis, des monstres, des équipements, des classes, des quêtes de guilde, des corrections de bugs et bien d&#x27;autres améliorations font également partie de la mise à jour 3.6 de DOFUS.
+Retrouvez tous les détails dans le Patch Notes complet et connectez-vous pour découvrir toutes les nouveautés !
+Lisez le Patch Notes
+Suivant ›
+Partager
+Tweet</description>
 <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.5 - Pas de repos pour les braves 03 Mars 2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1768057-repos-braves</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1768057-repos-braves</guid>
-<description>MÀJ 3.5 - Pas de repos pour les braves 03 Mars 2026</description>
+<description>MÀJ 3.5 - Pas de repos pour les braves 03 Mars 2026
+Retour à la liste
+Présentation
+3.5
+Patch Notes
++
+Au programme de cette 3.5 :
+Refonte de l’élevage
+Création d’un nouveau métier « Éleveur » ;
+Fin des enclos privés au profit de 6 enclos publics au village des éleveurs ;
+Les montures deviennent des objets comme les autres (plus de certificats, de péremptions…) ;
+Augmentation du niveau max des montures de 100 =&gt; 200 ;
+Modification de la capture (nouveaux filets) ;
+Nouvelles zones pour les muldos et volkornes.
+Horloge du Chaos
+Découvrez un PvP 3v3 fun et rapide où vous incarnez des archétypes sans équipement pour affronter le temps lui-même via des effets chaotiques à chaque tour. Le Kolizéum autrement, sans classement ni pression.
+Interface d&#x27;apparence
+Intégration de nouveaux corps, visages et postures (idles) de classes ;
+Amélioration de la cabine d&#x27;essayage : fusion avec l&#x27;interface cosmétique pour consulter les objets possédés et non possédés et conceptualiser des tenues.
+Nouvelle itération des Songes
+Changement du combat final
+Mode entraînement
+Épreuves de songes : accédez à des souvenirs prédéfinies ou customisées et complétez-les pour obtenir des succès !
+Autres améliorations de confort de jeu : HDV, pierre d&#x27;âme, modification sur l&#x27;Huppermage...
+Pour en savoir plus, lisez les devblogs dédiés :
+Huppermage Montures
+Songes Infinis HDV Interface cosmétique
+‹ Précédent
+Suivant ›
+Partager
+Tweet</description>
 <pubDate>Tue, 03 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.4 - Les copains d&#x27;abord 09 Décembre 2025</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1766529-copains-abord</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1766529-copains-abord</guid>
-<description>MÀJ 3.4 - Les copains d&#x27;abord 09 Décembre 2025</description>
+<description>MÀJ 3.4 - Les copains d&#x27;abord 09 Décembre 2025
+Retour à la liste
+Présentation
+3.4
+Patch Notes
++
+Au programme de la mise à jour 3.4 :
+Refonte des guildes avec les ajouts de :
+Missions de guildes, des activités à réaliser en groupe ou en solo appartenant à 5 types : donjons, farm, anomalies temporelles, Songes Infinis et Expédition.
+Une jauge de guilde alimentée par les missions : vous pouvez choisir entre 5 paliers de jauge. Plus le palier est élevé, plus les missions sont difficiles, mais plus grandes sont les récompenses. En remplissant cette jauge, vous gagnez de l&#x27;XP de guilde et des jetons cosmétiques.
+Halls de guildes, avec des apparences à débloquer et à acheter. Ils vous permettent aussi de retrouver des PNJ pour dépenser les jetons cosmétiques que vous avez gagnés. Le thème du hall de guilde peut dépendre d’une ville au choix parmi Bonta, Brâkmar, Sufokia, Pandala, Amakna, Frigost ou Astrub.
+Drop rare : sur chaque monstre du jeu, si vous avez moins de 50 niveaux d&#x27;écart avec lui, vous aurez la possibilité d’obtenir un équipement de(s) panoplie(s) associée(s) à un faible taux.
+Nouveau boss : affrontez Qilby grâce à une anomalie temporelle !
+Amélioration de l&#x27;obtention du Dofus Ocre.
+Evolution des Songes Infinis
+Pour en savoir plus, lisez les devblogs dédiés :
+Guildes Songes Infinis Confort de jeu
+‹ Précédent
+Suivant ›
+Partager
+Tweet</description>
 <pubDate>Tue, 09 Dec 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.3 - Puits des Songes Infinis 23 Septembre 2025</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1765214-puits-songes-infinis</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1765214-puits-songes-infinis</guid>
-<description>MÀJ 3.3 - Puits des Songes Infinis 23 Septembre 2025</description>
+<description>MÀJ 3.3 - Puits des Songes Infinis 23 Septembre 2025
+Retour à la liste
+Présentation
+3.3
+Patch Notes
++
+La mise à jour 3.3, c’est :
+Refonte du Puits des Songes Infinis
+Mort définitive : si vous mourez, votre songe s‘arrête !
+Les Songes sont désormais composés de 26 salles.
+Un système de difficulté ajustable inédit, du Rêve jusqu’au Cauchemar, à choisir selon vos envies et votre appât du gain.
+De nouvelles mécaniques telles que les Fontaines et Faveurs oniriques : des bonus mineurs à combiner intelligemment pour descendre encore plus loin dans le Puits.
+Des infos enrichies (bestiaire détaillé, placement des monstres…) afin d’anticiper au mieux vos choix et adapter votre tactique.
+Pour en apprendre davantage...
+DEVBLOG PUITS DES SONGES INFINIS
+Mais aussi, de nombreuses améliorations de confort de jeu, parmi lesquels :
+Ladders accessibles en jeu : Songes, XP, Succès, Kolizéum, désormais, tous les ladders sont visibles en jeu.
+Équilibrage des Alliances versus Alliances : modification du recyclage des prismes et ajout du recyclage sur les percepteurs.
+L&#x27;Initiative n&#x27;est plus liée à la Vitalité.
+Une quinzaine de quêtes liées aux dalles et horaires ont été modifiées pour faciliter leur accomplissement.
+‹ Précédent
+Suivant ›
+Partager
+Tweet</description>
 <pubDate>Tue, 23 Sep 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.2 - Osavora 22 Juillet 2025</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1764400-osavora</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1764400-osavora</guid>
-<description>MÀJ 3.2 - Osavora 22 Juillet 2025</description>
+<description>MÀJ 3.2 - Osavora 22 Juillet 2025
+Retour à la liste
+Présentation
+3.2
+Patch Notes
++
+Sommaire
+Devblogs
+Rejoignez un monde vivant bâti sur le dos d’une bête colossale, créature ancestrale domptée par Osamodas, où chaque saison – naissance, chasse et repos – est une lutte pour l’équilibre des lieux et pas un simple passage du temps.
+Star de l’année des univers Ankama, l’Osamodas devait absolument bénéficier d’une refonte à l’occasion de cette mise à jour en son honneur. Découvrez tout ce qui a changé avec cette nouvelle mue !
+Calendrier, hôtels de vente, ladders et notifications : des améliorations et de toutes nouvelles interfaces font leur apparition. De quoi reprendre du poil de la bête !
+OSAVORA Refonte Osamodas Interfaces
+‹ Précédent
+Suivant ›
+Partager
+Tweet</description>
 <pubDate>Tue, 22 Jul 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.1 - Opération Consolidation 22 Avril 2025</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1762717-operation-consolidation</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1762717-operation-consolidation</guid>
-<description>MÀJ 3.1 - Opération Consolidation 22 Avril 2025</description>
+<description>MÀJ 3.1 - Opération Consolidation 22 Avril 2025
+Retour à la liste
+Présentation
+3.1
+Patch Notes
++
+Sommaire
+Quoi de neuf avec Opération Consolidation ?
+Corrections de bugs
+Confort de jeu : options d’accessibilité, info‑bulles enrichies, repères visuels repensés.
+Équilibrages : ajustements de classes, de sorts, de monstres, et d&#x27;objets.
+Modifications sur les recettes d&#x27;équipement.
+Et ce n’est qu’un aperçu !
+Devblog MaJ 3.1
+Vous avez manqué le live de présentation de la mise à jour qui a eu lieu le 1 avril ? Petite séance de rattrapage avec le replay, disponible ici :
+‹ Précédent
+Suivant ›
+Partager
+Tweet</description>
 <pubDate>Tue, 22 Apr 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
