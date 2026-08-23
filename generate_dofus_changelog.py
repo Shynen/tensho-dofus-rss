@@ -122,7 +122,30 @@ def is_valid_changelog_url(url):
 # ============================================================
 # DATES
 # ============================================================
+if is_correctif and url_date:
 
+    dt = url_date
+
+    date_source = "URL"
+
+elif listing_date:
+
+    dt = listing_date
+
+    date_source = "LISTING"
+
+elif article_date:
+
+    dt = article_date
+
+    date_source = "ARTICLE"
+
+elif cached_date:
+
+    dt = cached_date
+
+    date_source = "CACHE"
+    
 def parse_date(value):
     if not value:
         return None
@@ -130,7 +153,95 @@ def parse_date(value):
     value = clean_text(
         value
     )
+def parse_date_from_text(
+    text
+):
+    """
+    Recherche une date française directement
+    dans un texte.
 
+    Exemple :
+
+    MÀJ 3.5 - Pas de repos pour les braves 03 Mars 2026
+
+    retourne :
+
+    03/03/2026
+    """
+
+    if not text:
+        return None
+
+    text = clean_text(
+        text
+    )
+
+    months = {
+        "janvier": 1,
+        "février": 2,
+        "fevrier": 2,
+        "mars": 3,
+        "avril": 4,
+        "mai": 5,
+        "juin": 6,
+        "juillet": 7,
+        "août": 8,
+        "aout": 8,
+        "septembre": 9,
+        "octobre": 10,
+        "novembre": 11,
+        "décembre": 12,
+        "decembre": 12,
+    }
+
+    match = re.search(
+        r"\b"
+        r"(\d{1,2})\s+"
+        r"(janvier|février|fevrier|mars|avril|mai|juin|"
+        r"juillet|août|aout|septembre|octobre|novembre|"
+        r"décembre|decembre)"
+        r"\s+"
+        r"(\d{4})"
+        r"\b",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    if not match:
+        return None
+
+    day = int(
+        match.group(1)
+    )
+
+    month_name = (
+        match.group(2)
+        .lower()
+    )
+
+    month = months.get(
+        month_name
+    )
+
+    year = int(
+        match.group(3)
+    )
+
+    if not month:
+        return None
+
+    try:
+
+        return datetime(
+            year,
+            month,
+            day,
+            tzinfo=timezone.utc
+        )
+
+    except ValueError:
+
+        return None
     # --------------------------------------------------------
     # RFC / HTTP / RSS
     # --------------------------------------------------------
@@ -768,10 +879,25 @@ def extract_listing_items(
             title = clean_title(
                 link.inner_text()
             )
-
-            dt = extract_listing_date(
-                link
+            
+            # ========================================================
+            # DATE DIRECTEMENT DEPUIS LE TITRE DU LISTING
+            # ========================================================
+            
+            dt = parse_date_from_text(
+                title
             )
+            
+            # ========================================================
+            # SI AUCUNE DATE DANS LE TITRE,
+            # ON CHERCHE DANS LA CARTE
+            # ========================================================
+            
+            if not dt:
+            
+                dt = extract_listing_date(
+                    link
+                )
 
             if dt:
 
