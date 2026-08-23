@@ -8,21 +8,32 @@ on:
 permissions:
   contents: write
 
-# Empêche deux exécutions du même workflow
-# de générer et pousser les fichiers en même temps.
+# ============================================================
+# EMPÊCHE PLUSIEURS RUNS DU RSS EN MÊME TEMPS
+# ============================================================
+
 concurrency:
-  group: update-dofus-rss
-  cancel-in-progress: false
+  group: dofus-rss-update
+  cancel-in-progress: true
 
 jobs:
   update:
     runs-on: ubuntu-latest
 
     steps:
+
+      # ========================================================
+      # CHECKOUT
+      # ========================================================
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      # ========================================================
+      # PYTHON
+      # ========================================================
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -30,24 +41,46 @@ jobs:
           python-version: "3.x"
           cache: "pip"
 
+      # ========================================================
+      # DEPENDANCES
+      # ========================================================
+
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+
+      # ========================================================
+      # PLAYWRIGHT
+      # ========================================================
 
       - name: Install Playwright browsers
         run: |
           python -m playwright install chromium
 
+      # ========================================================
+      # GENERATION DOFUS NEWS
+      # ========================================================
+
       - name: Generate Dofus News RSS
         run: |
           python generate_dofus_news.py
+
+      # ========================================================
+      # GENERATION DOFUS CHANGELOG
+      # ========================================================
 
       - name: Generate Dofus Changelog RSS
         run: |
           python generate_dofus_changelog.py
 
+      # ========================================================
+      # COMMIT + PUSH
+      # ========================================================
+
       - name: Commit generated feeds
         run: |
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -60,18 +93,31 @@ jobs:
             dofus-changelog-discord.xml \
             dofus_changelog_cache.json
 
+          # ----------------------------------------------------
+          # Rien à envoyer
+          # ----------------------------------------------------
+
           if git diff --cached --quiet; then
-            echo "Aucun changement à commit."
+            echo "ℹ️ Aucun changement à commit."
             exit 0
           fi
 
+          # ----------------------------------------------------
+          # Commit
+          # ----------------------------------------------------
+
           git commit -m "Update Dofus RSS feeds"
 
-          echo "Récupération des éventuels commits distants..."
+          # ----------------------------------------------------
+          # Synchronisation avec le dépôt distant
+          # ----------------------------------------------------
+
           git fetch origin main
 
-          echo "Rebase sur origin/main..."
           git rebase origin/main
 
-          echo "Push vers GitHub..."
+          # ----------------------------------------------------
+          # Push
+          # ----------------------------------------------------
+
           git push origin HEAD:main
