@@ -1209,7 +1209,9 @@ def enrich_item(
         page.wait_for_timeout(
             1200
         )
-
+        article_content = extract_article_content(
+            page
+        )
         soup = BeautifulSoup(
             page.content(),
             "html.parser"
@@ -1565,16 +1567,19 @@ def enrich_item(
     # RESULTAT
     # ========================================================
 
-    result = {
-        "url":
-            url,
-
-        "title":
-            title,
-
-        "date":
-            dt.isoformat(),
-    }
+        result = {
+            "url":
+                url,
+        
+            "title":
+                title,
+        
+            "description":
+                article_content,
+        
+            "date":
+                dt.isoformat(),
+        }
 
     return result
 
@@ -1678,7 +1683,10 @@ def build_rss(
                 (
                     "<description>"
                     + html.escape(
-                        item["title"]
+                        item.get(
+                            "description",
+                            item["title"]
+                        )
                     )
                     + "</description>"
                 ),
@@ -1822,10 +1830,13 @@ def build_discord_rss(
                 + "</guid>"
             ),
 
-            (
+           (
                 "<description>"
                 + html.escape(
-                    item["title"]
+                    item.get(
+                        "description",
+                        item["title"]
+                    )
                 )
                 + "</description>"
             ),
@@ -2113,14 +2124,20 @@ def main():
             previous_date
         ):
 
-            previous_item = {
+           previous_item = {
                 "url":
                     previous_url,
-
+            
                 "title":
                     state.get(
                         "title",
                         "Changelog DOFUS"
+                    ),
+            
+                "description":
+                    state.get(
+                        "description",
+                        ""
                     ),
 
                 "date":
@@ -2236,10 +2253,16 @@ def main():
             {
                 "url":
                     latest["url"],
-
+        
                 "title":
                     latest["title"],
-
+        
+                "description":
+                    latest.get(
+                        "description",
+                        ""
+                    ),
+        
                 "date":
                     latest["date"],
             }
@@ -2275,18 +2298,24 @@ def main():
             last_date
         ):
 
-            previous_item = {
-                "url":
-                    last_url,
-
-                "title":
-                    state.get(
-                        "title",
-                        "Changelog DOFUS"
-                    ),
-
-                "date":
-                    last_date.isoformat(),
+        previous_item = {
+            "url":
+                last_url,
+        
+            "title":
+                state.get(
+                    "title",
+                    "Changelog DOFUS"
+                ),
+        
+            "description":
+                state.get(
+                    "description",
+                    ""
+                ),
+        
+            "date":
+                last_date.isoformat(),
             }
 
             build_discord_rss(
