@@ -1093,7 +1093,7 @@ def enrich_item(
     )
 
     # ========================================================
-    # DATE URL
+    # DATE DEPUIS URL
     # ========================================================
 
     url_date = None
@@ -1105,10 +1105,11 @@ def enrich_item(
         )
 
     # ========================================================
-    # TITRE / DATE INITIAUX
+    # VALEURS INITIALES
     # ========================================================
 
     title = listing_title
+
     title_source = (
         "LISTING"
         if listing_title
@@ -1143,11 +1144,19 @@ def enrich_item(
             "html.parser"
         )
 
+        # ====================================================
+        # TITRE ARTICLE
+        # ====================================================
+
         article_title = (
             extract_title_from_soup(
                 soup
             )
         )
+
+        # ====================================================
+        # DATE ARTICLE
+        # ====================================================
 
         article_date = (
             extract_jsonld_date(
@@ -1165,10 +1174,11 @@ def enrich_item(
 
         if is_correctif:
 
-            # Pour un correctif, le H1 de la page
-            # peut être celui de la MÀJ parente.
-            #
-            # On conserve donc le titre du listing.
+            # ------------------------------------------------
+            # CORRECTIF
+            # ------------------------------------------------
+            # Le H1 peut être celui de la MÀJ principale.
+            # On privilégie donc le titre du listing.
 
             if listing_title:
 
@@ -1186,7 +1196,7 @@ def enrich_item(
                     "CACHE"
                 )
 
-            else:
+            elif article_title:
 
                 title = article_title
 
@@ -1196,8 +1206,10 @@ def enrich_item(
 
         else:
 
-            # Article principal :
-            # on préfère le vrai titre de l'article.
+            # ------------------------------------------------
+            # ARTICLE PRINCIPAL
+            # ------------------------------------------------
+            # On privilégie le vrai titre de l'article.
 
             if (
                 article_title
@@ -1232,11 +1244,49 @@ def enrich_item(
         # ====================================================
         # DATE
         # ====================================================
+        #
+        # PRIORITÉ :
+        #
+        # CORRECTIF :
+        #
+        #     URL
+        #       ↓
+        #     TITRE ARTICLE
+        #       ↓
+        #     LISTING
+        #       ↓
+        #     ARTICLE
+        #       ↓
+        #     CACHE
+        #
+        # ARTICLE NORMAL :
+        #
+        #     TITRE ARTICLE
+        #       ↓
+        #     LISTING
+        #       ↓
+        #     ARTICLE
+        #       ↓
+        #     CACHE
+        #
+        # IMPORTANT :
+        # Le cache n'écrase JAMAIS une donnée fraîche.
+        # ====================================================
+
+        title_date = None
 
         # ----------------------------------------------------
-        # Pour les correctifs :
-        # la date présente dans l'URL est la source la plus
-        # fiable et doit toujours être prioritaire.
+        # 1. DATE DANS LE TITRE DE L'ARTICLE
+        # ----------------------------------------------------
+
+        if article_title:
+
+            title_date = parse_date_from_text(
+                article_title
+            )
+
+        # ----------------------------------------------------
+        # 2. CORRECTIF : DATE DEPUIS URL
         # ----------------------------------------------------
 
         if is_correctif and url_date:
@@ -1247,66 +1297,90 @@ def enrich_item(
                 "URL"
             )
 
-        else:
+        # ----------------------------------------------------
+        # 3. DATE DU TITRE ARTICLE
+        # ----------------------------------------------------
 
-            # ------------------------------------------------
-            # Pour les MÀJ principales :
-            #
-            # 1. Date écrite dans le titre réel de l'article
-            # 2. Date du listing si disponible
-            # 3. Date META / JSON-LD
-            # 4. Cache en dernier recours
-            #
-            # Le titre réel est important car le listing DOFUS
-            # peut parfois exposer une date appartenant à une
-            # autre carte/article.
-            # ------------------------------------------------
+        elif title_date:
 
-            article_title_date = parse_date_from_text(
-                article_title
+            dt = title_date
+
+            date_source = (
+                "TITRE ARTICLE"
             )
 
-            if article_title_date:
+        # ----------------------------------------------------
+        # 4. DATE DU LISTING
+        # ----------------------------------------------------
 
-                dt = article_title_date
+        elif listing_date:
 
-                date_source = (
-                    "ARTICLE TITRE"
-                )
+            dt = listing_date
 
-            elif listing_date:
+            date_source = (
+                "LISTING"
+            )
 
-                dt = listing_date
+        # ----------------------------------------------------
+        # 5. DATE ARTICLE
+        # ----------------------------------------------------
 
-                date_source = (
-                    "LISTING"
-                )
+        elif article_date:
 
-            elif article_date:
+            dt = article_date
 
-                dt = article_date
+            date_source = (
+                "ARTICLE"
+            )
 
-                date_source = (
-                    "ARTICLE"
-                )
+        # ----------------------------------------------------
+        # 6. CACHE
+        # ----------------------------------------------------
 
-            elif cached_date:
+        elif cached_date:
 
-                dt = cached_date
+            dt = cached_date
 
-                date_source = (
-                    "CACHE"
-                )
+            date_source = (
+                "CACHE"
+            )
 
-    except Exception as exc:
+    except Exception as e:
 
         print(
-            f"⚠️ Erreur ouverture article : "
-            f"{exc}"
+            f"⚠️ Erreur lors de l'ouverture de l'article : {e}"
         )
 
+        # ====================================================
+        # FALLBACK SI PLAYWRIGHT ÉCHOUE
+        # ====================================================
+
+        if is_correctif and url_date:
+
+            dt = url_date
+
+            date_source = (
+                "URL"
+            )
+
+        elif listing_date:
+
+            dt = listing_date
+
+            date_source = (
+                "LISTING"
+            )
+
+        elif cached_date:
+
+            dt = cached_date
+
+            date_source = (
+                "CACHE"
+            )
+
     # ========================================================
-    # FALLBACKS
+    # FALLBACK DATE DEPUIS LE TITRE FINAL
     # ========================================================
 
     if not dt:
@@ -1328,7 +1402,7 @@ def enrich_item(
             dt = article_title_date
 
             date_source = (
-                "ARTICLE TITRE"
+                "TITRE"
             )
 
         elif listing_date:
@@ -1354,6 +1428,10 @@ def enrich_item(
             date_source = (
                 "CACHE"
             )
+
+    # ========================================================
+    # FALLBACK TITRE
+    # ========================================================
 
     if not title:
 
