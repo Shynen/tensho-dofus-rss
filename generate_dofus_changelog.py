@@ -2297,27 +2297,24 @@ def main():
             last_date
         ):
 
-        previous_item = {
-            "url":
-                last_url,
-        
-            "title":
-                state.get(
-                    "title",
-                    "Changelog DOFUS"
-                ),
-        
-            "description":
-                latest.get(
-                    "description",
+            previous_item = {
+                "url":
+                    last_url,
+
+                "title":
+                    state.get(
+                        "title",
+                        "Changelog DOFUS"
+                    ),
+
+                "description":
                     state.get(
                         "description",
                         ""
-                    )
-                ),
-        
-            "date":
-                last_date.isoformat(),
+                    ),
+
+                "date":
+                    last_date.isoformat(),
             }
 
             build_discord_rss(
