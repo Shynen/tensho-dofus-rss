@@ -22,6 +22,7 @@ MAX_ARTICLES = 20
 LISTING_TARGET = 24
 MAX_LOAD_MORE_CLICKS = 8
 
+
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -30,6 +31,7 @@ HEADERS = {
     ),
     "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
 }
+
 
 FRENCH_MONTHS = {
     "janvier": 1,
@@ -49,6 +51,10 @@ FRENCH_MONTHS = {
     "decembre": 12,
 }
 
+
+# =========================================================
+# OUTILS
+# =========================================================
 
 def clean_text(value):
     return re.sub(r"\s+", " ", str(value or "")).strip()
@@ -132,6 +138,10 @@ def format_pubdate(dt):
     )
 
 
+# =========================================================
+# CACHE
+# =========================================================
+
 def load_cache():
     if not os.path.exists(CACHE_FILE):
         print(
@@ -179,6 +189,10 @@ def save_cache(cache):
         )
 
 
+# =========================================================
+# URL
+# =========================================================
+
 def is_valid_news_url(url):
     value = url.lower()
 
@@ -188,6 +202,10 @@ def is_valid_news_url(url):
         and value.rstrip("/") != SOURCE_URL.rstrip("/")
     )
 
+
+# =========================================================
+# FALLBACK GOOGLE NEWS
+# =========================================================
 
 def collect_news_urls_google_news():
     google_rss = (
@@ -226,6 +244,7 @@ def collect_news_urls_google_news():
         )
 
         for item in items:
+
             link_node = item.find("link")
 
             if not link_node:
@@ -277,6 +296,10 @@ def collect_news_urls_google_news():
 
     return urls
 
+
+# =========================================================
+# DATE DU LISTING
+# =========================================================
 
 def extract_date_from_listing_link(link):
     """
@@ -354,6 +377,10 @@ def extract_date_from_listing_link(link):
 
     return None
 
+
+# =========================================================
+# COLLECTE DU LISTING
+# =========================================================
 
 def collect_news_listing():
     """
@@ -604,7 +631,12 @@ def collect_news_listing():
     return listing
 
 
+# =========================================================
+# DATE DE L'ARTICLE
+# =========================================================
+
 def extract_date_from_soup(soup):
+
     # ---------------------------------------------------------
     # 1. JSON-LD
     # ---------------------------------------------------------
@@ -642,26 +674,38 @@ def extract_date_from_soup(soup):
             if not isinstance(obj, dict):
                 continue
 
-            for key in (
-                "datePublished",
-                "dateCreated",
-                "dateModified",
-            ):
+            candidates = [obj]
 
-                value = obj.get(key)
+            graph = obj.get("@graph")
 
-                if value:
+            if isinstance(graph, list):
+                candidates.extend(graph)
 
-                    dt = (
-                        parse_date(value)
-                        or parse_french_date(value)
-                    )
+            for candidate in candidates:
 
-                    if dt is not None:
-                        return (
-                            dt,
-                            f"JSON-LD/{key}",
+                if not isinstance(candidate, dict):
+                    continue
+
+                for key in (
+                    "datePublished",
+                    "dateCreated",
+                    "dateModified",
+                ):
+
+                    value = candidate.get(key)
+
+                    if value:
+
+                        dt = (
+                            parse_date(value)
+                            or parse_french_date(value)
                         )
+
+                        if dt is not None:
+                            return (
+                                dt,
+                                f"JSON-LD/{key}",
+                            )
 
     # ---------------------------------------------------------
     # 2. META
@@ -785,11 +829,202 @@ def extract_date_from_soup(soup):
     return None, None
 
 
+# =========================================================
+# TITRE ARTICLE
+# =========================================================
+
+def extract_article_title(soup, url):
+    """
+    Récupère le véritable titre de l'article.
+
+    Ordre de priorité :
+    1. JSON-LD headline
+    2. og:title
+    3. h1
+    4. <title>
+    5. slug URL
+
+    Les titres parasites du listing sont rejetés.
+    """
+
+    forbidden_titles = {
+        "en savoir+",
+        "en savoir +",
+        "actualités récentes",
+        "actualites recentes",
+        "actualités",
+        "actualites",
+    }
+
+    def valid_title(value):
+        value = clean_text(value)
+
+        if not value:
+            return ""
+
+        normalized = value.lower()
+
+        if normalized in forbidden_titles:
+            return ""
+
+        return value
+
+    # ---------------------------------------------------------
+    # 1. JSON-LD headline
+    # ---------------------------------------------------------
+
+    for script in soup.find_all(
+        "script",
+        type="application/ld+json",
+    ):
+
+        raw = (
+            script.string
+            or script.get_text()
+        )
+
+        if not raw:
+            continue
+
+        try:
+            data = json.loads(raw)
+
+        except Exception:
+            continue
+
+        objects = (
+            data
+            if isinstance(data, list)
+            else [data]
+        )
+
+        for obj in objects:
+
+            if not isinstance(obj, dict):
+                continue
+
+            candidates = [obj]
+
+            graph = obj.get("@graph")
+
+            if isinstance(graph, list):
+                candidates.extend(graph)
+
+            for candidate in candidates:
+
+                if not isinstance(candidate, dict):
+                    continue
+
+                headline = valid_title(
+                    candidate.get("headline")
+                )
+
+                if headline:
+                    return (
+                        headline,
+                        "JSON-LD/headline",
+                    )
+
+    # ---------------------------------------------------------
+    # 2. OG TITLE
+    # ---------------------------------------------------------
+
+    meta = soup.find(
+        "meta",
+        attrs={
+            "property": "og:title"
+        },
+    )
+
+    if meta:
+        title = valid_title(
+            meta.get("content")
+        )
+
+        if title:
+            return (
+                title,
+                "OG:title",
+            )
+
+    # ---------------------------------------------------------
+    # 3. H1
+    # ---------------------------------------------------------
+
+    h1 = soup.find("h1")
+
+    if h1:
+        title = valid_title(
+            h1.get_text(
+                " ",
+                strip=True,
+            )
+        )
+
+        if title:
+            return (
+                title,
+                "H1",
+            )
+
+    # ---------------------------------------------------------
+    # 4. TITLE HTML
+    # ---------------------------------------------------------
+
+    if soup.title:
+        title = valid_title(
+            soup.title.get_text(
+                " ",
+                strip=True,
+            )
+        )
+
+        if title:
+
+            # Nettoyage éventuel du suffixe du site.
+            title = re.sub(
+                r"\s*[|–—-]\s*DOFUS.*$",
+                "",
+                title,
+                flags=re.IGNORECASE,
+            )
+
+            title = valid_title(title)
+
+            if title:
+                return (
+                    title,
+                    "HTML/title",
+                )
+
+    # ---------------------------------------------------------
+    # 5. SLUG URL
+    # ---------------------------------------------------------
+
+    title = (
+        url.rstrip("/")
+        .split("/")[-1]
+        .replace("-", " ")
+        .strip()
+        .title()
+    )
+
+    return (
+        clean_text(title),
+        "URL/slug",
+    )
+
+
+# =========================================================
+# ARTICLE
+# =========================================================
+
 def extract_article(
     url,
     cache,
     listing_date,
 ):
+
     session = requests.Session()
 
     session.headers.update(
@@ -822,41 +1057,10 @@ def extract_article(
     # TITRE
     # ---------------------------------------------------------
 
-    title = ""
-
-    h1 = soup.find("h1")
-
-    if h1:
-        title = clean_text(
-            h1.get_text(
-                " ",
-                strip=True,
-            )
-        )
-
-    if not title:
-
-        meta = soup.find(
-            "meta",
-            attrs={
-                "property": "og:title"
-            },
-        )
-
-        if meta:
-            title = clean_text(
-                meta.get("content")
-            )
-
-    if not title:
-
-        title = (
-            url.rstrip("/")
-            .split("/")[-1]
-            .replace("-", " ")
-            .strip()
-            .title()
-        )
+    title, title_source = extract_article_title(
+        soup,
+        url,
+    )
 
     # ---------------------------------------------------------
     # DATE DE LA PAGE ARTICLE
@@ -877,6 +1081,7 @@ def extract_article(
             and article_date.date()
             == listing_date.date()
         ):
+
             # Même jour :
             # on garde l'heure précise de l'article.
 
@@ -887,6 +1092,7 @@ def extract_article(
             )
 
         else:
+
             # Date différente :
             # le listing officiel est prioritaire.
 
@@ -918,6 +1124,7 @@ def extract_article(
 
         if dt is not None:
             date_source = "CACHE"
+
         else:
             date_source = None
 
@@ -970,7 +1177,8 @@ def extract_article(
         description = title
 
     print(
-        f"   🏷️ Titre trouvé via ARTICLE: "
+        f"   🏷️ Titre trouvé via "
+        f"{title_source}: "
         f"{title}"
     )
 
@@ -988,12 +1196,17 @@ def extract_article(
     }
 
 
+# =========================================================
+# RSS
+# =========================================================
+
 def create_rss(
     filename,
     title,
     description,
     articles,
 ):
+
     rss = Element(
         "rss",
         {
@@ -1074,7 +1287,12 @@ def create_rss(
     )
 
 
+# =========================================================
+# MAIN
+# =========================================================
+
 def main():
+
     print("")
 
     print(
