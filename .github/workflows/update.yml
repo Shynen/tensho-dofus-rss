@@ -47,35 +47,20 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Ajouter tous les fichiers générés/modifiés
           git add -A
 
+          # Aucun changement
           if git diff --cached --quiet; then
             echo "ℹ️ Aucun changement à commit."
             exit 0
           fi
 
+          # Commit
           git commit -m "Update Dofus RSS feeds"
 
+          # Synchroniser avec main avant le push
           git pull --rebase origin main
 
-          git push origin HEAD:main
-          # ----------------------------------------------------
-          # Aucun changement
-          # ----------------------------------------------------
-
-          if git diff --cached --quiet; then
-            echo "ℹ️ Aucun changement à commit."
-            exit 0
-          fi
-
-          # ----------------------------------------------------
-          # Commit
-          # ----------------------------------------------------
-
-          git commit -m "Update Dofus RSS feeds"
-
-          # ----------------------------------------------------
           # Push
-          # ----------------------------------------------------
-
           git push origin HEAD:main
