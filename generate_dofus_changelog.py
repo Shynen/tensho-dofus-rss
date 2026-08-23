@@ -2341,61 +2341,27 @@ def main():
     # DEJA ENVOYE
     # ========================================================
 
-    else:
+else:
 
-        print(
-            "ℹ️ Le dernier changelog "
-            "DOFUS a déjà été envoyé."
-        )
+    print(
+        "ℹ️ Le dernier changelog "
+        "DOFUS a déjà été envoyé."
+    )
 
-        # ----------------------------------------------------
-        # On conserve le dernier article envoyé dans le RSS.
-        # ----------------------------------------------------
+    # On reconstruit le RSS avec les données
+    # fraîchement récupérées par Playwright.
+    build_discord_rss(
+        latest
+    )
 
-        if (
-            last_url
-            and
-            last_date
-        ):
+    print(
+        "ℹ️ Aucun nouvel envoi Discord."
+    )
 
-            previous_item = {
-                "url":
-                    last_url,
-
-                "title":
-                    state.get(
-                        "title",
-                        "Changelog DOFUS"
-                    ),
-
-                "description":
-                    state.get(
-                        "description",
-                        ""
-                    ),
-
-                "date":
-                    last_date.isoformat(),
-            }
-
-            build_discord_rss(
-                previous_item
-            )
-
-        else:
-
-            build_discord_rss(
-                latest
-            )
-
-        print(
-            "ℹ️ Aucun nouvel envoi Discord."
-        )
-
-        print(
-            "🟢 dofus-changelog-discord.xml "
-            "généré sans nouvel envoi."
-        )
+    print(
+        "🟢 dofus-changelog-discord.xml "
+        "généré sans nouvel envoi."
+    )
 
     # ========================================================
     # FIN
