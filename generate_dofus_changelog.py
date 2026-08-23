@@ -122,37 +122,7 @@ def is_valid_changelog_url(url):
 # ============================================================
 # DATES
 # ============================================================
-if is_correctif and url_date:
 
-    dt = url_date
-
-    date_source = "URL"
-
-elif listing_date:
-
-    dt = listing_date
-
-    date_source = "LISTING"
-
-elif article_date:
-
-    dt = article_date
-
-    date_source = "ARTICLE"
-
-elif cached_date:
-
-    dt = cached_date
-
-    date_source = "CACHE"
-    
-def parse_date(value):
-    if not value:
-        return None
-
-    value = clean_text(
-        value
-    )
 def parse_date_from_text(
     text
 ):
@@ -166,7 +136,7 @@ def parse_date_from_text(
 
     retourne :
 
-    03/03/2026
+    03/03/2026 en datetime UTC.
     """
 
     if not text:
@@ -175,6 +145,9 @@ def parse_date_from_text(
     text = clean_text(
         text
     )
+
+    if not text:
+        return None
 
     months = {
         "janvier": 1,
@@ -195,14 +168,14 @@ def parse_date_from_text(
     }
 
     match = re.search(
-        r"\b"
-        r"(\d{1,2})\s+"
+        r"\\b"
+        r"(\\d{1,2})\\s+"
         r"(janvier|février|fevrier|mars|avril|mai|juin|"
         r"juillet|août|aout|septembre|octobre|novembre|"
         r"décembre|decembre)"
-        r"\s+"
-        r"(\d{4})"
-        r"\b",
+        r"\\s+"
+        r"(\\d{4})"
+        r"\\b",
         text,
         flags=re.IGNORECASE
     )
@@ -242,23 +215,39 @@ def parse_date_from_text(
     except ValueError:
 
         return None
+
+
+def parse_date(value):
+    if not value:
+        return None
+
+    value = clean_text(
+        value
+    )
+
+    if not value:
+        return None
+
     # --------------------------------------------------------
     # RFC / HTTP / RSS
     # --------------------------------------------------------
 
     try:
+
         dt = parsedate_to_datetime(
             value
         )
 
-        if dt.tzinfo is None:
-            dt = dt.replace(
-                tzinfo=timezone.utc
-            )
+        if dt:
 
-        return dt.astimezone(
-            timezone.utc
-        )
+            if dt.tzinfo is None:
+                dt = dt.replace(
+                    tzinfo=timezone.utc
+                )
+
+            return dt.astimezone(
+                timezone.utc
+            )
 
     except Exception:
         pass
@@ -268,6 +257,7 @@ def parse_date_from_text(
     # --------------------------------------------------------
 
     try:
+
         dt = datetime.fromisoformat(
             value.replace(
                 "Z",
@@ -302,6 +292,7 @@ def parse_date_from_text(
     for fmt in formats:
 
         try:
+
             return datetime.strptime(
                 value,
                 fmt
@@ -316,60 +307,9 @@ def parse_date_from_text(
     # Dates françaises en texte
     # --------------------------------------------------------
 
-    months = {
-        "janvier": 1,
-        "février": 2,
-        "fevrier": 2,
-        "mars": 3,
-        "avril": 4,
-        "mai": 5,
-        "juin": 6,
-        "juillet": 7,
-        "août": 8,
-        "aout": 8,
-        "septembre": 9,
-        "octobre": 10,
-        "novembre": 11,
-        "décembre": 12,
-        "decembre": 12,
-    }
-
-    match = re.search(
-        r"\b(\d{1,2})\s+"
-        r"(janvier|février|fevrier|mars|avril|mai|juin|"
-        r"juillet|août|aout|septembre|octobre|novembre|"
-        r"décembre|decembre)\s+"
-        r"(\d{4})\b",
-        value,
-        flags=re.IGNORECASE
+    return parse_date_from_text(
+        value
     )
-
-    if match:
-
-        day = int(
-            match.group(1)
-        )
-
-        month = months[
-            match.group(2).lower()
-        ]
-
-        year = int(
-            match.group(3)
-        )
-
-        try:
-            return datetime(
-                year,
-                month,
-                day,
-                tzinfo=timezone.utc
-            )
-
-        except ValueError:
-            pass
-
-    return None
 
 
 def date_from_url(url):
@@ -394,11 +334,11 @@ def date_from_url(url):
     )[-1]
 
     matches = re.findall(
-        r"(?<!\d)"
-        r"(\d{1,2})-"
-        r"(\d{1,2})-"
-        r"(\d{4})"
-        r"(?!\d)",
+        r"(?<!\\d)"
+        r"(\\d{1,2})-"
+        r"(\\d{1,2})-"
+        r"(\\d{4})"
+        r"(?!\\d)",
         slug
     )
 
@@ -408,6 +348,7 @@ def date_from_url(url):
     day, month, year = matches[-1]
 
     try:
+
         return datetime(
             int(year),
             int(month),
@@ -1292,28 +1233,11 @@ def enrich_item(
         # DATE
         # ====================================================
 
-        """
-        ORDRE DE PRIORITÉ :
-
-        CORRECTIF :
-            URL
-            > LISTING
-            > ARTICLE
-            > CACHE
-
-        ARTICLE NORMAL :
-            LISTING
-            > ARTICLE
-            > CACHE
-
-        C'est volontaire.
-
-        Le listing DOFUS est la source de référence
-        pour la date de publication d'un article principal.
-
-        Le cache ne doit JAMAIS remplacer une date
-        fraîchement récupérée sur le listing.
-        """
+        # ----------------------------------------------------
+        # Pour les correctifs :
+        # la date présente dans l'URL est la source la plus
+        # fiable et doit toujours être prioritaire.
+        # ----------------------------------------------------
 
         if is_correctif and url_date:
 
@@ -1321,6 +1245,90 @@ def enrich_item(
 
             date_source = (
                 "URL"
+            )
+
+        else:
+
+            # ------------------------------------------------
+            # Pour les MÀJ principales :
+            #
+            # 1. Date écrite dans le titre réel de l'article
+            # 2. Date du listing si disponible
+            # 3. Date META / JSON-LD
+            # 4. Cache en dernier recours
+            #
+            # Le titre réel est important car le listing DOFUS
+            # peut parfois exposer une date appartenant à une
+            # autre carte/article.
+            # ------------------------------------------------
+
+            article_title_date = parse_date_from_text(
+                article_title
+            )
+
+            if article_title_date:
+
+                dt = article_title_date
+
+                date_source = (
+                    "ARTICLE TITRE"
+                )
+
+            elif listing_date:
+
+                dt = listing_date
+
+                date_source = (
+                    "LISTING"
+                )
+
+            elif article_date:
+
+                dt = article_date
+
+                date_source = (
+                    "ARTICLE"
+                )
+
+            elif cached_date:
+
+                dt = cached_date
+
+                date_source = (
+                    "CACHE"
+                )
+
+    except Exception as exc:
+
+        print(
+            f"⚠️ Erreur ouverture article : "
+            f"{exc}"
+        )
+
+    # ========================================================
+    # FALLBACKS
+    # ========================================================
+
+    if not dt:
+
+        article_title_date = parse_date_from_text(
+            title
+        )
+
+        if is_correctif and url_date:
+
+            dt = url_date
+
+            date_source = (
+                "URL"
+            )
+
+        elif article_title_date:
+
+            dt = article_title_date
+
+            date_source = (
+                "ARTICLE TITRE"
             )
 
         elif listing_date:
@@ -1337,43 +1345,6 @@ def enrich_item(
 
             date_source = (
                 "ARTICLE"
-            )
-
-        elif cached_date:
-
-            dt = cached_date
-
-            date_source = (
-                "CACHE"
-            )
-
-    except Exception as exc:
-
-        print(
-            f"⚠️ Erreur ouverture article : "
-            f"{exc}"
-        )
-
-    # ========================================================
-    # FALLBACKS
-    # ========================================================
-
-    if not dt:
-
-        if is_correctif and url_date:
-
-            dt = url_date
-
-            date_source = (
-                "URL"
-            )
-
-        elif listing_date:
-
-            dt = listing_date
-
-            date_source = (
-                "LISTING"
             )
 
         elif cached_date:
