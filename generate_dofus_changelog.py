@@ -76,16 +76,64 @@ FRENCH_MONTHS = {
 
 
 ########################################
+# TITRES GENERIQUES A IGNORER
+########################################
+
+INVALID_TITLES = {
+    "découvrir",
+    "decouvrir",
+    "voir plus",
+    "voir plus...",
+    "lire",
+    "lire la suite",
+    "en savoir plus",
+    "plus d'informations",
+    "plus d’informations",
+    "read more",
+    "learn more",
+    "loading",
+}
+
+
+########################################
 # OUTILS
 ########################################
 
 def clean_text(value):
-
     return re.sub(
         r"\s+",
         " ",
         str(value or "")
     ).strip()
+
+
+def is_valid_title(value):
+    """
+    Vérifie qu'un titre ressemble réellement à un titre d'article
+    et non à un bouton / CTA du site.
+    """
+
+    title = clean_text(value)
+
+    if not title:
+        return False
+
+    lowered = title.lower().strip()
+
+    if lowered in INVALID_TITLES:
+        return False
+
+    if lowered.startswith("loading"):
+        return False
+
+    if lowered.startswith("http"):
+        return False
+
+    # Les titres extrêmement courts sont généralement des boutons.
+    if len(title) < 4:
+        return False
+
+    return True
 
 
 def parse_date(value):
@@ -409,6 +457,61 @@ def is_valid_changelog_url(url):
 
 
 ########################################
+# EXTRACTION TITRE DEPUIS UNE CARTE
+########################################
+
+def extract_card_title(node):
+
+    """
+    Cherche le vrai titre dans une carte.
+
+    Important :
+    On ne considère jamais un bouton comme un titre valide.
+    """
+
+    selectors = (
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "[class*='title']",
+        "[class*='Title']",
+    )
+
+    for selector in selectors:
+
+        try:
+
+            headings = node.locator(
+                selector
+            )
+
+            for j in range(
+                headings.count()
+            ):
+
+                candidate = clean_text(
+                    headings.nth(
+                        j
+                    ).inner_text(
+                        timeout=1000
+                    )
+                )
+
+                if is_valid_title(
+                    candidate
+                ):
+
+                    return candidate
+
+        except Exception:
+
+            pass
+
+    return ""
+
+
+########################################
 # LISTING CHANGELOG
 ########################################
 
@@ -500,10 +603,20 @@ def collect_changelog_listing():
 
                     return None
 
-                title = clean_text(
+                ########################################
+                # TITRE DIRECT DU LIEN
+                ########################################
+
+                raw_title = clean_text(
                     link.inner_text(
                         timeout=2000
                     )
+                )
+
+                title = (
+                    raw_title
+                    if is_valid_title(raw_title)
+                    else ""
                 )
 
                 listing_date = None
@@ -559,68 +672,32 @@ def collect_changelog_listing():
                             # TITRE DE LA CARTE
                             ########################################
 
-                            for selector in (
-                                "h1",
-                                "h2",
-                                "h3",
-                                "h4",
+                            candidate_title = (
+                                extract_card_title(
+                                    node
+                                )
+                            )
+
+                            if is_valid_title(
+                                candidate_title
                             ):
 
-                                try:
-
-                                    headings = (
-                                        node.locator(
-                                            selector
-                                        )
-                                    )
-
-                                    for j in range(
-                                        headings.count()
-                                    ):
-
-                                        candidate_title = (
-                                            clean_text(
-                                                headings.nth(
-                                                    j
-                                                ).inner_text(
-                                                    timeout=1000
-                                                )
-                                            )
-                                        )
-
-                                        if (
-                                            candidate_title
-                                        ):
-
-                                            title = (
-                                                candidate_title
-                                            )
-
-                                            break
-
-                                    if title:
-                                        break
-
-                                except Exception:
-                                    pass
+                                title = (
+                                    candidate_title
+                                )
 
                             break
 
                     except Exception:
+
                         pass
 
                 ########################################
                 # FALLBACK TITRE
                 ########################################
 
-                if (
-                    not title
-                    or title.lower().startswith(
-                        "loading"
-                    )
-                    or title.lower().startswith(
-                        "http"
-                    )
+                if not is_valid_title(
+                    title
                 ):
 
                     for level in range(
@@ -640,48 +717,24 @@ def collect_changelog_listing():
                                     ".."
                                 )
 
-                            for selector in (
-                                "h1",
-                                "h2",
-                                "h3",
-                                "h4",
+                            candidate_title = (
+                                extract_card_title(
+                                    node
+                                )
+                            )
+
+                            if is_valid_title(
+                                candidate_title
                             ):
 
-                                headings = (
-                                    node.locator(
-                                        selector
-                                    )
+                                title = (
+                                    candidate_title
                                 )
 
-                                for j in range(
-                                    headings.count()
-                                ):
-
-                                    candidate_title = (
-                                        clean_text(
-                                            headings.nth(
-                                                j
-                                            ).inner_text(
-                                                timeout=1000
-                                            )
-                                        )
-                                    )
-
-                                    if candidate_title:
-
-                                        title = (
-                                            candidate_title
-                                        )
-
-                                        break
-
-                                if title:
-                                    break
-
-                            if title:
                                 break
 
                         except Exception:
+
                             pass
 
                 ########################################
@@ -696,9 +749,15 @@ def collect_changelog_listing():
                         )
                     )
 
-                if not title:
+                ########################################
+                # NE JAMAIS CONSERVER UN CTA
+                ########################################
 
-                    return None
+                if not is_valid_title(
+                    title
+                ):
+
+                    title = ""
 
                 return {
 
@@ -942,10 +1001,116 @@ def extract_article_description(
 
 
 ########################################
+# TITRE ARTICLE
+########################################
+
+def extract_real_article_title(page):
+
+    """
+    Recherche le vrai titre directement dans l'article.
+
+    Priorité :
+    1. h1
+    2. og:title
+    3. title HTML
+    """
+
+    ########################################
+    # H1
+    ########################################
+
+    try:
+
+        headings = page.locator(
+            "h1"
+        )
+
+        for i in range(
+            headings.count()
+        ):
+
+            candidate = clean_text(
+                headings.nth(
+                    i
+                ).inner_text(
+                    timeout=3000
+                )
+            )
+
+            if is_valid_title(
+                candidate
+            ):
+
+                return candidate
+
+    except Exception:
+
+        pass
+
+    ########################################
+    # OG TITLE
+    ########################################
+
+    try:
+
+        locator = (
+            page
+            .locator(
+                'meta[property="og:title"]'
+            )
+            .first
+        )
+
+        if locator.count() > 0:
+
+            candidate = clean_text(
+                locator.get_attribute(
+                    "content"
+                )
+            )
+
+            if is_valid_title(
+                candidate
+            ):
+
+                return candidate
+
+    except Exception:
+
+        pass
+
+    ########################################
+    # TITLE HTML
+    ########################################
+
+    try:
+
+        candidate = clean_text(
+            page.title()
+        )
+
+        if is_valid_title(
+            candidate
+        ):
+
+            # Certains titres peuvent contenir
+            # " - DOFUS". On ne l'enlève pas
+            # automatiquement afin de ne pas
+            # altérer le titre officiel.
+
+            return candidate
+
+    except Exception:
+
+        pass
+
+    return ""
+
+
+########################################
 # ARTICLE
 #
-# TITRE + DATE :
-# LISTING PRIORITAIRE
+# TITRE + DATE
 ########################################
 
 def extract_article(
@@ -1004,64 +1169,40 @@ def extract_article(
     # TITRE
     ########################################
 
-    title = listing_title
+    #
+    # IMPORTANT :
+    #
+    # Si le titre du listing est un vrai titre,
+    # on peut le conserver.
+    #
+    # Si le listing contient "Découvrir" ou
+    # un autre CTA, on l'ignore et on recherche
+    # le vrai titre dans l'article.
+    #
+
+    title = ""
+
+    if is_valid_title(
+        listing_title
+    ):
+
+        title = listing_title
+
+    ########################################
+    # VRAI TITRE ARTICLE
+    ########################################
 
     if not title:
 
-        try:
-
-            h1 = (
+        title = (
+            extract_real_article_title(
                 page
-                .locator(
-                    "h1"
-                )
-                .first
             )
+        )
 
-            if h1.count() > 0:
-
-                candidate = clean_text(
-                    h1.inner_text(
-                        timeout=3000
-                    )
-                )
-
-                if (
-                    candidate
-                    and not candidate.lower().startswith(
-                        "loading"
-                    )
-                ):
-
-                    title = candidate
-
-        except Exception:
-
-            pass
-
-    if not title:
-
-        try:
-
-            locator = (
-                page
-                .locator(
-                    'meta[property="og:title"]'
-                )
-                .first
-            )
-
-            if locator.count() > 0:
-
-                title = clean_text(
-                    locator.get_attribute(
-                        "content"
-                    )
-                )
-
-        except Exception:
-
-            pass
+    ########################################
+    # DERNIER FALLBACK
+    ########################################
 
     if not title:
 
@@ -1222,7 +1363,7 @@ def extract_article(
 
     print(
         f"   🏷️ Titre trouvé via "
-        f"{'LISTING' if listing_title else 'ARTICLE'}: "
+        f"{'LISTING' if is_valid_title(listing_title) else 'ARTICLE'}: "
         f"{title}"
     )
 
@@ -1467,6 +1608,13 @@ def main():
                     f"{entry['title']}"
                 )
 
+            else:
+
+                print(
+                    "   🏷️ Titre du listing "
+                    "invalide ou absent."
+                )
+
             if entry.get(
                 "date"
             ):
@@ -1517,7 +1665,7 @@ def main():
     )
 
     ########################################
-    # TRI
+    # TRI PAR DATE
     ########################################
 
     articles.sort(
