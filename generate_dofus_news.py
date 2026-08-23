@@ -2,10 +2,8 @@ import asyncio
 import json
 import os
 import re
-import unicodedata
-from datetime import datetime
-from email.utils import format_datetime
-from pathlib import Path
+from datetime import datetime, timezone
+from email.utils import format_datetime, parsedate_to_datetime
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
@@ -55,23 +53,49 @@ def clean_text(text):
     if not text:
         return ""
 
-    text = BeautifulSoup(str(text), "html.parser").get_text(" ", strip=True)
+    text = BeautifulSoup(
+        str(text),
+        "html.parser"
+    ).get_text(" ", strip=True)
+
     text = re.sub(r"\s+", " ", text)
+
     return text.strip()
 
 
 def normalize_title(text):
     """
-    Nettoyage léger uniquement.
-    On NE supprime PAS les accents.
-    On NE transforme PAS le titre en slug.
+    Nettoyage léger du titre.
+
+    IMPORTANT :
+    - Les accents sont conservés.
+    - Le texte n'est PAS transformé en slug.
+    - Le titre réel fourni par DOFUS est conservé.
     """
 
     text = clean_text(text)
 
-    # Suppression de quelques caractères parasites
+    if not text:
+        return ""
+
     text = text.replace("\xa0", " ")
     text = re.sub(r"\s+", " ", text)
+
+    # Suppression de quelques suffixes possibles ajoutés
+    # par les métadonnées HTML.
+    text = re.sub(
+        r"\s*\|\s*DOFUS(?:\s+MMORPG)?\s*$",
+        "",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    text = re.sub(
+        r"\s*-\s*DOFUS(?:\s+MMORPG)?\s*$",
+        "",
+        text,
+        flags=re.IGNORECASE
+    )
 
     return text.strip()
 
@@ -93,67 +117,75 @@ def title_is_valid(title):
         "actualites recentes",
         "lire la suite",
         "voir plus",
+        "voir la suite",
+        "plus d'informations",
+        "plus d’informations",
+        "menu",
+        "accueil",
     }
 
     if title.lower() in invalid_titles:
         return False
 
+    # Protection supplémentaire contre les titres composés
+    # uniquement d'un bouton/navigation.
+    if title.lower().startswith("en savoir"):
+        return False
+
+    if title.lower().startswith("actualités récentes"):
+        return False
+
+    if title.lower().startswith("actualites recentes"):
+        return False
+
     return True
-
-
-def slug_to_title(url):
-    """
-    Dernier fallback uniquement.
-    Cette fonction ne doit normalement plus être utilisée
-    puisque Playwright récupère le vrai H1.
-    """
-
-    slug = url.rstrip("/").split("/")[-1]
-
-    # Retire l'ID numérique
-    slug = re.sub(r"^\d+-", "", slug)
-
-    title = slug.replace("-", " ")
-
-    return title.strip().title()
 
 
 def parse_date(value):
     if not value:
         return None
 
-    value = value.strip()
+    value = str(value).strip()
 
+    if not value:
+        return None
+
+    # --------------------------------------------------------
     # Format RFC / HTTP classique
-    try:
-        from email.utils import parsedate_to_datetime
+    # --------------------------------------------------------
 
+    try:
         dt = parsedate_to_datetime(value)
 
         if dt.tzinfo is None:
-            from datetime import timezone
             dt = dt.replace(tzinfo=timezone.utc)
 
         return dt
+
     except Exception:
         pass
 
+    # --------------------------------------------------------
     # Formats ISO éventuels
+    # --------------------------------------------------------
+
     iso_formats = [
         "%Y-%m-%dT%H:%M:%S.%f%z",
         "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%dT%H:%M:%S",
         "%Y-%m-%d",
     ]
 
     for fmt in iso_formats:
+
         try:
             dt = datetime.strptime(value, fmt)
 
             if dt.tzinfo is None:
-                from datetime import timezone
                 dt = dt.replace(tzinfo=timezone.utc)
 
             return dt
+
         except Exception:
             continue
 
@@ -186,36 +218,64 @@ def escape_xml(text):
 # ============================================================
 
 def load_cache():
+
     if not os.path.exists(CACHE_FILE):
+
         print("Cache Actualités Dofus chargé : 0 articles.")
+
         return []
 
     try:
-        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+
+        with open(
+            CACHE_FILE,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
             data = json.load(f)
 
         if not isinstance(data, list):
             data = []
 
-        print(f"Cache Actualités Dofus chargé : {len(data)} articles.")
+        print(
+            f"Cache Actualités Dofus chargé : "
+            f"{len(data)} articles."
+        )
+
         return data
 
     except Exception as e:
-        print(f"⚠️ Impossible de charger le cache : {e}")
+
+        print(
+            f"⚠️ Impossible de charger le cache : {e}"
+        )
+
         return []
 
 
 def save_cache(articles):
+
     try:
-        with open(CACHE_FILE, "w", encoding="utf-8") as f:
+
+        with open(
+            CACHE_FILE,
+            "w",
+            encoding="utf-8"
+        ) as f:
+
             json.dump(
                 articles[:MAX_ARTICLES],
                 f,
                 ensure_ascii=False,
                 indent=2
             )
+
     except Exception as e:
-        print(f"⚠️ Impossible de sauvegarder le cache : {e}")
+
+        print(
+            f"⚠️ Impossible de sauvegarder le cache : {e}"
+        )
 
 
 # ============================================================
@@ -223,6 +283,7 @@ def save_cache(articles):
 # ============================================================
 
 async def get_listing_articles(page):
+
     print("========================================")
     print("Ouverture avec Playwright :")
     print(NEWS_URL)
@@ -252,6 +313,7 @@ async def get_listing_articles(page):
 
         try:
             href = await link.get_attribute("href")
+
         except Exception:
             continue
 
@@ -260,11 +322,11 @@ async def get_listing_articles(page):
 
         href = urljoin(BASE_URL, href)
 
-        # On évite la page principale
+        # On évite la page principale.
         if href.rstrip("/") == NEWS_URL.rstrip("/"):
             continue
 
-        # Nettoyage éventuel des ancres
+        # Nettoyage éventuel des ancres.
         href = href.split("#")[0]
 
         if href in seen_urls:
@@ -273,18 +335,23 @@ async def get_listing_articles(page):
         seen_urls.add(href)
 
         # ----------------------------------------------------
-        # Date : on cherche d'abord dans la carte/listing
+        # DATE
         # ----------------------------------------------------
 
         date_value = None
 
         try:
-            # On remonte quelques niveaux pour trouver la carte
+
+            # On remonte quelques niveaux pour trouver
+            # la carte/listing de l'article.
+
             container = link.locator(
-                "xpath=ancestor::*[self::article or "
+                "xpath=ancestor::*["
+                "self::article or "
                 "self::li or "
                 "contains(@class,'card') or "
-                "contains(@class,'item')][1]"
+                "contains(@class,'item')"
+                "][1]"
             )
 
             if await container.count() > 0:
@@ -303,20 +370,30 @@ async def get_listing_articles(page):
                     if await loc.count() == 0:
                         continue
 
-                    for i in range(min(await loc.count(), 3)):
+                    for i in range(
+                        min(await loc.count(), 3)
+                    ):
 
                         try:
+
                             element = loc.nth(i)
 
-                            datetime_attr = await element.get_attribute(
-                                "datetime"
+                            datetime_attr = (
+                                await element.get_attribute(
+                                    "datetime"
+                                )
                             )
 
                             if datetime_attr:
-                                date_value = parse_date(datetime_attr)
+
+                                date_value = parse_date(
+                                    datetime_attr
+                                )
 
                             if not date_value:
+
                                 text = await element.inner_text()
+
                                 date_value = parse_date(text)
 
                             if date_value:
@@ -332,13 +409,13 @@ async def get_listing_articles(page):
             pass
 
         # ----------------------------------------------------
-        # Si la date n'a pas été trouvée dans le container,
-        # recherche plus large autour du lien.
+        # Recherche plus large si la date n'a pas été trouvée.
         # ----------------------------------------------------
 
         if not date_value:
 
             try:
+
                 parent = link.locator("xpath=..")
 
                 for _ in range(4):
@@ -348,15 +425,19 @@ async def get_listing_articles(page):
 
                     html = await parent.inner_html()
 
-                    # Recherche de dates ISO
                     match = re.search(
                         r"\d{4}-\d{2}-\d{2}"
-                        r"(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?",
+                        r"(?:T\d{2}:\d{2}:\d{2}"
+                        r"(?:\.\d+)?"
+                        r"(?:Z|[+-]\d{2}:?\d{2})?)?",
                         html
                     )
 
                     if match:
-                        date_value = parse_date(match.group(0))
+
+                        date_value = parse_date(
+                            match.group(0)
+                        )
 
                     if date_value:
                         break
@@ -376,122 +457,167 @@ async def get_listing_articles(page):
         if len(articles) >= MAX_LISTING_ARTICLES:
             break
 
-    print(f"Premier lot : {len(articles)} actualités détectées.")
-
-    dates_found = sum(
-        1 for article in articles if article["date"] is not None
+    print(
+        f"Premier lot : {len(articles)} "
+        f"actualités détectées."
     )
 
-    print(f"📅 Dates trouvées dans la liste : {dates_found}/{len(articles)}")
-    print(f"🟢 Total actualités récupérées : {len(articles)}")
+    dates_found = sum(
+        1
+        for article in articles
+        if article["date"] is not None
+    )
+
+    print(
+        f"📅 Dates trouvées dans la liste : "
+        f"{dates_found}/{len(articles)}"
+    )
+
+    print(
+        f"🟢 Total actualités récupérées : "
+        f"{len(articles)}"
+    )
+
     print()
 
     return articles
 
 
 # ============================================================
-# EXTRACTION DU VRAI TITRE AVEC PLAYWRIGHT
+# EXTRACTION DU VRAI TITRE
 # ============================================================
 
 async def extract_article_title(page, url):
+
     """
-    Ouvre réellement la page de l'article avec Playwright.
+    Récupère le TITRE RÉEL de l'article.
 
     Ordre de priorité :
-      1. H1
-      2. meta[property="og:title"]
-      3. meta[name="twitter:title"]
-      4. JSON-LD headline
+
+      1. og:title
+      2. twitter:title
+      3. JSON-LD headline
+      4. H1 réellement pertinent
       5. <title>
 
-    Le slug URL n'est volontairement PAS utilisé ici.
+    IMPORTANT :
+
+    On ne fait PAS confiance au premier H1 trouvé.
+
+    Le site DOFUS contient des éléments de navigation
+    pouvant apparaître comme H1 et retourner :
+      - Actualités récentes
+      - En savoir+
+
+    Ces valeurs sont explicitement rejetées.
+
+    Le slug URL n'est jamais utilisé comme titre.
     """
 
     try:
+
         await page.goto(
             url,
             wait_until="domcontentloaded",
             timeout=60000
         )
 
-        # Petit délai pour laisser le rendu Dofus se terminer.
-        await page.wait_for_timeout(1500)
+        # Laisser le temps au rendu JS de DOFUS.
+        await page.wait_for_timeout(1800)
 
     except Exception as e:
-        print(f"   ⚠️ Ouverture article impossible : {e}")
+
+        print(
+            f"   ⚠️ Ouverture article impossible : {e}"
+        )
+
         return ""
 
-    # --------------------------------------------------------
-    # 1. H1
-    # --------------------------------------------------------
+    # ========================================================
+    # 1. OG:TITLE
+    # ========================================================
 
-    h1_selectors = [
-        "h1",
-        "main h1",
-        "article h1",
-        "[role='main'] h1",
-    ]
+    try:
 
-    for selector in h1_selectors:
+        og_selectors = [
+            'meta[property="og:title"]',
+            'meta[property="og:title"][content]',
+        ]
 
-        try:
+        for selector in og_selectors:
+
             locator = page.locator(selector)
 
-            count = await locator.count()
+            if await locator.count() == 0:
+                continue
 
-            for i in range(min(count, 5)):
+            for i in range(
+                min(await locator.count(), 3)
+            ):
 
                 try:
-                    text = normalize_title(
-                        await locator.nth(i).inner_text()
+
+                    value = await locator.nth(i).get_attribute(
+                        "content"
                     )
 
-                    if title_is_valid(text):
-                        return text
+                    value = normalize_title(value)
+
+                    if title_is_valid(value):
+                        return value
 
                 except Exception:
                     continue
 
-        except Exception:
-            continue
+    except Exception:
+        pass
 
-    # --------------------------------------------------------
-    # 2. OG TITLE
-    # --------------------------------------------------------
+    # ========================================================
+    # 2. TWITTER TITLE
+    # ========================================================
 
     try:
-        og = page.locator('meta[property="og:title"]')
 
-        if await og.count() > 0:
-            value = await og.first.get_attribute("content")
+        twitter_selectors = [
+            'meta[name="twitter:title"]',
+            'meta[property="twitter:title"]',
+            'meta[name="twitter:title"][content]',
+        ]
 
-            if title_is_valid(value):
-                return normalize_title(value)
+        for selector in twitter_selectors:
+
+            locator = page.locator(selector)
+
+            if await locator.count() == 0:
+                continue
+
+            for i in range(
+                min(await locator.count(), 3)
+            ):
+
+                try:
+
+                    value = await locator.nth(i).get_attribute(
+                        "content"
+                    )
+
+                    value = normalize_title(value)
+
+                    if title_is_valid(value):
+                        return value
+
+                except Exception:
+                    continue
 
     except Exception:
         pass
 
-    # --------------------------------------------------------
-    # 3. TWITTER TITLE
-    # --------------------------------------------------------
+    # ========================================================
+    # 3. JSON-LD
+    # ========================================================
 
     try:
-        twitter = page.locator('meta[name="twitter:title"]')
 
-        if await twitter.count() > 0:
-            value = await twitter.first.get_attribute("content")
-
-            if title_is_valid(value):
-                return normalize_title(value)
-
-    except Exception:
-        pass
-
-    # --------------------------------------------------------
-    # 4. JSON-LD
-    # --------------------------------------------------------
-
-    try:
         scripts = page.locator(
             'script[type="application/ld+json"]'
         )
@@ -501,21 +627,48 @@ async def extract_article_title(page, url):
         for i in range(count):
 
             try:
+
                 raw = await scripts.nth(i).inner_text()
+
+                if not raw.strip():
+                    continue
 
                 data = json.loads(raw)
 
-                objects = data if isinstance(data, list) else [data]
+                objects = []
+
+                if isinstance(data, list):
+
+                    objects.extend(data)
+
+                elif isinstance(data, dict):
+
+                    objects.append(data)
+
+                    # Certains JSON-LD utilisent @graph.
+                    graph = data.get("@graph")
+
+                    if isinstance(graph, list):
+                        objects.extend(graph)
 
                 for obj in objects:
 
                     if not isinstance(obj, dict):
                         continue
 
-                    headline = obj.get("headline")
+                    possible_titles = [
+                        obj.get("headline"),
+                        obj.get("name"),
+                    ]
 
-                    if title_is_valid(headline):
-                        return normalize_title(headline)
+                    for headline in possible_titles:
+
+                        headline = normalize_title(
+                            headline
+                        )
+
+                        if title_is_valid(headline):
+                            return headline
 
             except Exception:
                 continue
@@ -523,16 +676,85 @@ async def extract_article_title(page, url):
     except Exception:
         pass
 
-    # --------------------------------------------------------
-    # 5. TITLE HTML
-    # --------------------------------------------------------
+    # ========================================================
+    # 4. H1 PERTINENT
+    # ========================================================
 
     try:
+
+        # On cherche plusieurs H1 possibles mais on rejette
+        # explicitement les éléments de navigation.
+
+        h1_selectors = [
+            "main h1",
+            "article h1",
+            "[role='main'] h1",
+            "h1",
+        ]
+
+        candidates = []
+
+        for selector in h1_selectors:
+
+            locator = page.locator(selector)
+
+            if await locator.count() == 0:
+                continue
+
+            for i in range(
+                min(await locator.count(), 10)
+            ):
+
+                try:
+
+                    text = await locator.nth(i).inner_text()
+
+                    text = normalize_title(text)
+
+                    if not text:
+                        continue
+
+                    if not title_is_valid(text):
+                        continue
+
+                    # Évite les doublons.
+                    if text not in candidates:
+                        candidates.append(text)
+
+                except Exception:
+                    continue
+
+        # On privilégie les H1 longs et significatifs.
+        # Les titres d'articles DOFUS sont généralement
+        # beaucoup plus longs que les éléments de navigation.
+
+        candidates.sort(
+            key=lambda value: (
+                len(value),
+                value.count(" ")
+            ),
+            reverse=True
+        )
+
+        if candidates:
+
+            return candidates[0]
+
+    except Exception:
+        pass
+
+    # ========================================================
+    # 5. TITLE HTML
+    # ========================================================
+
+    try:
+
         page_title = await page.title()
+
+        page_title = normalize_title(page_title)
 
         if title_is_valid(page_title):
 
-            # Dofus peut ajouter des suffixes.
             page_title = re.sub(
                 r"\s*\|\s*DOFUS.*$",
                 "",
@@ -547,11 +769,19 @@ async def extract_article_title(page, url):
                 flags=re.IGNORECASE
             )
 
+            page_title = normalize_title(
+                page_title
+            )
+
             if title_is_valid(page_title):
-                return normalize_title(page_title)
+                return page_title
 
     except Exception:
         pass
+
+    # ========================================================
+    # AUCUN TITRE FIABLE
+    # ========================================================
 
     return ""
 
@@ -563,60 +793,97 @@ async def extract_article_title(page, url):
 async def process_articles(page, listing_articles):
 
     print("########################################")
-    print(f"# URLs Actualités Dofus trouvées : {len(listing_articles)}")
+
+    print(
+        f"# URLs Actualités Dofus trouvées : "
+        f"{len(listing_articles)}"
+    )
+
     print("########################################")
     print()
 
     results = []
 
-    for index, article in enumerate(listing_articles, start=1):
+    for index, article in enumerate(
+        listing_articles,
+        start=1
+    ):
 
         url = article["url"]
         date_value = article["date"]
 
-        print(f"[{index}/{len(listing_articles)}] {url}")
+        print(
+            f"[{index}/{len(listing_articles)}] "
+            f"{url}"
+        )
 
         # ----------------------------------------------------
-        # TITRE
+        # TITRE RÉEL
         # ----------------------------------------------------
 
-        title = await extract_article_title(page, url)
+        title = await extract_article_title(
+            page,
+            url
+        )
 
         if title:
-            print(f"   🏷️ Titre trouvé via PLAYWRIGHT: {title}")
+
+            print(
+                f"   🏷️ Titre trouvé via PLAYWRIGHT: "
+                f"{title}"
+            )
+
         else:
-            print("   ⚠️ Impossible de récupérer le vrai titre.")
+
+            print(
+                "   ⚠️ Impossible de récupérer "
+                "le vrai titre."
+            )
 
         # ----------------------------------------------------
         # DATE
         # ----------------------------------------------------
 
         if date_value:
+
             print(
                 "   📅 Date trouvée via LISTING: "
                 f"{format_datetime(date_value)}"
             )
+
         else:
-            print("   ⚠️ Date introuvable.")
+
+            print(
+                "   ⚠️ Date introuvable."
+            )
 
         # ----------------------------------------------------
-        # Si aucun titre réel n'est trouvé :
-        # ON N'UTILISE PLUS LE SLUG COMME TITRE.
+        # TITRE ABSENT
         #
-        # On ignore simplement l'article plutôt que d'envoyer
-        # un titre faux dans Discord.
+        # IMPORTANT :
+        # On n'utilise PAS le slug URL.
         # ----------------------------------------------------
 
         if not title:
-            print("   ❌ Article ignoré : titre réel introuvable.")
+
+            print(
+                "   ❌ Article ignoré : "
+                "titre réel introuvable."
+            )
+
             print()
+
             continue
 
-        # Si date absente, on utilise maintenant comme dernier
-        # recours la date actuelle.
+        # ----------------------------------------------------
+        # DATE ABSENTE
         #
-        # Cela évite de produire un RSS invalide.
+        # Dernier recours : date actuelle.
+        # Cela garantit un pubDate valide.
+        # ----------------------------------------------------
+
         if not date_value:
+
             date_value = datetime.now().astimezone()
 
         article_data = {
@@ -629,12 +896,13 @@ async def process_articles(page, listing_articles):
         results.append(article_data)
 
         print(
-            f"🟢 {format_datetime(date_value)} - {title}"
+            f"🟢 {format_datetime(date_value)} "
+            f"- {title}"
         )
+
         print()
 
-        # Petite pause pour éviter d'enchaîner trop rapidement
-        # les pages Dofus.
+        # Petite pause entre les pages.
         await page.wait_for_timeout(300)
 
         if len(results) >= MAX_ARTICLES:
@@ -647,13 +915,18 @@ async def process_articles(page, listing_articles):
 # FUSION AVEC LE CACHE
 # ============================================================
 
-def merge_with_cache(new_articles, cache):
+def merge_with_cache(
+    new_articles,
+    cache
+):
 
     merged = []
-
     seen = set()
 
-    # Les nouveaux articles passent en premier
+    # --------------------------------------------------------
+    # Les nouveaux articles passent en premier.
+    # --------------------------------------------------------
+
     for article in new_articles:
 
         guid = article.get("guid")
@@ -662,20 +935,29 @@ def merge_with_cache(new_articles, cache):
             continue
 
         seen.add(guid)
+
         merged.append(article)
 
-    # Puis anciens articles du cache
+    # --------------------------------------------------------
+    # Puis anciens articles du cache.
+    # --------------------------------------------------------
+
     for article in cache:
 
-        guid = article.get("guid") or article.get("url")
+        guid = (
+            article.get("guid")
+            or article.get("url")
+        )
 
         if not guid or guid in seen:
             continue
 
         seen.add(guid)
 
-        # Normalisation des anciennes entrées
-        title = normalize_title(article.get("title", ""))
+        title = normalize_title(
+            article.get("title", "")
+        )
+
         url = article.get("url", "")
         date_value = article.get("date")
 
@@ -683,7 +965,11 @@ def merge_with_cache(new_articles, cache):
             continue
 
         if not date_value:
-            date_value = datetime.now().astimezone().isoformat()
+            date_value = (
+                datetime.now()
+                .astimezone()
+                .isoformat()
+            )
 
         merged.append(
             {
@@ -694,15 +980,23 @@ def merge_with_cache(new_articles, cache):
             }
         )
 
-    # Tri par date décroissante
+    # --------------------------------------------------------
+    # Tri par date décroissante.
+    # --------------------------------------------------------
+
     def sort_key(article):
 
         try:
+
             return datetime.fromisoformat(
                 article.get("date", "")
             )
+
         except Exception:
-            return datetime.min.astimezone()
+
+            return datetime.min.replace(
+                tzinfo=timezone.utc
+            )
 
     merged.sort(
         key=sort_key,
@@ -718,22 +1012,38 @@ def merge_with_cache(new_articles, cache):
 
 def generate_normal_rss(articles):
 
-    print("Génération de dofus-news.xml...")
+    print(
+        "Génération de dofus-news.xml..."
+    )
 
     items = []
 
     for article in articles:
 
-        title = escape_xml(article["title"])
-        link = escape_xml(article["url"])
-        guid = escape_xml(article["guid"])
+        title = escape_xml(
+            article["title"]
+        )
+
+        link = escape_xml(
+            article["url"]
+        )
+
+        guid = escape_xml(
+            article["guid"]
+        )
 
         try:
+
             date_value = datetime.fromisoformat(
                 article["date"]
             )
+
         except Exception:
-            date_value = datetime.now().astimezone()
+
+            date_value = (
+                datetime.now()
+                .astimezone()
+            )
 
         pub_date = escape_xml(
             format_rss_date(date_value)
@@ -767,10 +1077,17 @@ def generate_normal_rss(articles):
 </rss>
 """
 
-    with open(RSS_FILE, "w", encoding="utf-8") as f:
+    with open(
+        RSS_FILE,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
         f.write(rss)
 
-    print("🟢 dofus-news.xml généré.")
+    print(
+        "🟢 dofus-news.xml généré."
+    )
 
 
 # ============================================================
@@ -779,34 +1096,55 @@ def generate_normal_rss(articles):
 
 def generate_discord_rss(articles):
 
-    print("Génération de dofus-news-discord.xml...")
+    print(
+        "Génération de dofus-news-discord.xml..."
+    )
 
     # --------------------------------------------------------
     # IMPORTANT :
-    # Ce flux est volontairement extrêmement minimal.
     #
-    # Readybot / Discord doit recevoir :
-    # title
-    # link
-    # guid
-    # description
-    # pubDate
+    # Flux volontairement extrêmement minimal
+    # pour Readybot / Discord.
+    #
+    # Uniquement :
+    #   title
+    #   link
+    #   guid
+    #   description
+    #   pubDate
+    #
+    # Le pubDate est obligatoire pour que Readybot
+    # puisse correctement détecter les nouveaux articles.
     # --------------------------------------------------------
 
     items = []
 
     for article in articles:
 
-        title = escape_xml(article["title"])
-        link = escape_xml(article["url"])
-        guid = escape_xml(article["guid"])
+        title = escape_xml(
+            article["title"]
+        )
+
+        link = escape_xml(
+            article["url"]
+        )
+
+        guid = escape_xml(
+            article["guid"]
+        )
 
         try:
+
             date_value = datetime.fromisoformat(
                 article["date"]
             )
+
         except Exception:
-            date_value = datetime.now().astimezone()
+
+            date_value = (
+                datetime.now()
+                .astimezone()
+            )
 
         pub_date = escape_xml(
             format_rss_date(date_value)
@@ -843,9 +1181,12 @@ def generate_discord_rss(articles):
         "w",
         encoding="utf-8"
     ) as f:
+
         f.write(rss)
 
-    print("🟢 dofus-news-discord.xml généré.")
+    print(
+        "🟢 dofus-news-discord.xml généré."
+    )
 
 
 # ============================================================
@@ -877,24 +1218,28 @@ async def main():
         page = await context.new_page()
 
         # ----------------------------------------------------
-        # 1. Listing
+        # 1. LISTING
         # ----------------------------------------------------
 
-        listing_articles = await get_listing_articles(page)
+        listing_articles = (
+            await get_listing_articles(page)
+        )
 
         # ----------------------------------------------------
-        # 2. Articles individuels
+        # 2. ARTICLES INDIVIDUELS
         # ----------------------------------------------------
 
-        new_articles = await process_articles(
-            page,
-            listing_articles
+        new_articles = (
+            await process_articles(
+                page,
+                listing_articles
+            )
         )
 
         await browser.close()
 
     # --------------------------------------------------------
-    # 3. Cache
+    # 3. CACHE
     # --------------------------------------------------------
 
     articles = merge_with_cache(
@@ -903,21 +1248,34 @@ async def main():
     )
 
     print()
+
     print("########################################")
-    print(f"# {len(articles)} Actualités Dofus retenues")
+
+    print(
+        f"# {len(articles)} "
+        f"Actualités Dofus retenues"
+    )
+
     print("########################################")
     print()
 
-    for index, article in enumerate(articles, start=1):
+    for index, article in enumerate(
+        articles,
+        start=1
+    ):
 
         try:
+
             date_value = datetime.fromisoformat(
                 article["date"]
             )
 
-            date_display = format_datetime(date_value)
+            date_display = format_datetime(
+                date_value
+            )
 
         except Exception:
+
             date_display = article["date"]
 
         print(
@@ -929,7 +1287,7 @@ async def main():
     print()
 
     # --------------------------------------------------------
-    # 4. Sauvegarde cache
+    # 4. SAUVEGARDE CACHE
     # --------------------------------------------------------
 
     save_cache(articles)
@@ -938,16 +1296,25 @@ async def main():
     # 5. RSS
     # --------------------------------------------------------
 
-    generate_normal_rss(articles)
+    generate_normal_rss(
+        articles
+    )
 
-    generate_discord_rss(articles)
+    generate_discord_rss(
+        articles
+    )
 
     print()
+
     print("########################################")
     print("# DOFUS ACTUALITÉS RSS TERMINÉ")
     print("########################################")
     print()
 
+
+# ============================================================
+# LANCEMENT
+# ============================================================
 
 if __name__ == "__main__":
     asyncio.run(main())
