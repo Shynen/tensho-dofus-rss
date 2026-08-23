@@ -1046,11 +1046,17 @@ def extract_article_content(page):
     - conserve le vrai contenu du changelog
     """
 
+    # On privilégie les conteneurs réellement dédiés au contenu.
+    # "article" et "main" restent des fallbacks.
     selectors = [
         ".article-content",
         ".news-content",
         ".article-body",
         ".content-article",
+        '[class*="article-content"]',
+        '[class*="article__content"]',
+        '[class*="news-content"]',
+        '[class*="news__content"]',
         "article",
         "main",
     ]
@@ -1058,31 +1064,59 @@ def extract_article_content(page):
     for selector in selectors:
 
         try:
-
             locator = page.locator(selector).first
 
             if locator.count() == 0:
                 continue
 
-            text = locator.inner_text(timeout=5000).strip()
+            # On récupère le DOM du conteneur pour pouvoir supprimer
+            # les éléments parasites avant extraction du texte.
+            html_content = locator.evaluate(
+                """element => {
+                    const clone = element.cloneNode(true);
 
-            if len(text) < 100:
-                continue
+                    clone.querySelectorAll(
+                        'script, style, nav, header, footer, form, '
+                        'button, aside, [class*="share"], '
+                        '[class*="social"], [class*="breadcrumb"], '
+                        '[class*="navigation"], [class*="sidebar"]'
+                    ).forEach(el => el.remove());
 
-            # ----------------------------------------------------
-            # Nettoyage des lignes
-            # ----------------------------------------------------
+                    return clone.innerHTML;
+                }"""
+            )
 
+            soup = BeautifulSoup(
+                html_content,
+                "html.parser"
+            )
+
+            # Suppression supplémentaire des éléments parasites.
+            for unwanted in soup.select(
+                "script, style, nav, header, footer, form, "
+                "button, aside"
+            ):
+                unwanted.decompose()
+
+            text = soup.get_text(
+                "\n",
+                strip=True
+            )
+
+            # Nettoyage des lignes.
             lines = []
 
             for line in text.splitlines():
 
-                line = line.strip()
+                line = clean_text(line)
 
                 if not line:
                     continue
 
                 lines.append(line)
+
+            if len(lines) < 3:
+                continue
 
             # ----------------------------------------------------
             # Suppression de l'en-tête/navigation du changelog
@@ -1092,6 +1126,8 @@ def extract_article_content(page):
                 "Corrections de bugs",
                 "Modifications",
                 "Nouveautés",
+                "Améliorations",
+                "Équilibrage",
             )
 
             start_index = None
@@ -1104,7 +1140,6 @@ def extract_article_content(page):
                     break
 
             if start_index is not None:
-
                 lines = lines[start_index:]
 
             # ----------------------------------------------------
@@ -1114,6 +1149,9 @@ def extract_article_content(page):
             end_markers = (
                 "Partager",
                 "Tweet",
+                "Partager sur",
+                "Facebook",
+                "X",
             )
 
             cleaned_lines = []
@@ -1136,6 +1174,8 @@ def extract_article_content(page):
             continue
 
     return ""
+
+
 # ============================================================
 # ENRICHISSEMENT ARTICLE
 # ============================================================
