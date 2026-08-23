@@ -162,7 +162,7 @@ def collect_news_urls():
                     full_url = urljoin(
                         BASE_URL,
                         href
-                    ).rstrip("/")
+                        ).split("#", 1)[0].rstrip("/")
 
                     if is_valid_news_url(full_url):
                         urls.add(full_url)
@@ -256,9 +256,14 @@ def collect_news_urls():
 
 
 def extract_article(url, cache):
-
     session = requests.Session()
     session.headers.update(HEADERS)
+
+    soup = None
+
+    # -------------------------------------------------
+    # 1. Tentative classique avec requests
+    # -------------------------------------------------
 
     try:
         response = session.get(
@@ -274,29 +279,32 @@ def extract_article(url, cache):
         )
 
     except Exception as e:
-        print(f"⚠️ Impossible de charger : {e}")
-        return None
+        print(f"⚠️ Requests impossible : {e}")
+
+    # -------------------------------------------------
+    # 2. Extraction du titre
+    # -------------------------------------------------
 
     title = ""
 
-    h1 = soup.find("h1")
+    if soup:
+        h1 = soup.find("h1")
 
-    if h1:
-        title = clean_text(
-            h1.get_text(" ", strip=True)
-        )
-
-    if not title:
-
-        meta = soup.find(
-            "meta",
-            attrs={"property": "og:title"}
-        )
-
-        if meta:
+        if h1:
             title = clean_text(
-                meta.get("content")
+                h1.get_text(" ", strip=True)
             )
+
+        if not title:
+            meta = soup.find(
+                "meta",
+                attrs={"property": "og:title"}
+            )
+
+            if meta:
+                title = clean_text(
+                    meta.get("content")
+                )
 
     if not title:
         title = (
@@ -307,62 +315,284 @@ def extract_article(url, cache):
             .title()
         )
 
+    # -------------------------------------------------
+    # 3. Recherche de la date dans le HTML
+    # -------------------------------------------------
+
     dt = None
 
-    for script in soup.find_all(
-        "script",
-        type="application/ld+json"
-    ):
+    if soup:
 
-        raw = script.string or script.get_text()
-
-        if not raw:
-            continue
-
-        for value in re.findall(
-            r'"datePublished"\s*:\s*"([^"]+)"',
-            raw
+        # JSON-LD
+        for script in soup.find_all(
+            "script",
+            type="application/ld+json"
         ):
+            raw = script.string or script.get_text()
 
-            dt = parse_date(value)
+            if not raw:
+                continue
 
-            if dt:
-                break
+            # Recherche large de plusieurs noms possibles
+            for field in [
+                "datePublished",
+                "dateCreated",
+                "dateModified",
+                "published",
+                "publicationDate",
+                "publishDate"
+            ]:
 
-        if dt:
-            break
-
-    if not dt:
-
-        for attrs in [
-            {"property": "article:published_time"},
-            {"property": "og:published_time"},
-        ]:
-
-            meta = soup.find(
-                "meta",
-                attrs=attrs
-            )
-
-            if meta:
-
-                dt = parse_date(
-                    meta.get("content")
+                pattern = (
+                    rf'"{field}"\s*:\s*"([^"]+)"'
                 )
+
+                for value in re.findall(
+                    pattern,
+                    raw,
+                    flags=re.IGNORECASE
+                ):
+                    dt = parse_date(value)
+
+                    if dt:
+                        break
 
                 if dt:
                     break
 
-    if not dt:
-
-        for node in soup.find_all("time"):
-
-            dt = parse_date(
-                node.get("datetime")
-            )
-
             if dt:
                 break
+
+        # Meta tags
+        if not dt:
+
+            meta_selectors = [
+                {"property": "article:published_time"},
+                {"property": "og:published_time"},
+                {"property": "article:modified_time"},
+                {"name": "date"},
+                {"name": "publishdate"},
+                {"name": "publication_date"},
+                {"name": "published"},
+            ]
+
+            for attrs in meta_selectors:
+
+                meta = soup.find(
+                    "meta",
+                    attrs=attrs
+                )
+
+                if not meta:
+                    continue
+
+                for attr in [
+                    "content",
+                    "value"
+                ]:
+                    value = meta.get(attr)
+
+                    if not value:
+                        continue
+
+                    dt = parse_date(value)
+
+                    if dt:
+                        break
+
+                if dt:
+                    break
+
+        # Balises <time>
+        if not dt:
+
+            for node in soup.find_all("time"):
+
+                candidates = [
+                    node.get("datetime"),
+                    node.get("data-datetime"),
+                    node.get("data-date"),
+                    node.get("data-time"),
+                ]
+
+                for value in candidates:
+
+                    dt = parse_date(value)
+
+                    if dt:
+                        break
+
+                if dt:
+                    break
+
+    # -------------------------------------------------
+    # 4. FALLBACK PLAYWRIGHT
+    # -------------------------------------------------
+
+    if not dt:
+
+        print("🔄 Date absente avec requests → Playwright...")
+
+        try:
+
+            with sync_playwright() as p:
+
+                browser = p.chromium.launch(
+                    headless=True
+                )
+
+                page = browser.new_page(
+                    locale="fr-FR",
+                    user_agent=HEADERS["User-Agent"]
+                )
+
+                page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=60000
+                )
+
+                page.wait_for_timeout(2500)
+
+                html = page.content()
+
+                browser.close()
+
+            soup_pw = BeautifulSoup(
+                html,
+                "html.parser"
+            )
+
+            # -----------------------------
+            # JSON-LD Playwright
+            # -----------------------------
+
+            for script in soup_pw.find_all(
+                "script",
+                type="application/ld+json"
+            ):
+
+                raw = script.string or script.get_text()
+
+                if not raw:
+                    continue
+
+                for field in [
+                    "datePublished",
+                    "dateCreated",
+                    "dateModified",
+                    "published",
+                    "publicationDate",
+                    "publishDate"
+                ]:
+
+                    pattern = (
+                        rf'"{field}"\s*:\s*"([^"]+)"'
+                    )
+
+                    for value in re.findall(
+                        pattern,
+                        raw,
+                        flags=re.IGNORECASE
+                    ):
+
+                        dt = parse_date(value)
+
+                        if dt:
+                            break
+
+                    if dt:
+                        break
+
+                if dt:
+                    break
+
+            # -----------------------------
+            # Meta Playwright
+            # -----------------------------
+
+            if not dt:
+
+                for attrs in [
+                    {"property": "article:published_time"},
+                    {"property": "og:published_time"},
+                    {"property": "article:modified_time"},
+                    {"name": "date"},
+                    {"name": "publishdate"},
+                    {"name": "publication_date"},
+                ]:
+
+                    meta = soup_pw.find(
+                        "meta",
+                        attrs=attrs
+                    )
+
+                    if not meta:
+                        continue
+
+                    for attr in [
+                        "content",
+                        "value"
+                    ]:
+
+                        value = meta.get(attr)
+
+                        if not value:
+                            continue
+
+                        dt = parse_date(value)
+
+                        if dt:
+                            break
+
+                    if dt:
+                        break
+
+            # -----------------------------
+            # <time> Playwright
+            # -----------------------------
+
+            if not dt:
+
+                for node in soup_pw.find_all("time"):
+
+                    for value in [
+                        node.get("datetime"),
+                        node.get("data-datetime"),
+                        node.get("data-date"),
+                        node.get("data-time"),
+                    ]:
+
+                        dt = parse_date(value)
+
+                        if dt:
+                            break
+
+                    if dt:
+                        break
+
+            # Titre rendu par Playwright
+            if not title:
+
+                h1 = soup_pw.find("h1")
+
+                if h1:
+                    title = clean_text(
+                        h1.get_text(
+                            " ",
+                            strip=True
+                        )
+                    )
+
+        except Exception as e:
+
+            print(
+                f"⚠️ Playwright article impossible : {e}"
+            )
+
+    # -------------------------------------------------
+    # 5. Cache
+    # -------------------------------------------------
 
     if not dt and url in cache:
 
@@ -370,36 +600,59 @@ def extract_article(url, cache):
             cache[url].get("pubDate")
         )
 
+    # -------------------------------------------------
+    # 6. Impossible de trouver la date
+    # -------------------------------------------------
+
     if not dt:
-        print("⚠️ Date introuvable.")
+
+        print(
+            "❌ Date introuvable après toutes les méthodes."
+        )
+
         return None
+
+    # -------------------------------------------------
+    # 7. Description
+    # -------------------------------------------------
 
     description = ""
 
-    meta = soup.find(
-        "meta",
-        attrs={"name": "description"}
-    )
-
-    if meta:
-        description = clean_text(
-            meta.get("content")
-        )
-
-    if not description:
+    if soup:
 
         meta = soup.find(
             "meta",
-            attrs={"property": "og:description"}
+            attrs={"name": "description"}
         )
 
         if meta:
+
             description = clean_text(
                 meta.get("content")
             )
 
+        if not description:
+
+            meta = soup.find(
+                "meta",
+                attrs={
+                    "property": "og:description"
+                }
+            )
+
+            if meta:
+
+                description = clean_text(
+                    meta.get("content")
+                )
+
     if not description:
+
         description = title
+
+    # -------------------------------------------------
+    # 8. Article final
+    # -------------------------------------------------
 
     return {
         "title": title,
