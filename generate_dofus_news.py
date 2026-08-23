@@ -59,6 +59,8 @@ INVALID_TITLES = {
     "decouvrir",
     "actualités",
     "actualites",
+    "actualités récentes",
+    "actualites recentes",
     "news",
     "voir plus",
     "lire la suite",
