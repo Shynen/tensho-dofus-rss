@@ -229,7 +229,8 @@ def collect_news_urls():
     print(SOURCE_URL)
     print("========================================")
 
-    urls = set()
+    # URL -> date trouvée directement sur la page de listing.
+    news_data = {}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -248,33 +249,92 @@ def collect_news_urls():
         except Exception as exc:
             print(f"❌ Erreur ouverture page : {exc}")
             browser.close()
-            return []
+            return {}
 
         def collect_visible_urls():
-            before = len(urls)
-            links = page.locator('a[href*="/fr/mmorpg/actualites/news/"]')
+            before = len(news_data)
+            links = page.locator(
+                'a[href*="/fr/mmorpg/actualites/news/"]'
+            )
 
             for i in range(links.count()):
                 try:
-                    href = links.nth(i).get_attribute("href")
+                    link = links.nth(i)
+                    href = link.get_attribute("href")
+
                     if not href:
                         continue
 
                     full_url = urljoin(BASE_URL, href)
-                    full_url = full_url.split("#", 1)[0].rstrip("/")
+                    full_url = (
+                        full_url.split("#", 1)[0].rstrip("/")
+                    )
 
-                    if is_valid_news_url(full_url):
-                        urls.add(full_url)
+                    if not is_valid_news_url(full_url):
+                        continue
+
+                    # La page de listing contient normalement la date
+                    # dans la carte qui englobe le lien. On remonte
+                    # quelques niveaux et utilise le premier texte
+                    # contenant une date française exploitable.
+                    listing_date = None
+
+                    for level in range(1, 7):
+                        try:
+                            parent = link.locator(
+                                "xpath=" + "/.." * level
+                            )
+                            card_text = parent.inner_text(
+                                timeout=2000
+                            )
+
+                            listing_date = parse_french_date(
+                                card_text
+                            )
+
+                            if listing_date is not None:
+                                break
+
+                        except Exception:
+                            continue
+
+                    # On conserve l'URL même si la date n'est pas
+                    # trouvée : extract_article pourra encore tenter
+                    # la page individuelle puis le cache.
+                    if full_url not in news_data:
+                        news_data[full_url] = listing_date
+                    elif (
+                        news_data[full_url] is None
+                        and listing_date is not None
+                    ):
+                        news_data[full_url] = listing_date
+
                 except Exception:
                     pass
 
-            return len(urls) - before
+            return len(news_data) - before
 
         collect_visible_urls()
-        print(f"Premier lot : {len(urls)} actualités détectées.")
 
-        for click_number in range(1, MAX_LOAD_MORE_CLICKS + 1):
-            if len(urls) >= MAX_ARTICLES:
+        dated = sum(
+            1
+            for value in news_data.values()
+            if value is not None
+        )
+
+        print(
+            f"Premier lot : {len(news_data)} actualités détectées."
+        )
+        print(
+            f"📅 Dates trouvées dans la liste : "
+            f"{dated}/{len(news_data)}"
+        )
+
+        for click_number in range(
+            1,
+            MAX_LOAD_MORE_CLICKS + 1,
+        ):
+            if len(news_data) >= MAX_ARTICLES:
                 break
 
             print(
@@ -282,19 +342,26 @@ def collect_news_urls():
                 f"({click_number}/{MAX_LOAD_MORE_CLICKS})..."
             )
 
-            buttons = page.get_by_text("VOIR PLUS", exact=True)
+            buttons = page.get_by_text(
+                "VOIR PLUS",
+                exact=True,
+            )
             clicked = False
 
             for i in range(buttons.count()):
                 try:
                     button = buttons.nth(i)
+
                     if not button.is_visible():
                         continue
+
                     button.scroll_into_view_if_needed()
                     button.click(timeout=10000)
+
                     clicked = True
                     print("🟢 VOIR PLUS cliqué.")
                     break
+
                 except Exception:
                     pass
 
@@ -305,22 +372,37 @@ def collect_news_urls():
             page.wait_for_timeout(2500)
 
             try:
-                page.wait_for_load_state("networkidle", timeout=10000)
+                page.wait_for_load_state(
+                    "networkidle",
+                    timeout=10000,
+                )
             except PlaywrightTimeoutError:
                 pass
 
             added = collect_visible_urls()
+
+            dated = sum(
+                1
+                for value in news_data.values()
+                if value is not None
+            )
+
             print(
                 f"Actualités actuellement trouvées : "
-                f"{len(urls)} (+{added})"
+                f"{len(news_data)} (+{added})"
+            )
+            print(
+                f"📅 Dates trouvées dans la liste : "
+                f"{dated}/{len(news_data)}"
             )
 
             if added == 0:
                 break
 
         browser.close()
+
     # Fallback si Dofus bloque la récupération directe.
-    if len(urls) == 0:
+    if len(news_data) == 0:
         print("")
         print(
             "⚠️ Aucune actualité trouvée directement."
@@ -332,9 +414,14 @@ def collect_news_urls():
         fallback_urls = collect_news_urls_google_news()
 
         for fallback_url in fallback_urls:
-            urls.add(fallback_url)
-    print(f"🟢 Total actualités récupérées : {len(urls)}")
-    return sorted(urls)
+            news_data[fallback_url] = None
+
+    print(
+        f"🟢 Total actualités récupérées : "
+        f"{len(news_data)}"
+    )
+
+    return news_data
 
 
 def extract_date_from_soup(soup):
@@ -426,7 +513,7 @@ def extract_date_from_soup(soup):
     return None, None
 
 
-def extract_article(url, cache):
+def extract_article(url, cache, listing_date=None):
     session = requests.Session()
     session.headers.update(HEADERS)
 
@@ -459,6 +546,12 @@ def extract_article(url, cache):
         )
 
     dt, date_source = extract_date_from_soup(soup)
+
+    # Les pages individuelles peuvent parfois masquer leur date.
+    # La page de listing officielle fournit déjà cette date.
+    if dt is None and listing_date is not None:
+        dt = listing_date
+        date_source = "LISTING"
 
     # Cache seulement en dernier recours.
     if dt is None and url in cache:
@@ -535,19 +628,28 @@ print("# ACTUALITÉS FRANÇAISES")
 print("########################################")
 
 cache = load_cache()
-urls = collect_news_urls()
+news_data = collect_news_urls()
 
 print("")
 print("########################################")
-print(f"# URLs Actualités Dofus trouvées : {len(urls)}")
+print(
+    f"# URLs Actualités Dofus trouvées : {len(news_data)}"
+)
 print("########################################")
 
 articles = []
 
-for index, url in enumerate(urls, start=1):
-    print(f"[{index}/{len(urls)}] {url}")
+for index, (url, listing_date) in enumerate(
+    news_data.items(),
+    start=1,
+):
+    print(f"[{index}/{len(news_data)}] {url}")
 
-    article = extract_article(url, cache)
+    article = extract_article(
+        url,
+        cache,
+        listing_date=listing_date,
+    )
 
     if article is not None:
         articles.append(article)
