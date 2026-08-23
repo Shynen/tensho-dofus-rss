@@ -5,18 +5,9 @@ import re
 from datetime import datetime, timezone
 from email.utils import formatdate
 from urllib.parse import urljoin
+from xml.etree.ElementTree import Element, SubElement, ElementTree, indent
 
-from xml.etree.ElementTree import (
-    Element,
-    SubElement,
-    ElementTree,
-    indent,
-)
-
-from playwright.sync_api import (
-    sync_playwright,
-    TimeoutError as PlaywrightTimeoutError,
-)
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 
 # ============================================================
@@ -30,48 +21,17 @@ SOURCE_URL = (
 )
 
 OUTPUT = "dofus-news.xml"
-
 DISCORD_OUTPUT = "dofus-news-discord.xml"
-
 CACHE_FILE = "dofus_news_cache.json"
 
 MAX_ARTICLES = 20
-
 MAX_LOAD_MORE_CLICKS = 8
-
-
-# ============================================================
-# USER AGENT
-# ============================================================
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/149.0 Safari/537.36"
 )
-
-
-# ============================================================
-# TITRES INVALIDES
-# ============================================================
-
-INVALID_TITLES = {
-    "",
-    "tous",
-    "découvrir",
-    "decouvrir",
-    "actualités",
-    "actualites",
-    "actualités récentes",
-    "actualites recentes",
-    "news",
-    "voir plus",
-    "voir tous",
-    "voir tous les articles",
-    "lire la suite",
-    "en savoir plus",
-    "en savoir+",
-}
 
 
 # ============================================================
@@ -98,15 +58,35 @@ FRENCH_MONTHS = {
 
 
 # ============================================================
+# TITRES À IGNORER
+# ============================================================
+
+INVALID_TITLES = {
+    "",
+    "tous",
+    "découvrir",
+    "decouvrir",
+    "actualités",
+    "actualites",
+    "actualités récentes",
+    "actualites recentes",
+    "news",
+    "voir plus",
+    "voir tous",
+    "voir tous les articles",
+    "lire la suite",
+    "en savoir plus",
+    "en savoir+",
+    "audience et publicité",
+}
+
+
+# ============================================================
 # UTILITAIRES
 # ============================================================
 
 def clean_text(value):
-    return re.sub(
-        r"\s+",
-        " ",
-        str(value or ""),
-    ).strip()
+    return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
 def normalize_title(value):
@@ -114,7 +94,6 @@ def normalize_title(value):
 
 
 def is_valid_title(value):
-
     title = clean_text(value)
 
     if not title:
@@ -132,65 +111,38 @@ def is_valid_title(value):
     return True
 
 
-# ============================================================
-# DATE
-# ============================================================
-
-def parse_date(value):
-
+def normalize_url(value):
     if not value:
-        return None
+        return ""
 
-    value = clean_text(value)
+    return (
+        urljoin(BASE_URL, value)
+        .split("#", 1)[0]
+        .rstrip("/")
+    )
 
-    # ISO
+
+def extract_article_id(url):
+    match = re.search(
+        r"/news/(\d+)-",
+        url,
+        re.IGNORECASE,
+    )
+
+    if not match:
+        return 0
+
     try:
-
-        if value.endswith("Z"):
-            value = value[:-1] + "+00:00"
-
-        dt = datetime.fromisoformat(value)
-
-        if dt.tzinfo is None:
-            dt = dt.replace(
-                tzinfo=timezone.utc
-            )
-
-        return dt.astimezone(
-            timezone.utc
-        )
-
+        return int(match.group(1))
     except Exception:
-        pass
+        return 0
 
-    # RFC / HTTP
-    try:
 
-        from email.utils import (
-            parsedate_to_datetime
-        )
-
-        dt = parsedate_to_datetime(
-            value
-        )
-
-        if dt.tzinfo is None:
-            dt = dt.replace(
-                tzinfo=timezone.utc
-            )
-
-        return dt.astimezone(
-            timezone.utc
-        )
-
-    except Exception:
-        pass
-
-    return None
-
+# ============================================================
+# DATES
+# ============================================================
 
 def parse_french_date(value):
-
     if not value:
         return None
 
@@ -198,8 +150,8 @@ def parse_french_date(value):
 
     # Exemple :
     # 20 août 2026
-    # 20 août 2026 à 17h00
-    # 20 août 2026 à 17:00
+    # 20 août 2026 à 18h00
+    # 20 août 2026 à 18:00
 
     match = re.search(
         r"\b"
@@ -209,52 +161,41 @@ def parse_french_date(value):
         r"décembre|decembre)"
         r"\s+(\d{4})"
         r"(?:\s+(?:à|a|at)\s+"
-        r"(\d{1,2})"
-        r"(?::|h)"
-        r"(\d{2}))?"
+        r"(\d{1,2})(?::|h)(\d{2}))?"
         r"\b",
         text,
-        flags=re.IGNORECASE,
+        re.IGNORECASE,
     )
 
     if match:
-
         try:
-
             return datetime(
                 int(match.group(3)),
-                FRENCH_MONTHS[
-                    match.group(2).lower()
-                ],
+                FRENCH_MONTHS[match.group(2).lower()],
                 int(match.group(1)),
                 int(match.group(4) or 0),
                 int(match.group(5) or 0),
                 tzinfo=timezone.utc,
             )
-
         except Exception:
             pass
 
     # Exemple :
     # 20/08/2026
-    # 20/08/2026 17:00
+    # 20/08/2026 18:00
 
     match = re.search(
         r"\b"
         r"(\d{1,2})[/-]"
         r"(\d{1,2})[/-]"
         r"(\d{4})"
-        r"(?:[ T]"
-        r"(\d{1,2}):"
-        r"(\d{2}))?"
+        r"(?:[ T](\d{1,2}):(\d{2}))?"
         r"\b",
         text,
     )
 
     if match:
-
         try:
-
             return datetime(
                 int(match.group(3)),
                 int(match.group(2)),
@@ -263,15 +204,49 @@ def parse_french_date(value):
                 int(match.group(5) or 0),
                 tzinfo=timezone.utc,
             )
-
         except Exception:
             pass
 
     return None
 
 
-def format_pubdate(dt):
+def parse_date(value):
+    if not value:
+        return None
 
+    value = clean_text(value)
+
+    try:
+        if value.endswith("Z"):
+            value = value[:-1] + "+00:00"
+
+        dt = datetime.fromisoformat(value)
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        return dt.astimezone(timezone.utc)
+
+    except Exception:
+        pass
+
+    try:
+        from email.utils import parsedate_to_datetime
+
+        dt = parsedate_to_datetime(value)
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        return dt.astimezone(timezone.utc)
+
+    except Exception:
+        pass
+
+    return None
+
+
+def format_pubdate(dt):
     return formatdate(
         dt.timestamp(),
         usegmt=True,
@@ -279,59 +254,23 @@ def format_pubdate(dt):
 
 
 # ============================================================
-# ID DOFUS
-# ============================================================
-
-def extract_article_id(url):
-
-    match = re.search(
-        r"/news/(\d+)-",
-        url,
-        flags=re.IGNORECASE,
-    )
-
-    if not match:
-        return 0
-
-    try:
-        return int(match.group(1))
-
-    except Exception:
-        return 0
-
-
-# ============================================================
 # CACHE
 # ============================================================
 
 def load_cache():
-
-    if not os.path.exists(
-        CACHE_FILE
-    ):
-
-        print(
-            "Cache Actualités Dofus chargé : "
-            "0 articles."
-        )
-
+    if not os.path.exists(CACHE_FILE):
+        print("Cache Actualités Dofus chargé : 0 articles.")
         return {}
 
     try:
-
         with open(
             CACHE_FILE,
             "r",
             encoding="utf-8",
         ) as file:
-
             data = json.load(file)
 
-        if not isinstance(
-            data,
-            dict,
-        ):
-
+        if not isinstance(data, dict):
             return {}
 
         print(
@@ -342,23 +281,19 @@ def load_cache():
         return data
 
     except Exception as exc:
-
         print(
             "⚠️ Erreur lecture cache : "
             f"{exc}"
         )
-
         return {}
 
 
 def save_cache(cache):
-
     with open(
         CACHE_FILE,
         "w",
         encoding="utf-8",
     ) as file:
-
         json.dump(
             cache,
             file,
@@ -368,43 +303,177 @@ def save_cache(cache):
 
 
 # ============================================================
-# URL VALIDE
+# URL NEWS VALIDE
 # ============================================================
 
 def is_valid_news_url(url):
-
     if not url:
         return False
 
-    value = url.lower()
-
     return (
         "/fr/mmorpg/actualites/news/"
-        in value
-        and
-        "/news/" in value
+        in url.lower()
     )
 
 
 # ============================================================
-# PLAYWRIGHT
+# EXTRACTION D'UNE CARTE
+# ============================================================
+
+def find_article_card(link, article_url):
+    """
+    Remonte depuis le lien jusqu'au plus petit conteneur
+    correspondant uniquement à CET article.
+
+    Cela évite de récupérer par erreur un titre provenant
+    d'une autre zone de la page.
+    """
+
+    fallback = None
+
+    for level in range(1, 13):
+
+        try:
+            parent = link.locator(
+                "xpath=" + "/.." * level
+            )
+
+            links = parent.locator(
+                'a[href*="/fr/mmorpg/actualites/news/"]'
+            )
+
+            urls = set()
+
+            for i in range(links.count()):
+                href = links.nth(i).get_attribute("href")
+                url = normalize_url(href)
+
+                if is_valid_news_url(url):
+                    urls.add(url)
+
+            if urls != {article_url}:
+                continue
+
+            text = clean_text(
+                parent.inner_text(
+                    timeout=1500
+                )
+            )
+
+            if not text:
+                continue
+
+            if fallback is None:
+                fallback = parent
+
+            if parse_french_date(text):
+                return parent
+
+        except Exception:
+            continue
+
+    return fallback
+
+
+# ============================================================
+# EXTRACTION TITRE
+# ============================================================
+
+def extract_card_title(card, link, card_text):
+    """
+    Recherche le titre uniquement à l'intérieur de la carte.
+
+    On ne dépend d'aucun titre ou URL spécifique.
+    """
+
+    # --------------------------------------------------------
+    # 1. Texte du lien lui-même
+    # --------------------------------------------------------
+
+    try:
+        candidate = clean_text(
+            link.inner_text(
+                timeout=1500
+            )
+        )
+
+        if is_valid_title(candidate):
+            return candidate
+
+    except Exception:
+        pass
+
+    # --------------------------------------------------------
+    # 2. Ligne située juste avant la date
+    # --------------------------------------------------------
+
+    lines = [
+        clean_text(line)
+        for line in str(card_text or "").splitlines()
+        if clean_text(line)
+    ]
+
+    for i, line in enumerate(lines):
+
+        if parse_french_date(line):
+
+            for j in range(
+                i - 1,
+                max(-1, i - 6),
+                -1,
+            ):
+
+                candidate = lines[j]
+
+                if parse_french_date(candidate):
+                    continue
+
+                if is_valid_title(candidate):
+                    return candidate
+
+    # --------------------------------------------------------
+    # 3. Headings de la carte
+    # --------------------------------------------------------
+
+    try:
+        headings = card.locator(
+            "h1, h2, h3, h4, h5, h6"
+        )
+
+        candidates = []
+
+        for i in range(headings.count()):
+
+            candidate = clean_text(
+                headings.nth(i).inner_text(
+                    timeout=1500
+                )
+            )
+
+            if is_valid_title(candidate):
+                candidates.append(candidate)
+
+        if candidates:
+            return candidates[0]
+
+    except Exception:
+        pass
+
+    return ""
+
+
+# ============================================================
+# COLLECTE DES ACTUALITÉS
 # ============================================================
 
 def collect_news():
 
     print("")
-    print(
-        "========================================"
-    )
-    print(
-        "Ouverture avec Playwright :"
-    )
+    print("========================================")
+    print("Ouverture avec Playwright :")
     print(SOURCE_URL)
-    print(
-        "========================================"
-    )
+    print("========================================")
 
-    # URL -> informations du listing
     articles = {}
 
     with sync_playwright() as p:
@@ -426,9 +495,7 @@ def collect_news():
                 timeout=60000,
             )
 
-            page.wait_for_timeout(
-                4000
-            )
+            page.wait_for_timeout(4000)
 
         except Exception as exc:
 
@@ -438,12 +505,11 @@ def collect_news():
             )
 
             browser.close()
-
             return []
 
-        # --------------------------------------------------------
-        # COLLECTE
-        # --------------------------------------------------------
+        # ----------------------------------------------------
+        # SCAN DES CARTES VISIBLES
+        # ----------------------------------------------------
 
         def collect_visible():
 
@@ -457,211 +523,137 @@ def collect_news():
 
                 try:
 
-                    link = links.nth(
-                        index
-                    )
+                    link = links.nth(index)
 
                     href = link.get_attribute(
                         "href"
                     )
 
-                    if not href:
-                        continue
-
-                    url = urljoin(
-                        BASE_URL,
-                        href,
-                    )
-
-                    url = (
-                        url
-                        .split("#", 1)[0]
-                        .rstrip("/")
+                    article_url = normalize_url(
+                        href
                     )
 
                     if not is_valid_news_url(
-                        url
+                        article_url
                     ):
                         continue
 
-                    # ------------------------------------------------
-                    # TITRE
-                    # ------------------------------------------------
+                    # ----------------------------------------
+                    # CARTE
+                    # ----------------------------------------
 
-                    title = None
+                    card = find_article_card(
+                        link,
+                        article_url,
+                    )
 
-                    # On remonte progressivement dans
-                    # les conteneurs de la carte.
+                    if card is None:
+                        continue
 
-                    for level in range(
-                        1,
-                        7,
-                    ):
+                    card_text = clean_text(
+                        card.inner_text(
+                            timeout=1500
+                        )
+                    )
 
-                        try:
+                    # ----------------------------------------
+                    # DATE
+                    # ----------------------------------------
 
-                            parent = link.locator(
-                                "xpath="
-                                + "/.." * level
-                            )
+                    listing_date = (
+                        parse_french_date(
+                            card_text
+                        )
+                    )
 
-                            for selector in (
-                                "h1",
-                                "h2",
-                                "h3",
-                                "h4",
-                                "h5",
-                                "h6",
-                            ):
+                    # Secours si la carte immédiate
+                    # ne contient pas la date.
 
-                                headings = (
-                                    parent.locator(
-                                        selector
-                                    )
+                    if listing_date is None:
+
+                        for level in range(
+                            1,
+                            5,
+                        ):
+
+                            try:
+
+                                parent = link.locator(
+                                    "xpath="
+                                    + "/.." * level
                                 )
 
-                                for h in range(
-                                    headings.count()
-                                ):
-
-                                    candidate = clean_text(
-                                        headings.nth(h).inner_text(
+                                candidate = (
+                                    parse_french_date(
+                                        parent.inner_text(
                                             timeout=1500
                                         )
                                     )
+                                )
 
-                                    if is_valid_title(
-                                        candidate
-                                    ):
-
-                                        title = (
-                                            candidate
-                                        )
-
-                                        break
-
-                                if title:
+                                if candidate:
+                                    listing_date = candidate
                                     break
 
-                            if title:
-                                break
-
-                        except Exception:
-                            continue
-
-                    # Fallback texte du lien
-
-                    if not title:
-
-                        try:
-
-                            candidate = clean_text(
-                                link.inner_text(
-                                    timeout=1500
-                                )
-                            )
-
-                            if is_valid_title(
-                                candidate
-                            ):
-
-                                title = candidate
-
-                        except Exception:
-                            pass
-
-                    # ------------------------------------------------
-                    # DATE DU LISTING
-                    # ------------------------------------------------
-
-                    listing_date = None
-
-                    for level in range(
-                        1,
-                        7,
-                    ):
-
-                        try:
-
-                            parent = link.locator(
-                                "xpath="
-                                + "/.." * level
-                            )
-
-                            text = clean_text(
-                                parent.inner_text(
-                                    timeout=1500
-                                )
-                            )
-
-                            if not text:
+                            except Exception:
                                 continue
 
-                            candidate_date = (
-                                parse_french_date(
-                                    text
-                                )
-                            )
+                    if listing_date is None:
+                        continue
 
-                            if candidate_date:
+                    # ----------------------------------------
+                    # TITRE
+                    # ----------------------------------------
 
-                                listing_date = (
-                                    candidate_date
-                                )
+                    title = extract_card_title(
+                        card,
+                        link,
+                        card_text,
+                    )
 
-                                break
+                    # ----------------------------------------
+                    # ENREGISTREMENT
+                    # ----------------------------------------
 
-                        except Exception:
-                            continue
+                    article = {
+                        "url": article_url,
+                        "title": title,
+                        "date": listing_date,
+                        "id": extract_article_id(
+                            article_url
+                        ),
+                    }
 
-                    # ------------------------------------------------
-                    # SAUVEGARDE
-                    # ------------------------------------------------
+                    # Une URL peut apparaître plusieurs fois
+                    # dans une même carte (image + titre).
+                    #
+                    # On conserve la meilleure information.
 
-                    if url not in articles:
+                    if article_url not in articles:
 
-                        articles[url] = {
-                            "url": url,
-                            "title": title or "",
-                            "date": listing_date,
-                            "id": extract_article_id(
-                                url
-                            ),
-                        }
+                        articles[article_url] = article
 
                     else:
 
-                        # Si une deuxième occurrence
-                        # fournit une date alors que
-                        # la première n'en avait pas.
-
-                        if (
-                            articles[url]["date"]
-                            is None
-                            and listing_date
-                        ):
-
-                            articles[url]["date"] = (
-                                listing_date
-                            )
+                        existing = articles[
+                            article_url
+                        ]
 
                         if (
                             not is_valid_title(
-                                articles[url]["title"]
+                                existing["title"]
                             )
                             and is_valid_title(
                                 title
                             )
                         ):
-
-                            articles[url]["title"] = (
-                                title
-                            )
+                            existing["title"] = title
 
                 except Exception:
                     continue
 
-        # Premier passage
+        # Premier scan
+
         collect_visible()
 
         print(
@@ -669,20 +661,9 @@ def collect_news():
             f"{len(articles)} actualités détectées."
         )
 
-        dated_count = sum(
-            1
-            for article in articles.values()
-            if article["date"] is not None
-        )
-
-        print(
-            "📅 Dates trouvées dans la liste : "
-            f"{dated_count}/{len(articles)}"
-        )
-
-        # --------------------------------------------------------
+        # ----------------------------------------------------
         # VOIR PLUS
-        # --------------------------------------------------------
+        # ----------------------------------------------------
 
         for click_number in range(
             1,
@@ -690,12 +671,10 @@ def collect_news():
         ):
 
             if len(articles) >= MAX_ARTICLES:
-
                 break
 
             print(
-                "🔄 Recherche du bouton "
-                f"VOIR PLUS "
+                "🔄 Recherche du bouton VOIR PLUS "
                 f"({click_number}/{MAX_LOAD_MORE_CLICKS})..."
             )
 
@@ -712,9 +691,7 @@ def collect_news():
 
                 try:
 
-                    button = buttons.nth(
-                        i
-                    )
+                    button = buttons.nth(i)
 
                     if not button.is_visible():
                         continue
@@ -769,20 +746,15 @@ def collect_news():
             )
 
             print(
-                "Actualités actuellement "
-                f"trouvées : {after} "
+                "Actualités actuellement trouvées : "
+                f"{after} "
                 f"(+{after - before})"
             )
 
             if after == before:
-
                 break
 
         browser.close()
-
-    # --------------------------------------------------------
-    # LISTE FINALE
-    # --------------------------------------------------------
 
     result = list(
         articles.values()
@@ -797,199 +769,157 @@ def collect_news():
 
 
 # ============================================================
-# TITRE DE SECOURS
+# VÉRIFICATION DU TITRE DU DERNIER ARTICLE
 # ============================================================
 
-def make_fallback_title(url):
+def verify_latest_title(article):
 
-    slug = (
-        url.rstrip("/")
-        .split("/")[-1]
+    if not article:
+        return article
+
+    print("")
+    print(
+        "🔎 Vérification du titre du dernier article :"
     )
 
-    # Supprime l'ID numérique
-    slug = re.sub(
-        r"^\d+-",
-        "",
-        slug,
+    print(
+        f"   {article['url']}"
     )
 
-    return (
-        slug
-        .replace("-", " ")
-        .strip()
-        .title()
-    )
+    with sync_playwright() as p:
 
-
-# ============================================================
-# DESCRIPTION
-# ============================================================
-
-def get_description(
-    page,
-    title,
-):
-
-    description = ""
-
-    # Meta description
-
-    try:
-
-        meta = page.locator(
-            'meta[name="description"]'
+        browser = p.chromium.launch(
+            headless=True
         )
 
-        if meta.count():
-
-            description = clean_text(
-                meta.first.get_attribute(
-                    "content"
-                )
-            )
-
-    except Exception:
-        pass
-
-    # OpenGraph
-
-    if not description:
+        page = browser.new_page(
+            locale="fr-FR",
+            user_agent=USER_AGENT,
+        )
 
         try:
 
-            meta = page.locator(
-                'meta[property="og:description"]'
+            page.goto(
+                article["url"],
+                wait_until="domcontentloaded",
+                timeout=60000,
             )
 
-            if meta.count():
+            page.wait_for_timeout(
+                1500
+            )
 
-                description = clean_text(
-                    meta.first.get_attribute(
-                        "content"
-                    )
+            # ------------------------------------------------
+            # PRIORITÉ : OG TITLE
+            # ------------------------------------------------
+
+            try:
+
+                meta = page.locator(
+                    'meta[property="og:title"]'
                 )
 
-        except Exception:
-            pass
+                if meta.count():
 
-    return (
-        description
-        or title
-    )
+                    title = clean_text(
+                        meta.first.get_attribute(
+                            "content"
+                        )
+                    )
 
+                    if is_valid_title(title):
 
-# ============================================================
-# ENRICHISSEMENT DES ARTICLES
-# ============================================================
+                        article["title"] = title
 
-def enrich_articles(
-    articles,
-):
+                        print(
+                            "   🏷️ Titre confirmé : "
+                            f"{title}"
+                        )
 
-    print("")
+                        browser.close()
 
-    for index, article in enumerate(
-        articles,
-        start=1,
-    ):
+                        return article
 
-        print(
-            f"[{index}/{len(articles)}] "
-            f"{article['url']}"
-        )
+            except Exception:
+                pass
 
-        print(
-            "   🏷️ Titre trouvé via LISTING: "
-            f"{article['title']}"
-        )
+            # ------------------------------------------------
+            # SECOURS : H1
+            # ------------------------------------------------
 
-        if article["date"]:
+            try:
+
+                headings = page.locator(
+                    "h1"
+                )
+
+                for i in range(
+                    headings.count()
+                ):
+
+                    title = clean_text(
+                        headings.nth(i).inner_text(
+                            timeout=1500
+                        )
+                    )
+
+                    if is_valid_title(title):
+
+                        article["title"] = title
+
+                        print(
+                            "   🏷️ Titre confirmé : "
+                            f"{title}"
+                        )
+
+                        break
+
+            except Exception:
+                pass
+
+        except Exception as exc:
 
             print(
-                "   📅 Date trouvée via LISTING: "
-                f"{format_pubdate(article['date'])}"
+                "   ⚠️ Impossible de vérifier "
+                f"le titre : {exc}"
             )
 
-        # --------------------------------------------------------
-        # Si le titre est invalide,
-        # on essaie la page individuelle.
-        #
-        # IMPORTANT :
-        # on ne remplace PAS une bonne date du listing
-        # par une date du cache.
-        # --------------------------------------------------------
+        finally:
 
-        if is_valid_title(
-            article["title"]
-        ):
+            browser.close()
 
-            if article["date"]:
-
-                print(
-                    f"🟢 "
-                    f"{format_pubdate(article['date'])} "
-                    f"- "
-                    f"{article['title']}"
-                )
-
-            continue
-
-        # Fallback titre depuis URL
-
-        article["title"] = (
-            make_fallback_title(
-                article["url"]
-            )
-        )
-
-        print(
-            "   🛠️ Titre corrigé depuis URL : "
-            f"{article['title']}"
-        )
-
-    return articles
+    return article
 
 
 # ============================================================
 # CLASSEMENT
 # ============================================================
 
-def sort_articles(
-    articles,
-):
+def sort_articles(articles):
 
-    # --------------------------------------------------------
-    # LOGIQUE DÉFINITIVE :
-    #
-    # 1. DATE DE PUBLICATION DU LISTING
-    # 2. ID DOFUS EN CAS D'ÉGALITÉ
-    #
-    # Le cache n'intervient JAMAIS ici.
-    #
-    # Exemple actuel :
-    #
-    # Saison Ocre       20/08 ID 1770807
-    # Ankama Live       20/08 ID 1771404
-    # Packs classe      20/08 ID 1771141
-    # ZEVENT             20/08 ID 1771339
-    #
-    # => Ankama Live = ID le plus élevé
-    #
-    # Cela permet de neutraliser l'article mis
-    # en avant placé artificiellement en première position.
-    # --------------------------------------------------------
+    """
+    Classement totalement générique.
+
+    PRIORITÉ 1 :
+        date de publication
+
+    PRIORITÉ 2 :
+        ID DOFUS si plusieurs articles ont exactement
+        la même date.
+
+    Aucune URL ou aucun titre n'est connu à l'avance.
+    """
 
     articles = [
         article
         for article in articles
-        if article["date"] is not None
+        if article.get("date") is not None
     ]
 
     articles.sort(
         key=lambda article: (
             article["date"],
-            article["id"],
+            article.get("id", 0),
         ),
         reverse=True,
     )
@@ -1060,7 +990,7 @@ def create_rss(
             },
         ).text = article["url"]
 
-        # IMPORTANT READYBOT
+        # IMPORTANT POUR READYBOT
         SubElement(
             item,
             "pubDate",
@@ -1093,7 +1023,7 @@ def create_rss(
 
 
 # ============================================================
-# MAIN
+# PROGRAMME PRINCIPAL
 # ============================================================
 
 print("")
@@ -1104,18 +1034,17 @@ print(
     "# Tensho Dofus"
 )
 print(
-    "# ACTUALITÉS FRANÇAISES"
+    "# ACTUALITÉS / NEWS"
 )
 print(
     "########################################"
 )
 
-
 cache = load_cache()
 
 
 # ============================================================
-# SCAN DOFUS
+# SCAN
 # ============================================================
 
 articles = collect_news()
@@ -1135,21 +1064,23 @@ print(
 
 
 # ============================================================
-# ENRICHISSEMENT
-# ============================================================
-
-articles = enrich_articles(
-    articles
-)
-
-
-# ============================================================
 # CLASSEMENT
 # ============================================================
 
 articles = sort_articles(
     articles
 )
+
+
+# ============================================================
+# DERNIER ARTICLE
+# ============================================================
+
+if articles:
+
+    articles[0] = verify_latest_title(
+        articles[0]
+    )
 
 
 # ============================================================
@@ -1162,7 +1093,7 @@ articles = articles[
 
 
 # ============================================================
-# AFFICHAGE FINAL
+# AFFICHAGE
 # ============================================================
 
 print("")
@@ -1176,8 +1107,6 @@ print(
 print(
     "########################################"
 )
-print("")
-
 
 for index, article in enumerate(
     articles,
@@ -1191,30 +1120,20 @@ for index, article in enumerate(
         f"{article['title']}"
     )
 
+    print(
+        f"    {article['url']}"
+    )
+
 
 # ============================================================
-# DESCRIPTION + CACHE
+# CACHE DES ARTICLES
 # ============================================================
 
 for article in articles:
 
-    # Description simple.
-    #
-    # On garde le système volontairement minimal :
-    # le titre est suffisant pour Discord.
-
     article["description"] = (
         article["title"]
     )
-
-    # --------------------------------------------------------
-    # CACHE :
-    #
-    # Le cache sert à conserver les informations historiques.
-    #
-    # MAIS :
-    # il n'est PAS utilisé pour choisir le dernier article.
-    # --------------------------------------------------------
 
     cache[
         article["url"]
@@ -1227,14 +1146,13 @@ for article in articles:
     }
 
 
-save_cache(
-    cache
-)
-
-
 # ============================================================
 # RSS COMPLET
 # ============================================================
+
+save_cache(
+    cache
+)
 
 print("")
 print(
@@ -1254,7 +1172,7 @@ print(
 
 
 # ============================================================
-# DISCORD
+# RSS DISCORD
 # ============================================================
 
 print("")
@@ -1263,11 +1181,24 @@ print(
 )
 
 
-if articles:
+if not articles:
 
-    # ========================================================
-    # DERNIÈRE ACTUALITÉ
-    # ========================================================
+    print(
+        "⚠️ Aucune actualité disponible."
+    )
+
+    create_rss(
+        DISCORD_OUTPUT,
+        "DOFUS — Actualités",
+        "Dernière actualité officielle française de DOFUS.",
+        [],
+    )
+
+    print(
+        "🟢 Flux Discord vide généré."
+    )
+
+else:
 
     latest = articles[0]
 
@@ -1286,33 +1217,12 @@ if articles:
     )
 
     print(
-        "   "
-        f"{format_pubdate(latest['date'])}"
+        f"   {format_pubdate(latest['date'])}"
     )
 
+
     # ========================================================
-    # ÉTAT DISCORD
-    # ========================================================
-    #
-    # On utilise un fichier séparé dans le cache :
-    #
-    # _discord_last_sent
-    #
-    # Il contient UNIQUEMENT l'URL du dernier article
-    # envoyé à Discord.
-    #
-    # Ainsi :
-    #
-    # Run 1 -> article A -> envoyé
-    # Run 2 -> article A -> déjà envoyé
-    # Run 3 -> article A -> déjà envoyé
-    #
-    # Quand DOFUS publie B :
-    #
-    # Run suivant -> B différent -> envoyé
-    #
-    # Aucune file d'attente.
-    # Aucun article intermédiaire.
+    # DERNIER ARTICLE ENVOYÉ
     # ========================================================
 
     last_sent = cache.get(
@@ -1332,9 +1242,10 @@ if articles:
 
         last_sent_url = None
 
-    # --------------------------------------------------------
+
+    # ========================================================
     # NOUVEL ARTICLE
-    # --------------------------------------------------------
+    # ========================================================
 
     if latest["url"] != last_sent_url:
 
@@ -1354,8 +1265,9 @@ if articles:
             f"{latest['url']}"
         )
 
+
         # ----------------------------------------------------
-        # Flux Discord = UN SEUL ARTICLE
+        # UN SEUL ITEM DANS LE RSS DISCORD
         # ----------------------------------------------------
 
         create_rss(
@@ -1365,8 +1277,9 @@ if articles:
             [latest],
         )
 
+
         # ----------------------------------------------------
-        # Sauvegarde état
+        # SAUVEGARDE
         # ----------------------------------------------------
 
         cache[
@@ -1389,8 +1302,13 @@ if articles:
 
         print(
             "🟢 dofus-news-discord.xml généré "
-            "avec 1 nouveau article."
+            "avec 1 nouvel article."
         )
+
+
+    # ========================================================
+    # DÉJÀ ENVOYÉ
+    # ========================================================
 
     else:
 
@@ -1404,14 +1322,15 @@ if articles:
             "ℹ️ Aucun nouvel envoi Discord."
         )
 
+
         # ----------------------------------------------------
         # IMPORTANT :
         #
-        # On génère quand même un flux RSS valide
-        # contenant le dernier article.
+        # Le fichier reste un RSS valide avec UN article.
         #
-        # Cela permet à Readybot de parser le fichier
-        # même lorsqu'aucun nouvel article n'est détecté.
+        # Readybot peut donc continuer à le parser.
+        # Le script, lui, ne considère pas cet article
+        # comme un nouvel envoi.
         # ----------------------------------------------------
 
         create_rss(
@@ -1425,27 +1344,6 @@ if articles:
             "🟢 dofus-news-discord.xml généré "
             "sans nouvel envoi."
         )
-
-else:
-
-    print("")
-    print(
-        "⚠️ Aucune actualité disponible."
-    )
-
-    # Flux RSS vide mais parfaitement valide.
-
-    create_rss(
-        DISCORD_OUTPUT,
-        "DOFUS — Actualités",
-        "Dernière actualité officielle française de DOFUS.",
-        [],
-    )
-
-    print(
-        "🟢 dofus-news-discord.xml généré "
-        "sans nouvel envoi."
-    )
 
 
 # ============================================================
