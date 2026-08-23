@@ -31,6 +31,8 @@ DISCORD_OUTPUT = "dofus-news-discord.xml"
 
 CACHE_FILE = "dofus_news_cache.json"
 
+DISCORD_STATE_FILE = "dofus_discord_state.json"
+
 MAX_ARTICLES = 20
 
 LISTING_TARGET = 24
@@ -247,6 +249,55 @@ def save_cache(cache):
 
         json.dump(
             cache,
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+
+########################################
+# ÉTAT DISCORD
+########################################
+
+def load_discord_state():
+
+    if not os.path.exists(DISCORD_STATE_FILE):
+        return {}
+
+    try:
+
+        with open(
+            DISCORD_STATE_FILE,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            data = json.load(f)
+
+        if not isinstance(data, dict):
+            return {}
+
+        return data
+
+    except Exception as exc:
+
+        print(
+            f"⚠️ Erreur lecture état Discord : {exc}"
+        )
+
+        return {}
+
+
+def save_discord_state(state):
+
+    with open(
+        DISCORD_STATE_FILE,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            state,
             f,
             ensure_ascii=False,
             indent=2
@@ -494,20 +545,20 @@ def parse_jsonld_date(data):
             continue
 
         ########################################
-        # IMPORTANT
+        # DATE DE PUBLICATION PRIORITAIRE
         #
-        # dateModified est PRIORITAIRE.
+        # IMPORTANT :
+        # Le pubDate du RSS doit représenter
+        # la publication réelle de l'article.
         #
-        # Une actualité DOFUS peut être publiée
-        # plusieurs semaines auparavant puis
-        # remonter en tête du listing lorsqu'elle
-        # est modifiée / actualisée.
+        # dateModified ne doit pas transformer
+        # une ancienne actualité en "nouvelle".
         ########################################
 
         for key in (
-            "dateModified",
             "datePublished",
             "dateCreated",
+            "dateModified",
         ):
 
             value = obj.get(key)
@@ -592,21 +643,6 @@ def extract_date_from_html_soup(soup):
 
         (
             "property",
-            "article:modified_time"
-        ),
-
-        (
-            "property",
-            "og:updated_time"
-        ),
-
-        (
-            "name",
-            "dateModified"
-        ),
-
-        (
-            "property",
             "article:published_time"
         ),
 
@@ -633,6 +669,21 @@ def extract_date_from_html_soup(soup):
         (
             "property",
             "og:date"
+        ),
+
+        (
+            "property",
+            "article:modified_time"
+        ),
+
+        (
+            "property",
+            "og:updated_time"
+        ),
+
+        (
+            "name",
+            "dateModified"
         ),
 
     ]
@@ -825,7 +876,7 @@ def extract_article_with_playwright(
         ########################################
         # JSON-LD RENDU
         #
-        # MODIFIED AVANT PUBLISHED
+        # PUBLICATION PRIORITAIRE
         ########################################
 
         try:
@@ -862,27 +913,12 @@ def extract_article_with_playwright(
         ########################################
         # META RENDU
         #
-        # MODIFIED AVANT PUBLISHED
+        # PUBLICATION PRIORITAIRE
         ########################################
 
         if article_date is None:
 
             meta_selectors = [
-
-                (
-                    'meta[property="article:modified_time"]',
-                    "ARTICLE META/article:modified_time",
-                ),
-
-                (
-                    'meta[property="og:updated_time"]',
-                    "ARTICLE META/og:updated_time",
-                ),
-
-                (
-                    'meta[name="dateModified"]',
-                    "ARTICLE META/dateModified",
-                ),
 
                 (
                     'meta[property="article:published_time"]',
@@ -907,6 +943,26 @@ def extract_article_with_playwright(
                 (
                     'meta[name="date"]',
                     "ARTICLE META/date",
+                ),
+
+                (
+                    'meta[property="og:date"]',
+                    "ARTICLE META/og:date",
+                ),
+
+                (
+                    'meta[property="article:modified_time"]',
+                    "ARTICLE META/article:modified_time",
+                ),
+
+                (
+                    'meta[property="og:updated_time"]',
+                    "ARTICLE META/og:updated_time",
+                ),
+
+                (
+                    'meta[name="dateModified"]',
+                    "ARTICLE META/dateModified",
                 ),
 
             ]
@@ -1398,6 +1454,14 @@ def create_rss(
             "url"
         ]
 
+        ########################################
+        # GUID STABLE
+        #
+        # L'URL ne change jamais.
+        # C'est essentiel pour que Discord
+        # reconnaisse un article déjà envoyé.
+        ########################################
+
         SubElement(
             item,
             "guid",
@@ -1409,8 +1473,10 @@ def create_rss(
         ]
 
         ########################################
-        # IMPORTANT :
-        # pubDate TOUJOURS présent.
+        # PUBDATE STABLE
+        #
+        # Date réelle de publication.
+        # JAMAIS la date d'exécution.
         ########################################
 
         SubElement(
@@ -1472,6 +1538,16 @@ def main():
     ########################################
 
     cache = load_cache()
+
+    ########################################
+    # ÉTAT DISCORD
+    ########################################
+
+    discord_state = load_discord_state()
+
+    last_discord_url = discord_state.get(
+        "last_sent_url"
+    )
 
     ########################################
     # LISTING
@@ -1585,7 +1661,12 @@ def main():
     )
 
     ########################################
-    # PLUS RÉCENT / MODIFIÉ EN PREMIER
+    # PLUS RÉCENT EN PREMIER
+    #
+    # IMPORTANT :
+    # On utilise la date de publication.
+    # Une modification d'une vieille news
+    # ne doit pas la transformer en nouvelle news.
     ########################################
 
     articles.sort(
@@ -1699,17 +1780,70 @@ def main():
     ########################################
     # IMPORTANT
     #
-    # EXACTEMENT UN SEUL ARTICLE.
+    # UN SEUL ARTICLE.
     #
-    # Le plus récent.
-    #
-    # Discord ne reçoit donc jamais les
-    # 20 articles du flux principal.
+    # ET UNIQUEMENT SI C'EST UN NOUVEL
+    # ARTICLE PAR RAPPORT AU DERNIER
+    # ARTICLE SIGNALÉ DANS L'ÉTAT.
     ########################################
 
-    discord_articles = articles[
-        :1
-    ]
+    discord_articles = []
+
+    if articles:
+
+        newest_article = articles[0]
+
+        newest_url = newest_article[
+            "url"
+        ]
+
+        if newest_url != last_discord_url:
+
+            discord_articles = [
+                newest_article
+            ]
+
+            print(
+                "🆕 Nouvelle actualité Discord :"
+            )
+
+            print(
+                f"   {newest_article['title']}"
+            )
+
+            print(
+                f"   {newest_url}"
+            )
+
+            ########################################
+            # On mémorise l'article immédiatement.
+            #
+            # Ainsi, si le workflow est relancé
+            # après un timeout, l'ancien article
+            # ne repartira pas plusieurs fois.
+            ########################################
+
+            discord_state = {
+                "last_sent_url": newest_url,
+                "last_sent_pubDate": format_pubdate(
+                    newest_article["date"]
+                ),
+            }
+
+            save_discord_state(
+                discord_state
+            )
+
+        else:
+
+            print(
+                "ℹ️ Aucune nouvelle actualité "
+                "pour Discord."
+            )
+
+    ########################################
+    # GENERATION DU FLUX DISCORD
+    ########################################
 
     create_rss(
         DISCORD_OUTPUT,
@@ -1722,9 +1856,19 @@ def main():
         discord_articles
     )
 
-    print(
-        "🟢 dofus-news-discord.xml généré."
-    )
+    if discord_articles:
+
+        print(
+            "🟢 dofus-news-discord.xml généré "
+            "avec 1 nouvel article."
+        )
+
+    else:
+
+        print(
+            "🟢 dofus-news-discord.xml généré "
+            "sans nouvel article."
+        )
 
     ########################################
     # FIN
