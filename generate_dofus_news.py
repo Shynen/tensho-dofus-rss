@@ -9,7 +9,10 @@ from email.utils import formatdate
 from urllib.parse import urljoin
 from xml.etree.ElementTree import Element, SubElement, ElementTree, indent
 
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import (
+    sync_playwright,
+    TimeoutError as PlaywrightTimeoutError,
+)
 
 
 ########################################
@@ -142,7 +145,6 @@ def parse_french_date(value):
         except ValueError:
             pass
 
-
     match = re.search(
         r"\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b",
         text,
@@ -161,7 +163,6 @@ def parse_french_date(value):
 
         except ValueError:
             pass
-
 
     return None
 
@@ -207,7 +208,6 @@ def load_cache():
 
         return {}
 
-
     try:
 
         with open(
@@ -218,10 +218,8 @@ def load_cache():
 
             data = json.load(f)
 
-
         if not isinstance(data, dict):
             data = {}
-
 
         print(
             f"Cache Actualités Dofus chargé : "
@@ -229,7 +227,6 @@ def load_cache():
         )
 
         return data
-
 
     except Exception as exc:
 
@@ -272,128 +269,10 @@ def is_valid_news_url(url):
 
 
 ########################################
-# FALLBACK GOOGLE NEWS
-########################################
-
-def collect_news_urls_google_news():
-
-    urls = {}
-
-    google_rss = (
-        "https://news.google.com/rss/search"
-        "?q=site%3Adofus.com%2Ffr%2Fmmorpg%2Factualites%2Fnews%2F"
-        "&hl=fr&gl=FR&ceid=FR%3Afr"
-    )
-
-    try:
-
-        print("")
-        print(
-            "🔎 Fallback Google News RSS..."
-        )
-
-        print(google_rss)
-
-        response = requests.get(
-            google_rss,
-            headers=HEADERS,
-            timeout=30,
-        )
-
-        response.raise_for_status()
-
-        soup = BeautifulSoup(
-            response.text,
-            "xml"
-        )
-
-        items = soup.find_all("item")
-
-        print(
-            f"📰 Google News : "
-            f"{len(items)} résultats trouvés."
-        )
-
-        for item in items:
-
-            link_node = item.find("link")
-
-            if not link_node:
-                continue
-
-            google_url = clean_text(
-                link_node.get_text()
-            )
-
-            if not google_url:
-                continue
-
-            try:
-
-                article_response = requests.get(
-                    google_url,
-                    headers=HEADERS,
-                    timeout=20,
-                    allow_redirects=True,
-                )
-
-                final_url = (
-                    article_response.url
-                    .split("#", 1)[0]
-                    .rstrip("/")
-                )
-
-                if is_valid_news_url(
-                    final_url
-                ):
-
-                    urls[final_url] = None
-
-            except Exception as exc:
-
-                print(
-                    "⚠️ Impossible de résoudre "
-                    f"le lien Google News : {exc}"
-                )
-
-            if len(urls) >= LISTING_TARGET:
-                break
-
-
-        print(
-            f"🟢 Google News : "
-            f"{len(urls)} URLs Dofus récupérées."
-        )
-
-
-    except Exception as exc:
-
-        print(
-            "❌ Google News RSS indisponible : "
-            f"{exc}"
-        )
-
-
-    return urls
-
-
-########################################
 # LISTING DOFUS
 ########################################
 
 def collect_news_listing():
-
-    """
-    IMPORTANT :
-
-    Le listing sert UNIQUEMENT à récupérer
-    les URLs.
-
-    On NE récupère PLUS la date ici.
-
-    La vraie date sera récupérée directement
-    sur chaque page article avec Playwright.
-    """
 
     print("")
     print("========================================")
@@ -402,7 +281,6 @@ def collect_news_listing():
     print("========================================")
 
     listing = {}
-
 
     with sync_playwright() as p:
 
@@ -415,7 +293,6 @@ def collect_news_listing():
             user_agent=HEADERS["User-Agent"],
         )
 
-
         try:
 
             page.goto(
@@ -425,7 +302,6 @@ def collect_news_listing():
             )
 
             page.wait_for_timeout(5000)
-
 
         except Exception as exc:
 
@@ -437,7 +313,6 @@ def collect_news_listing():
             browser.close()
 
             return {}
-
 
         def collect_visible_listing():
 
@@ -484,7 +359,6 @@ def collect_news_listing():
                 except Exception:
                     pass
 
-
         links = page.locator(
             'a[href*="/fr/mmorpg/actualites/news/"]'
         )
@@ -497,7 +371,6 @@ def collect_news_listing():
             f"Premier lot : "
             f"{initial_count} actualités détectées."
         )
-
 
         ########################################
         # VOIR PLUS
@@ -525,7 +398,9 @@ def collect_news_listing():
 
             clicked = False
 
-            for i in range(buttons.count()):
+            for i in range(
+                buttons.count()
+            ):
 
                 try:
 
@@ -551,7 +426,6 @@ def collect_news_listing():
                 except Exception:
                     pass
 
-
             if not clicked:
 
                 print(
@@ -560,11 +434,9 @@ def collect_news_listing():
 
                 break
 
-
             page.wait_for_timeout(
                 2500
             )
-
 
             try:
 
@@ -575,7 +447,6 @@ def collect_news_listing():
 
             except PlaywrightTimeoutError:
                 pass
-
 
             before = len(listing)
 
@@ -592,35 +463,10 @@ def collect_news_listing():
                 f"(+{added})"
             )
 
-
             if added == 0:
                 break
 
-
         browser.close()
-
-
-    ########################################
-    # FALLBACK
-    ########################################
-
-    if len(listing) == 0:
-
-        print("")
-        print(
-            "⚠️ Aucune actualité trouvée "
-            "directement."
-        )
-
-        print(
-            "➡️ Activation du fallback "
-            "Google News..."
-        )
-
-        listing = (
-            collect_news_urls_google_news()
-        )
-
 
     print(
         f"🟢 Total actualités récupérées : "
@@ -628,6 +474,72 @@ def collect_news_listing():
     )
 
     return listing
+
+
+########################################
+# PARSING JSON-LD
+########################################
+
+def parse_jsonld_date(data):
+
+    objects = (
+        data
+        if isinstance(data, list)
+        else [data]
+    )
+
+    for obj in objects:
+
+        if not isinstance(obj, dict):
+            continue
+
+        ########################################
+        # IMPORTANT
+        #
+        # dateModified est PRIORITAIRE.
+        #
+        # Une actualité DOFUS peut être publiée
+        # plusieurs semaines auparavant puis
+        # remonter en tête du listing lorsqu'elle
+        # est modifiée / actualisée.
+        ########################################
+
+        for key in (
+            "dateModified",
+            "datePublished",
+            "dateCreated",
+        ):
+
+            value = obj.get(key)
+
+            dt = (
+                parse_date(value)
+                or parse_french_date(value)
+            )
+
+            if dt is not None:
+
+                return (
+                    dt,
+                    f"ARTICLE JSON-LD/{key}"
+                )
+
+        ########################################
+        # JSON-LD avec @graph
+        ########################################
+
+        graph = obj.get("@graph")
+
+        if isinstance(graph, list):
+
+            result = parse_jsonld_date(
+                graph
+            )
+
+            if result[0] is not None:
+                return result
+
+    return None, None
 
 
 ########################################
@@ -658,47 +570,40 @@ def extract_date_from_html_soup(soup):
             data = json.loads(raw)
 
         except Exception:
+
             continue
 
-
-        objects = (
+        dt, source = parse_jsonld_date(
             data
-            if isinstance(data, list)
-            else [data]
         )
 
+        if dt is not None:
 
-        for obj in objects:
-
-            if not isinstance(obj, dict):
-                continue
-
-
-            for key in (
-                "datePublished",
-                "dateCreated",
-            ):
-
-                value = obj.get(key)
-
-                dt = (
-                    parse_date(value)
-                    or parse_french_date(value)
-                )
-
-                if dt is not None:
-
-                    return (
-                        dt,
-                        f"JSON-LD/{key}"
-                    )
-
+            return (
+                dt,
+                source
+            )
 
     ########################################
     # META
     ########################################
 
     selectors = [
+
+        (
+            "property",
+            "article:modified_time"
+        ),
+
+        (
+            "property",
+            "og:updated_time"
+        ),
+
+        (
+            "name",
+            "dateModified"
+        ),
 
         (
             "property",
@@ -732,7 +637,6 @@ def extract_date_from_html_soup(soup):
 
     ]
 
-
     for attr, value in selectors:
 
         meta = soup.find(
@@ -760,7 +664,6 @@ def extract_date_from_html_soup(soup):
                 dt,
                 f"META/{value}"
             )
-
 
     ########################################
     # TIME
@@ -794,12 +697,11 @@ def extract_date_from_html_soup(soup):
                 "TIME"
             )
 
-
     return None, None
 
 
 ########################################
-# EXTRACTION ARTICLE AVEC PLAYWRIGHT
+# EXTRACTION ARTICLE PLAYWRIGHT
 ########################################
 
 def extract_article_with_playwright(
@@ -819,7 +721,6 @@ def extract_article_with_playwright(
             1800
         )
 
-
         ########################################
         # TITRE
         ########################################
@@ -837,7 +738,6 @@ def extract_article_with_playwright(
             '[data-testid="article-title"]',
 
         ]
-
 
         for selector in title_selectors:
 
@@ -870,7 +770,6 @@ def extract_article_with_playwright(
             except Exception:
                 pass
 
-
         ########################################
         # FALLBACK OG TITLE
         ########################################
@@ -892,7 +791,6 @@ def extract_article_with_playwright(
             except Exception:
                 pass
 
-
         ########################################
         # FALLBACK PAGE TITLE
         ########################################
@@ -908,13 +806,13 @@ def extract_article_with_playwright(
             except Exception:
                 pass
 
+        if not title:
 
-        title_source = (
-            "PLAYWRIGHT"
-            if title
-            else None
-        )
+            print(
+                "   ⚠️ Titre introuvable."
+            )
 
+            return None
 
         ########################################
         # DATE
@@ -924,9 +822,10 @@ def extract_article_with_playwright(
 
         article_date_source = None
 
-
         ########################################
         # JSON-LD RENDU
+        #
+        # MODIFIED AVANT PUBLISHED
         ########################################
 
         try:
@@ -935,7 +834,6 @@ def extract_article_with_playwright(
                 'script[type="application/ld+json"]'
             ).all_text_contents()
 
-
             for raw in scripts:
 
                 try:
@@ -943,70 +841,48 @@ def extract_article_with_playwright(
                     data = json.loads(raw)
 
                 except Exception:
+
                     continue
 
-
-                objects = (
+                dt, source = parse_jsonld_date(
                     data
-                    if isinstance(data, list)
-                    else [data]
                 )
 
+                if dt is not None:
 
-                for obj in objects:
+                    article_date = dt
 
-                    if not isinstance(
-                        obj,
-                        dict
-                    ):
-                        continue
+                    article_date_source = source
 
-
-                    for key in (
-                        "datePublished",
-                        "dateCreated",
-                    ):
-
-                        value = obj.get(
-                            key
-                        )
-
-                        dt = (
-                            parse_date(value)
-                            or parse_french_date(value)
-                        )
-
-
-                        if dt:
-
-                            article_date = dt
-
-                            article_date_source = (
-                                f"ARTICLE JSON-LD/{key}"
-                            )
-
-                            break
-
-
-                    if article_date:
-                        break
-
-
-                if article_date:
                     break
-
 
         except Exception:
             pass
 
-
         ########################################
         # META RENDU
+        #
+        # MODIFIED AVANT PUBLISHED
         ########################################
 
         if article_date is None:
 
             meta_selectors = [
+
+                (
+                    'meta[property="article:modified_time"]',
+                    "ARTICLE META/article:modified_time",
+                ),
+
+                (
+                    'meta[property="og:updated_time"]',
+                    "ARTICLE META/og:updated_time",
+                ),
+
+                (
+                    'meta[name="dateModified"]',
+                    "ARTICLE META/dateModified",
+                ),
 
                 (
                     'meta[property="article:published_time"]',
@@ -1035,7 +911,6 @@ def extract_article_with_playwright(
 
             ]
 
-
             for selector, source in meta_selectors:
 
                 try:
@@ -1058,7 +933,7 @@ def extract_article_with_playwright(
                         or parse_french_date(raw)
                     )
 
-                    if dt:
+                    if dt is not None:
 
                         article_date = dt
 
@@ -1068,7 +943,6 @@ def extract_article_with_playwright(
 
                 except Exception:
                     pass
-
 
         ########################################
         # TIME RENDU
@@ -1108,13 +982,13 @@ def extract_article_with_playwright(
 
                     ]
 
-
-                    dt = parse_any_date_candidates(
-                        values
+                    dt = (
+                        parse_any_date_candidates(
+                            values
+                        )
                     )
 
-
-                    if dt:
+                    if dt is not None:
 
                         article_date = dt
 
@@ -1124,10 +998,8 @@ def extract_article_with_playwright(
 
                         break
 
-
             except Exception:
                 pass
-
 
         ########################################
         # TEXTE ARTICLE
@@ -1149,7 +1021,7 @@ def extract_article_with_playwright(
                     body_text
                 )
 
-                if dt:
+                if dt is not None:
 
                     article_date = dt
 
@@ -1160,13 +1032,24 @@ def extract_article_with_playwright(
             except Exception:
                 pass
 
+        ########################################
+        # VALIDATION DATE
+        ########################################
+
+        if article_date is None:
+
+            print(
+                "   ⚠️ Date article "
+                "introuvable."
+            )
+
+            return None
 
         ########################################
         # DESCRIPTION
         ########################################
 
         description = ""
-
 
         try:
 
@@ -1182,7 +1065,6 @@ def extract_article_with_playwright(
 
         except Exception:
             pass
-
 
         if not description:
 
@@ -1201,38 +1083,18 @@ def extract_article_with_playwright(
             except Exception:
                 pass
 
-
         if not description:
             description = title
 
-
         ########################################
-        # VALIDATION
+        # RESULTAT
         ########################################
-
-        if not title:
-
-            print(
-                "   ⚠️ Titre introuvable."
-            )
-
-            return None
-
-
-        if article_date is None:
-
-            print(
-                "   ⚠️ Date article introuvable."
-            )
-
-            return None
-
 
         return {
 
             "title": title,
 
-            "title_source": title_source,
+            "title_source": "PLAYWRIGHT",
 
             "url": url,
 
@@ -1243,7 +1105,6 @@ def extract_article_with_playwright(
             "date_source": article_date_source,
 
         }
-
 
     except Exception as exc:
 
@@ -1273,12 +1134,10 @@ def extract_article_requests_fallback(
 
         response.raise_for_status()
 
-
         soup = BeautifulSoup(
             response.text,
             "html.parser"
         )
-
 
         ########################################
         # TITRE
@@ -1297,7 +1156,6 @@ def extract_article_requests_fallback(
                 )
             )
 
-
         if not title:
 
             meta = soup.find(
@@ -1313,7 +1171,6 @@ def extract_article_requests_fallback(
                     meta.get("content")
                 )
 
-
         ########################################
         # DATE
         ########################################
@@ -1324,14 +1181,11 @@ def extract_article_requests_fallback(
             )
         )
 
-
         if not title:
             return None
 
-
         if article_date is None:
             return None
-
 
         ########################################
         # DESCRIPTION
@@ -1352,11 +1206,12 @@ def extract_article_requests_fallback(
                 meta.get("content")
             )
 
-
         if not description:
-
             description = title
 
+        ########################################
+        # RESULTAT
+        ########################################
 
         return {
 
@@ -1375,7 +1230,6 @@ def extract_article_requests_fallback(
             ),
 
         }
-
 
     except Exception:
         return None
@@ -1402,10 +1256,9 @@ def extract_article(
         )
     )
 
-
     if article is not None:
-        return article
 
+        return article
 
     ########################################
     # 2. FALLBACK HTTP
@@ -1416,25 +1269,31 @@ def extract_article(
         "tentative fallback HTTP..."
     )
 
-
     article = (
         extract_article_requests_fallback(
             url
         )
     )
 
-
     if article is not None:
-        return article
 
+        return article
 
     ########################################
     # 3. CACHE
+    #
+    # Dernier recours uniquement.
     ########################################
 
     if url in cache:
 
         cached = cache[url]
+
+        if not isinstance(
+            cached,
+            dict
+        ):
+            return None
 
         dt = parse_date(
             cached.get(
@@ -1442,25 +1301,29 @@ def extract_article(
             )
         )
 
+        title = clean_text(
+            cached.get(
+                "title"
+            )
+        )
 
-        if dt is not None:
+        if dt is not None and title:
 
             return {
 
-                "title": clean_text(
-                    cached.get(
-                        "title"
-                    )
-                ),
+                "title": title,
 
                 "title_source": "CACHE",
 
                 "url": url,
 
-                "description": clean_text(
-                    cached.get(
-                        "description"
+                "description": (
+                    clean_text(
+                        cached.get(
+                            "description"
+                        )
                     )
+                    or title
                 ),
 
                 "date": dt,
@@ -1468,7 +1331,6 @@ def extract_article(
                 "date_source": "CACHE",
 
             }
-
 
     return None
 
@@ -1491,30 +1353,25 @@ def create_rss(
         }
     )
 
-
     channel = SubElement(
         rss,
         "channel"
     )
-
 
     SubElement(
         channel,
         "title"
     ).text = title
 
-
     SubElement(
         channel,
         "link"
     ).text = SOURCE_URL
 
-
     SubElement(
         channel,
         "description"
     ).text = description
-
 
     ########################################
     # ITEMS
@@ -1527,14 +1384,12 @@ def create_rss(
             "item"
         )
 
-
         SubElement(
             item,
             "title"
         ).text = article[
             "title"
         ]
-
 
         SubElement(
             item,
@@ -1542,7 +1397,6 @@ def create_rss(
         ).text = article[
             "url"
         ]
-
 
         SubElement(
             item,
@@ -1554,9 +1408,10 @@ def create_rss(
             "url"
         ]
 
-
+        ########################################
         # IMPORTANT :
-        # pubDate est toujours présent.
+        # pubDate TOUJOURS présent.
+        ########################################
 
         SubElement(
             item,
@@ -1565,7 +1420,6 @@ def create_rss(
             article["date"]
         )
 
-
         SubElement(
             item,
             "description"
@@ -1573,17 +1427,14 @@ def create_rss(
             "description"
         ]
 
-
     tree = ElementTree(
         rss
     )
-
 
     indent(
         tree,
         space="  "
     )
-
 
     tree.write(
         filename,
@@ -1616,20 +1467,17 @@ def main():
         "########################################"
     )
 
-
     ########################################
     # CACHE
     ########################################
 
     cache = load_cache()
 
-
     ########################################
     # LISTING
     ########################################
 
     listing = collect_news_listing()
-
 
     print("")
 
@@ -1646,18 +1494,15 @@ def main():
         "########################################"
     )
 
-
     ########################################
     # ARTICLES
     ########################################
 
     articles = []
 
-
     urls = list(
         listing.keys()
     )
-
 
     ########################################
     # UN SEUL NAVIGATEUR PLAYWRIGHT
@@ -1669,14 +1514,12 @@ def main():
             headless=True
         )
 
-
         page = browser.new_page(
             locale="fr-FR",
             user_agent=HEADERS[
                 "User-Agent"
             ],
         )
-
 
         for index, url in enumerate(
             urls,
@@ -1688,13 +1531,11 @@ def main():
                 f"{url}"
             )
 
-
             article = extract_article(
                 page,
                 url,
                 cache
             )
-
 
             if article is not None:
 
@@ -1702,20 +1543,17 @@ def main():
                     article
                 )
 
-
                 print(
                     f"   🏷️ Titre trouvé via "
                     f"{article['title_source']}: "
                     f"{article['title']}"
                 )
 
-
                 print(
                     f"   📅 Date trouvée via "
                     f"{article['date_source']}: "
                     f"{format_pubdate(article['date'])}"
                 )
-
 
                 print(
                     f"🟢 "
@@ -1724,7 +1562,6 @@ def main():
                     f"{article['title']}"
                 )
 
-
             else:
 
                 print(
@@ -1732,9 +1569,7 @@ def main():
                     "titre ou date introuvable."
                 )
 
-
         browser.close()
-
 
     ########################################
     # UNE URL = UN ARTICLE
@@ -1745,21 +1580,18 @@ def main():
         for article in articles
     }
 
-
     articles = list(
         unique_articles.values()
     )
 
-
     ########################################
-    # PLUS RÉCENT EN PREMIER
+    # PLUS RÉCENT / MODIFIÉ EN PREMIER
     ########################################
 
     articles.sort(
         key=lambda article: article["date"],
         reverse=True
     )
-
 
     ########################################
     # MAXIMUM 20
@@ -1768,7 +1600,6 @@ def main():
     articles = articles[
         :MAX_ARTICLES
     ]
-
 
     ########################################
     # AFFICHAGE
@@ -1789,7 +1620,6 @@ def main():
         "########################################"
     )
 
-
     for index, article in enumerate(
         articles,
         start=1
@@ -1801,7 +1631,6 @@ def main():
             f" - "
             f"{article['title']}"
         )
-
 
     ########################################
     # CACHE
@@ -1827,11 +1656,9 @@ def main():
 
         }
 
-
     save_cache(
         cache
     )
-
 
     ########################################
     # RSS COMPLET
@@ -1842,7 +1669,6 @@ def main():
     print(
         "Génération de dofus-news.xml..."
     )
-
 
     create_rss(
         OUTPUT,
@@ -1855,11 +1681,9 @@ def main():
         articles
     )
 
-
     print(
         "🟢 dofus-news.xml généré."
     )
-
 
     ########################################
     # RSS DISCORD
@@ -1872,27 +1696,20 @@ def main():
         "dofus-news-discord.xml..."
     )
 
-
-    # ====================================================
+    ########################################
     # IMPORTANT
     #
-    # LE FLUX DISCORD CONTIENT TOUJOURS
-    # EXACTEMENT UN SEUL ARTICLE :
+    # EXACTEMENT UN SEUL ARTICLE.
     #
-    # LE PLUS RÉCENT.
+    # Le plus récent.
     #
-    # Il ne contient jamais les 20 articles
-    # du flux principal.
-    #
-    # Cela limite fortement le risque que
-    # Discord récupère plusieurs anciens articles
-    # après un timeout ou un retard du workflow.
-    # ====================================================
+    # Discord ne reçoit donc jamais les
+    # 20 articles du flux principal.
+    ########################################
 
     discord_articles = articles[
         :1
     ]
-
 
     create_rss(
         DISCORD_OUTPUT,
@@ -1905,11 +1722,9 @@ def main():
         discord_articles
     )
 
-
     print(
         "🟢 dofus-news-discord.xml généré."
     )
-
 
     ########################################
     # FIN
