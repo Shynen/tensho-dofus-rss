@@ -49,12 +49,16 @@ jobs:
 
           git add -A
 
-          git diff --cached --quiet || git commit -m "Update Dofus RSS feeds"
+          if git diff --cached --quiet; then
+            echo "ℹ️ Aucun changement à commit."
+            exit 0
+          fi
+
+          git commit -m "Update Dofus RSS feeds"
 
           git pull --rebase origin main
 
-          git push
-
+          git push origin HEAD:main
           # ----------------------------------------------------
           # Aucun changement
           # ----------------------------------------------------
