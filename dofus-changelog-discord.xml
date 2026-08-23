@@ -1,16 +1,15 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
-  <channel>
-    <title>DOFUS — Changelogs</title>
-    <link>https://www.dofus.com/fr/mmorpg/actualites/maj</link>
-    <description>Dernière note de mise à jour officielle française de DOFUS.</description>
-    <lastBuildDate>Sun, 23 Aug 2026 20:50:21 GMT</lastBuildDate>
-    <item>
-      <title>MÀJ - Patch notes 3.6.10.10 du 18/08/2026</title>
-      <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</guid>
-      <pubDate>Tue, 18 Aug 2026 00:00:00 GMT</pubDate>
-      <description>MÀJ - Patch notes 3.6.10.10 du 18/08/2026</description>
-    </item>
-  </channel>
+<channel>
+<title>DOFUS Changelog Discord</title>
+<link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</link>
+<description>Dernier changelog DOFUS</description>
+<item>
+<title>MÀJ 3.6 - Raid is not dead 23 Juin 2026</title>
+<link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</link>
+<guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</guid>
+<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026</description>
+<pubDate>Tue, 18 Aug 2026 00:00:00 GMT</pubDate>
+</item>
+</channel>
 </rss>
