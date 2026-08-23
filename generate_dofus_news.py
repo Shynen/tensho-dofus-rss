@@ -7,7 +7,13 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from email.utils import formatdate
 from urllib.parse import urljoin
-from xml.etree.ElementTree import Element, SubElement, ElementTree, indent
+from xml.etree.ElementTree import (
+    Element,
+    SubElement,
+    ElementTree,
+    indent,
+    fromstring,
+)
 
 from playwright.sync_api import (
     sync_playwright,
@@ -89,20 +95,6 @@ def clean_article_title(value):
     """
     Supprime les informations techniques ajoutées
     par DOFUS à la fin du titre.
-
-    Exemples :
-
-    "Mon titre ! Info - 20/08/2026 - 17h00"
-    devient :
-    "Mon titre !"
-
-    "Mon titre ! Shop - 20/08/2026 - 16h00"
-    devient :
-    "Mon titre !"
-
-    "Mon titre ! Event - 11/08/2026 - 16h00"
-    devient :
-    "Mon titre !"
     """
 
     text = clean_text(value)
@@ -168,9 +160,6 @@ def extract_dofus_header_date(page):
     IMPORTANT :
     on ne scanne jamais tout le body pour trouver
     la date de publication.
-
-    Cela évite de récupérer une date mentionnée
-    dans le contenu de l'article.
     """
 
     selectors = [
@@ -471,6 +460,148 @@ def save_discord_state(state):
         )
 
 
+def save_discord_state_atomic(state):
+    """
+    Écriture atomique de l'état Discord.
+
+    Le fichier temporaire est écrit complètement
+    avant de remplacer l'ancien fichier.
+
+    Cela évite qu'un timeout laisse un JSON
+    partiellement écrit.
+    """
+
+    temp_file = (
+        f"{DISCORD_STATE_FILE}.tmp"
+    )
+
+    with open(
+        temp_file,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            state,
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+        f.flush()
+
+        try:
+            os.fsync(
+                f.fileno()
+            )
+        except Exception:
+            pass
+
+    os.replace(
+        temp_file,
+        DISCORD_STATE_FILE
+    )
+
+
+def load_last_discord_feed_article():
+    """
+    Sécurité supplémentaire.
+
+    Si le JSON d'état Discord n'existe plus,
+    on regarde directement le dernier article
+    présent dans le flux Discord.
+
+    Cela permet d'éviter de renvoyer deux fois
+    le même article après un timeout ou une perte
+    du fichier d'état.
+    """
+
+    if not os.path.exists(
+        DISCORD_OUTPUT
+    ):
+
+        return None
+
+    try:
+
+        with open(
+            DISCORD_OUTPUT,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            raw_xml = f.read()
+
+        root = fromstring(
+            raw_xml
+        )
+
+        item = root.find(
+            "./channel/item"
+        )
+
+        if item is None:
+            return None
+
+        link_node = item.find(
+            "link"
+        )
+
+        pubdate_node = item.find(
+            "pubDate"
+        )
+
+        title_node = item.find(
+            "title"
+        )
+
+        description_node = item.find(
+            "description"
+        )
+
+        url = clean_text(
+            link_node.text
+            if link_node is not None
+            else ""
+        )
+
+        pubdate = clean_text(
+            pubdate_node.text
+            if pubdate_node is not None
+            else ""
+        )
+
+        if not url:
+            return None
+
+        return {
+            "url": url,
+
+            "pubDate": pubdate,
+
+            "title": clean_text(
+                title_node.text
+                if title_node is not None
+                else ""
+            ),
+
+            "description": clean_text(
+                description_node.text
+                if description_node is not None
+                else ""
+            ),
+        }
+
+    except Exception as exc:
+
+        print(
+            "⚠️ Impossible de lire l'ancien "
+            f"flux Discord : {exc}"
+        )
+
+        return None
+
+
 ########################################
 # VALIDATION URL
 ########################################
@@ -493,13 +624,19 @@ def is_valid_news_url(url):
 def collect_news_listing():
 
     print("")
+
     print(
         "========================================"
     )
+
     print(
         "Ouverture avec Playwright :"
     )
-    print(SOURCE_URL)
+
+    print(
+        SOURCE_URL
+    )
+
     print(
         "========================================"
     )
@@ -738,7 +875,9 @@ def parse_jsonld_date(data):
             "dateModified",
         ):
 
-            value = obj.get(key)
+            value = obj.get(
+                key
+            )
 
             dt = (
                 parse_date(value)
@@ -1078,17 +1217,15 @@ def extract_article_with_playwright(
         # PRIORITÉ MAXIMALE
         ########################################
 
-        article_date, article_date_source = (
-            extract_dofus_header_date(
-                page
-            )
+        (
+            article_date,
+            article_date_source
+        ) = extract_dofus_header_date(
+            page
         )
 
         ########################################
         # JSON-LD RENDU
-        #
-        # UTILISÉ UNIQUEMENT SI LA DATE
-        # DOFUS N'A PAS ÉTÉ TROUVÉE
         ########################################
 
         if article_date is None:
@@ -1546,10 +1683,11 @@ def extract_article_requests_fallback(
 
         if article_date is None:
 
-            article_date, source = (
-                extract_date_from_html_soup(
-                    soup
-                )
+            (
+                article_date,
+                source
+            ) = extract_date_from_html_soup(
+                soup
             )
 
         if not title:
@@ -1857,7 +1995,6 @@ def main():
     ########################################
     # HISTORIQUE DISCORD
     #
-    # Nouveau système :
     # sent_urls = toutes les URLs déjà envoyées.
     #
     # Migration automatique de l'ancien système :
@@ -1888,6 +2025,47 @@ def main():
         sent_discord_urls.append(
             legacy_url
         )
+
+    ########################################
+    # SÉCURITÉ XML DISCORD
+    #
+    # Si le JSON d'état a disparu mais que le
+    # flux Discord précédent existe toujours,
+    # son article est automatiquement considéré
+    # comme déjà envoyé.
+    ########################################
+
+    previous_feed_article = (
+        load_last_discord_feed_article()
+    )
+
+    if previous_feed_article:
+
+        previous_feed_url = (
+            previous_feed_article[
+                "url"
+            ]
+        )
+
+        if (
+            previous_feed_url
+            and previous_feed_url
+            not in sent_discord_urls
+        ):
+
+            sent_discord_urls.append(
+                previous_feed_url
+            )
+
+            print(
+                "🛡️ Article déjà présent dans "
+                "dofus-news-discord.xml "
+                "considéré comme déjà envoyé :"
+            )
+
+            print(
+                f"   {previous_feed_url}"
+            )
 
     ########################################
     # LISTING
@@ -2117,12 +2295,8 @@ def main():
     #
     # UN SEUL ARTICLE MAXIMUM.
     #
-    # Si plusieurs nouvelles actualités sont
-    # arrivées, une seule est envoyée par run.
-    #
-    # Les autres restent dans la liste des
-    # articles non envoyés et seront envoyées
-    # lors des prochains runs.
+    # Même s'il y a 15 nouvelles actualités,
+    # UNE SEULE est sélectionnée par run.
     ########################################
 
     discord_articles = []
@@ -2137,8 +2311,12 @@ def main():
 
         for article in articles:
 
-            if (
+            article_url = (
                 article["url"]
+            )
+
+            if (
+                article_url
                 not in sent_discord_urls
             ):
 
@@ -2181,16 +2359,23 @@ def main():
             ########################################
             # ENREGISTREMENT IMMÉDIAT
             #
-            # IMPORTANT POUR LES TIMEOUTS.
+            # L'article est ajouté à l'historique
+            # AVANT la génération du XML.
             #
-            # Si le workflow timeout après cette
-            # étape, le prochain run saura que cet
-            # article a déjà été traité.
+            # Ainsi, même si le workflow rencontre
+            # ensuite un timeout, le prochain run
+            # ne doit pas le sélectionner à nouveau
+            # si le JSON est conservé.
             ########################################
 
-            sent_discord_urls.append(
+            if (
                 selected_url
-            )
+                not in sent_discord_urls
+            ):
+
+                sent_discord_urls.append(
+                    selected_url
+                )
 
             ########################################
             # LIMITE HISTORIQUE
@@ -2204,33 +2389,36 @@ def main():
 
             discord_state = {
 
-                "last_sent_url": selected_url,
+                "last_sent_url":
+                    selected_url,
 
-                "last_sent_pubDate": (
+                "last_sent_pubDate":
                     format_pubdate(
                         selected_discord_article[
                             "date"
                         ]
-                    )
-                ),
+                    ),
 
-                "last_sent_title": (
+                "last_sent_title":
                     selected_discord_article[
                         "title"
-                    ]
-                ),
+                    ],
 
-                "last_sent_description": (
+                "last_sent_description":
                     selected_discord_article[
                         "description"
-                    ]
-                ),
+                    ],
 
-                "sent_urls": sent_discord_urls,
+                "sent_urls":
+                    sent_discord_urls,
 
             }
 
-            save_discord_state(
+            ########################################
+            # ÉCRITURE ATOMIQUE
+            ########################################
+
+            save_discord_state_atomic(
                 discord_state
             )
 
@@ -2248,10 +2436,6 @@ def main():
     # On NE VIDE PAS le flux Discord.
     #
     # On conserve le dernier article envoyé.
-    #
-    # Cela évite qu'un lecteur RSS considère
-    # le flux comme supprimé puis reconstruise
-    # un historique lors du prochain passage.
     ########################################
 
     if not discord_articles:
@@ -2285,8 +2469,7 @@ def main():
         ########################################
         # SI L'ARTICLE EST SORTI DES 20
         #
-        # On peut quand même reconstruire
-        # l'item depuis l'état Discord.
+        # On reconstruit l'item depuis l'état.
         ########################################
 
         if not discord_articles:
