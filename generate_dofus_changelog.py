@@ -175,7 +175,7 @@ def parse_date_from_text(
         r"décembre|decembre)"
         r"\s+"
         r"(\d{4})"
-        r"\b"
+        r"\b",
         text,
         flags=re.IGNORECASE
     )
