@@ -1,0 +1,55 @@
+name: Update Dofus RSS
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: |
+          python -m playwright install chromium
+
+      - name: Generate Dofus News RSS
+        run: |
+          python generate_dofus_news.py
+
+      - name: Generate Dofus Changelog RSS
+        run: |
+          python generate_dofus_changelog.py
+
+      - name: Commit generated feeds
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            dofus-news.xml \
+            dofus-news-discord.xml \
+            dofus_news_cache.json \
+            dofus-changelog.xml \
+            dofus-changelog-discord.xml \
+            dofus_changelog_cache.json
+
+          git diff --cached --quiet || git commit -m "Update Dofus RSS feeds"
+          git push
