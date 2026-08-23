@@ -1036,26 +1036,22 @@ def collect_listing(
 
 def extract_article_content(page):
     """
-    Récupère uniquement le contenu principal
-    de l'article DOFUS.
+    Récupère uniquement le contenu principal du changelog DOFUS.
 
-    On évite volontairement le <body> complet
-    afin de ne pas récupérer :
-    - menus
-    - navigation
-    - boutons
-    - sidebar
-    - publicité
-    - footer
+    Pour les patch notes / correctifs :
+    - ignore la navigation
+    - ignore le titre de la MÀJ principale
+    - ignore la liste des patch notes
+    - ignore "Partager / Tweet"
+    - conserve le vrai contenu du changelog
     """
 
     selectors = [
-        "article",
         ".article-content",
         ".news-content",
         ".article-body",
         ".content-article",
-        ".ak-container",
+        "article",
         "main",
     ]
 
@@ -1063,23 +1059,20 @@ def extract_article_content(page):
 
         try:
 
-            locator = page.locator(
-                selector
-            ).first
+            locator = page.locator(selector).first
 
             if locator.count() == 0:
                 continue
 
-            text = locator.inner_text(
-                timeout=5000
-            )
-
-            text = text.strip()
+            text = locator.inner_text(timeout=5000).strip()
 
             if len(text) < 100:
                 continue
 
+            # ----------------------------------------------------
             # Nettoyage des lignes
+            # ----------------------------------------------------
+
             lines = []
 
             for line in text.splitlines():
@@ -1091,9 +1084,50 @@ def extract_article_content(page):
 
                 lines.append(line)
 
-            text = "\n".join(
-                lines
+            # ----------------------------------------------------
+            # Suppression de l'en-tête/navigation du changelog
+            # ----------------------------------------------------
+
+            start_markers = (
+                "Corrections de bugs",
+                "Modifications",
+                "Nouveautés",
             )
+
+            start_index = None
+
+            for i, line in enumerate(lines):
+
+                if line in start_markers:
+
+                    start_index = i
+                    break
+
+            if start_index is not None:
+
+                lines = lines[start_index:]
+
+            # ----------------------------------------------------
+            # Suppression de la fin de page
+            # ----------------------------------------------------
+
+            end_markers = (
+                "Partager",
+                "Tweet",
+            )
+
+            cleaned_lines = []
+
+            for line in lines:
+
+                if line in end_markers:
+                    break
+
+                cleaned_lines.append(line)
+
+            lines = cleaned_lines
+
+            text = "\n".join(lines).strip()
 
             if len(text) >= 100:
                 return text
@@ -1102,7 +1136,6 @@ def extract_article_content(page):
             continue
 
     return ""
-
 # ============================================================
 # ENRICHISSEMENT ARTICLE
 # ============================================================
