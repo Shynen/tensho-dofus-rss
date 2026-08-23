@@ -1,13 +1,16 @@
 import json
 import os
 import re
+
 from datetime import datetime, timezone
 from email.utils import formatdate
 from urllib.parse import urljoin
 from xml.etree.ElementTree import Element, SubElement, ElementTree, indent
 
-from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import (
+    sync_playwright,
+    TimeoutError as PlaywrightTimeoutError,
+)
 
 
 ########################################
@@ -15,16 +18,29 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 ########################################
 
 BASE_URL = "https://www.dofus.com"
-SOURCE_URL = "https://www.dofus.com/fr/mmorpg/actualites/maj"
+
+SOURCE_URL = (
+    "https://www.dofus.com/fr/mmorpg/actualites/maj"
+)
 
 OUTPUT = "dofus-changelog.xml"
-DISCORD_OUTPUT = "dofus-changelog-discord.xml"
 
-CACHE_FILE = "dofus_changelog_cache.json"
-DISCORD_STATE_FILE = "dofus_changelog_discord_state.json"
+DISCORD_OUTPUT = (
+    "dofus-changelog-discord.xml"
+)
+
+CACHE_FILE = (
+    "dofus_changelog_cache.json"
+)
+
+DISCORD_STATE_FILE = (
+    "dofus_changelog_discord_state.json"
+)
 
 MAX_ARTICLES = 20
+
 MAX_LOAD_MORE_CLICKS = 8
+
 
 HEADERS = {
     "User-Agent": (
@@ -34,6 +50,11 @@ HEADERS = {
     ),
     "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
 }
+
+
+########################################
+# MOIS FRANÇAIS
+########################################
 
 FRENCH_MONTHS = {
     "janvier": 1,
@@ -59,6 +80,7 @@ FRENCH_MONTHS = {
 ########################################
 
 def clean_text(value):
+
     return re.sub(
         r"\s+",
         " ",
@@ -73,14 +95,47 @@ def parse_date(value):
 
     try:
 
-        value = clean_text(value)
+        value = clean_text(
+            value
+        )
 
         if value.endswith("Z"):
-            value = value[:-1] + "+00:00"
 
-        dt = datetime.fromisoformat(value)
+            value = (
+                value[:-1]
+                + "+00:00"
+            )
+
+        dt = datetime.fromisoformat(
+            value
+        )
 
         if dt.tzinfo is None:
+
+            dt = dt.replace(
+                tzinfo=timezone.utc
+            )
+
+        return dt.astimezone(
+            timezone.utc
+        )
+
+    except Exception:
+
+        pass
+
+    try:
+
+        from email.utils import (
+            parsedate_to_datetime
+        )
+
+        dt = parsedate_to_datetime(
+            value
+        )
+
+        if dt.tzinfo is None:
+
             dt = dt.replace(
                 tzinfo=timezone.utc
             )
@@ -114,7 +169,7 @@ def parse_french_date(value):
         r"\s+(\d{4})"
         r"(?:\s+(?:à|a|at)\s+(\d{1,2})(?::|h)(\d{2}))?",
         text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     if match:
@@ -129,7 +184,7 @@ def parse_french_date(value):
                 int(match.group(1)),
                 int(match.group(4) or 0),
                 int(match.group(5) or 0),
-                tzinfo=timezone.utc
+                tzinfo=timezone.utc,
             )
 
         except ValueError:
@@ -141,10 +196,12 @@ def parse_french_date(value):
     ########################################
 
     match = re.search(
-        r"\b(\d{1,2})/(\d{1,2})/(\d{4})"
-        r"(?:\s*[-–—]?\s*(\d{1,2})h?(\d{2})?)?",
+        r"\b(\d{1,2})[/-]"
+        r"(\d{1,2})[/-]"
+        r"(\d{4})"
+        r"(?:\s*(?:-|–|—)?\s*"
+        r"(\d{1,2})(?::|h)(\d{2}))?\b",
         text,
-        re.IGNORECASE
     )
 
     if match:
@@ -157,28 +214,12 @@ def parse_french_date(value):
                 int(match.group(1)),
                 int(match.group(4) or 0),
                 int(match.group(5) or 0),
-                tzinfo=timezone.utc
+                tzinfo=timezone.utc,
             )
 
         except ValueError:
 
             pass
-
-    return None
-
-
-def parse_any_date(values):
-
-    for value in values:
-
-        dt = (
-            parse_date(value)
-            or parse_french_date(value)
-        )
-
-        if dt is not None:
-
-            return dt
 
     return None
 
@@ -202,7 +243,8 @@ def load_cache():
     ):
 
         print(
-            "Aucun cache Changelog Dofus trouvé."
+            "Cache Changelog Dofus chargé : "
+            "0 articles."
         )
 
         return {}
@@ -215,14 +257,16 @@ def load_cache():
             encoding="utf-8"
         ) as f:
 
-            data = json.load(f)
+            data = json.load(
+                f
+            )
 
         if not isinstance(
             data,
             dict
         ):
 
-            return {}
+            data = {}
 
         print(
             f"Cache Changelog Dofus chargé : "
@@ -234,7 +278,8 @@ def load_cache():
     except Exception as exc:
 
         print(
-            f"⚠️ Erreur lecture cache : {exc}"
+            f"⚠️ Erreur lecture cache : "
+            f"{exc}"
         )
 
         return {}
@@ -276,7 +321,9 @@ def load_discord_state():
             encoding="utf-8"
         ) as f:
 
-            data = json.load(f)
+            data = json.load(
+                f
+            )
 
         if not isinstance(
             data,
@@ -290,7 +337,8 @@ def load_discord_state():
     except Exception as exc:
 
         print(
-            f"⚠️ Erreur lecture état Discord : {exc}"
+            f"⚠️ Erreur lecture état Discord : "
+            f"{exc}"
         )
 
         return {}
@@ -298,12 +346,8 @@ def load_discord_state():
 
 def save_discord_state(state):
 
-    temp_file = (
-        f"{DISCORD_STATE_FILE}.tmp"
-    )
-
     with open(
-        temp_file,
+        DISCORD_STATE_FILE,
         "w",
         encoding="utf-8"
     ) as f:
@@ -315,64 +359,57 @@ def save_discord_state(state):
             indent=2
         )
 
-        f.flush()
-
-        try:
-
-            os.fsync(
-                f.fileno()
-            )
-
-        except Exception:
-
-            pass
-
-    os.replace(
-        temp_file,
-        DISCORD_STATE_FILE
-    )
-
 
 ########################################
 # VALIDATION URL
 ########################################
 
-def is_valid_url(url):
+def is_valid_changelog_url(url):
 
-    value = url.lower().rstrip("/")
+    value = (
+        url
+        .lower()
+        .rstrip("/")
+    )
 
-    if "dofus.com" not in value:
+    if (
+        "dofus.com" not in value
+    ):
+
         return False
 
-    if "/fr/mmorpg/actualites/maj/" not in value:
+    if (
+        "/fr/mmorpg/actualites/maj/"
+        not in value
+    ):
+
         return False
 
-    if value == SOURCE_URL.lower().rstrip("/"):
+    if (
+        value
+        == SOURCE_URL.lower().rstrip("/")
+    ):
+
         return False
 
-    # Exclure la page d'index "Voir tous les correctifs"
-    if value == (
+    ########################################
+    # EXCLURE LA PAGE INDEX DES CORRECTIFS
+    ########################################
+
+    correctifs_index = (
         BASE_URL
         + "/fr/mmorpg/actualites/maj/correctifs"
-    ).lower().rstrip("/"):
+    ).lower().rstrip("/")
+
+    if value == correctifs_index:
+
         return False
 
     return True
 
 
 ########################################
-# RÉCUPÉRATION DU LISTING
-#
-# IMPORTANT :
-#
-# Le listing est la source de vérité
-# pour :
-#
-#   - le titre
-#   - la date
-#
-# Les pages /correctifs/... peuvent
-# rediriger vers leur page parente.
+# LISTING CHANGELOG
 ########################################
 
 def collect_changelog_listing():
@@ -407,7 +444,7 @@ def collect_changelog_listing():
             locale="fr-FR",
             user_agent=HEADERS[
                 "User-Agent"
-            ]
+            ],
         )
 
         try:
@@ -415,7 +452,7 @@ def collect_changelog_listing():
             page.goto(
                 SOURCE_URL,
                 wait_until="domcontentloaded",
-                timeout=60000
+                timeout=60000,
             )
 
             page.wait_for_timeout(
@@ -425,69 +462,166 @@ def collect_changelog_listing():
         except Exception as exc:
 
             print(
-                f"❌ Erreur ouverture page : {exc}"
+                f"❌ Erreur ouverture page : "
+                f"{exc}"
             )
 
             browser.close()
 
             return {}
 
-        def collect_visible():
+        def extract_entry(link):
 
-            before = len(listing)
+            try:
 
-            links = page.locator(
-                'a[href*="/fr/mmorpg/actualites/maj/"]'
-            )
+                href = link.get_attribute(
+                    "href"
+                )
 
-            for i in range(
-                links.count()
-            ):
+                if not href:
 
-                try:
+                    return None
 
-                    link = links.nth(i)
-
-                    href = link.get_attribute(
-                        "href"
+                full_url = (
+                    urljoin(
+                        BASE_URL,
+                        href
                     )
+                    .split(
+                        "#",
+                        1
+                    )[0]
+                    .rstrip("/")
+                )
 
-                    if not href:
+                if not is_valid_changelog_url(
+                    full_url
+                ):
 
-                        continue
+                    return None
 
-                    full_url = (
-                        urljoin(
-                            BASE_URL,
-                            href
+                title = clean_text(
+                    link.inner_text(
+                        timeout=2000
+                    )
+                )
+
+                listing_date = None
+
+                card_text = ""
+
+                ########################################
+                # REMONTER LA CARTE
+                ########################################
+
+                for level in range(
+                    1,
+                    7
+                ):
+
+                    try:
+
+                        node = link
+
+                        for _ in range(
+                            level
+                        ):
+
+                            node = node.locator(
+                                ".."
+                            )
+
+                        text = clean_text(
+                            node.inner_text(
+                                timeout=2000
+                            )
                         )
-                        .split("#", 1)[0]
-                        .rstrip("/")
-                    )
 
-                    if not is_valid_url(
-                        full_url
-                    ):
+                        if len(text) > len(
+                            card_text
+                        ):
 
-                        continue
+                            card_text = text
 
-                    ########################################
-                    # TITRE DU LISTING
-                    ########################################
-
-                    title = clean_text(
-                        link.inner_text(
-                            timeout=2000
+                        candidate_date = (
+                            parse_french_date(
+                                text
+                            )
                         )
+
+                        if candidate_date:
+
+                            listing_date = (
+                                candidate_date
+                            )
+
+                            ########################################
+                            # TITRE DE LA CARTE
+                            ########################################
+
+                            for selector in (
+                                "h1",
+                                "h2",
+                                "h3",
+                                "h4",
+                            ):
+
+                                try:
+
+                                    headings = (
+                                        node.locator(
+                                            selector
+                                        )
+                                    )
+
+                                    for j in range(
+                                        headings.count()
+                                    ):
+
+                                        candidate_title = (
+                                            clean_text(
+                                                headings.nth(
+                                                    j
+                                                ).inner_text(
+                                                    timeout=1000
+                                                )
+                                            )
+                                        )
+
+                                        if (
+                                            candidate_title
+                                        ):
+
+                                            title = (
+                                                candidate_title
+                                            )
+
+                                            break
+
+                                    if title:
+                                        break
+
+                                except Exception:
+                                    pass
+
+                            break
+
+                    except Exception:
+                        pass
+
+                ########################################
+                # FALLBACK TITRE
+                ########################################
+
+                if (
+                    not title
+                    or title.lower().startswith(
+                        "loading"
                     )
-
-                    ########################################
-                    # DATE DU LISTING
-                    ########################################
-
-                    listing_date = None
-
-                    card_text = ""
+                    or title.lower().startswith(
+                        "http"
+                    )
+                ):
 
                     for level in range(
                         1,
@@ -506,201 +640,140 @@ def collect_changelog_listing():
                                     ".."
                                 )
 
-                            text = clean_text(
-                                node.inner_text(
-                                    timeout=2000
-                                )
-                            )
-
-                            if len(text) > len(
-                                card_text
+                            for selector in (
+                                "h1",
+                                "h2",
+                                "h3",
+                                "h4",
                             ):
 
-                                card_text = text
-
-                            candidate_date = (
-                                parse_french_date(
-                                    text
-                                )
-                            )
-
-                            if candidate_date:
-
-                                listing_date = (
-                                    candidate_date
-                                )
-
-                                ########################################
-                                # RECHERCHE TITRE DANS LA CARTE
-                                ########################################
-
-                                for selector in (
-                                    "h1",
-                                    "h2",
-                                    "h3",
-                                    "h4"
-                                ):
-
-                                    try:
-
-                                        headings = (
-                                            node.locator(
-                                                selector
-                                            )
-                                        )
-
-                                        for j in range(
-                                            headings.count()
-                                        ):
-
-                                            heading = (
-                                                clean_text(
-                                                    headings.nth(
-                                                        j
-                                                    ).inner_text(
-                                                        timeout=1000
-                                                    )
-                                                )
-                                            )
-
-                                            if heading:
-
-                                                title = (
-                                                    heading
-                                                )
-
-                                                break
-
-                                        if title:
-
-                                            break
-
-                                    except Exception:
-
-                                        pass
-
-                                break
-
-                        except Exception:
-
-                            pass
-
-                    ########################################
-                    # TITRE FALLBACK
-                    ########################################
-
-                    if (
-                        not title
-                        or title.lower().startswith(
-                            "http"
-                        )
-                    ):
-
-                        for level in range(
-                            1,
-                            5
-                        ):
-
-                            try:
-
-                                node = link
-
-                                for _ in range(
-                                    level
-                                ):
-
-                                    node = node.locator(
-                                        ".."
+                                headings = (
+                                    node.locator(
+                                        selector
                                     )
+                                )
 
-                                for selector in (
-                                    "h1",
-                                    "h2",
-                                    "h3",
-                                    "h4"
+                                for j in range(
+                                    headings.count()
                                 ):
 
-                                    headings = (
-                                        node.locator(
-                                            selector
+                                    candidate_title = (
+                                        clean_text(
+                                            headings.nth(
+                                                j
+                                            ).inner_text(
+                                                timeout=1000
+                                            )
                                         )
                                     )
 
-                                    for j in range(
-                                        headings.count()
-                                    ):
+                                    if candidate_title:
 
-                                        candidate = (
-                                            clean_text(
-                                                headings.nth(
-                                                    j
-                                                ).inner_text(
-                                                    timeout=1000
-                                                )
-                                            )
+                                        title = (
+                                            candidate_title
                                         )
-
-                                        if candidate:
-
-                                            title = (
-                                                candidate
-                                            )
-
-                                            break
-
-                                    if title:
 
                                         break
 
                                 if title:
-
                                     break
 
-                            except Exception:
+                            if title:
+                                break
 
-                                pass
+                        except Exception:
+                            pass
 
-                    ########################################
-                    # INVALID TITLE
-                    ########################################
+                ########################################
+                # DATE FALLBACK
+                ########################################
+
+                if listing_date is None:
+
+                    listing_date = (
+                        parse_french_date(
+                            card_text
+                        )
+                    )
+
+                if not title:
+
+                    return None
+
+                return {
+
+                    "url":
+                        full_url,
+
+                    "title":
+                        title,
+
+                    "date":
+                        listing_date,
+
+                }
+
+            except Exception:
+
+                return None
+
+        def collect_visible():
+
+            links = page.locator(
+                'a[href*="/fr/mmorpg/actualites/maj/"]'
+            )
+
+            before = len(
+                listing
+            )
+
+            for i in range(
+                links.count()
+            ):
+
+                try:
+
+                    entry = extract_entry(
+                        links.nth(i)
+                    )
+
+                    if not entry:
+
+                        continue
+
+                    url = entry[
+                        "url"
+                    ]
 
                     if (
-                        not title
-                        or title.lower().startswith(
-                            "loading"
-                        )
-                        or title.startswith(
-                            "http"
+                        url not in listing
+                        or (
+                            entry["date"]
+                            and (
+                                listing[url]["date"]
+                                is None
+                                or entry["date"]
+                                > listing[url]["date"]
+                            )
                         )
                     ):
 
-                        title = ""
-
-                    listing[
-                        full_url
-                    ] = {
-
-                        "url":
-                            full_url,
-
-                        "title":
-                            title,
-
-                        "date":
-                            listing_date,
-
-                        "listing_text":
-                            card_text,
-
-                    }
+                        listing[
+                            url
+                        ] = entry
 
                 except Exception:
 
                     pass
 
             return (
-                len(listing) - before
+                len(listing)
+                - before
             )
+
+        ########################################
+        # PREMIER LOT
+        ########################################
 
         collect_visible()
 
@@ -718,10 +791,6 @@ def collect_changelog_listing():
             MAX_LOAD_MORE_CLICKS + 1
         ):
 
-            if len(listing) >= MAX_ARTICLES:
-
-                break
-
             print(
                 f"🔄 Recherche du bouton VOIR PLUS "
                 f"({click_number}/"
@@ -733,6 +802,13 @@ def collect_changelog_listing():
                 exact=True
             )
 
+            if buttons.count() == 0:
+
+                buttons = page.get_by_text(
+                    "Voir plus",
+                    exact=True
+                )
+
             clicked = False
 
             for i in range(
@@ -741,29 +817,18 @@ def collect_changelog_listing():
 
                 try:
 
-                    button = buttons.nth(
-                        i
-                    )
+                    button = buttons.nth(i)
 
                     if not button.is_visible():
-
                         continue
 
                     button.scroll_into_view_if_needed()
-
-                    page.wait_for_timeout(
-                        300
-                    )
 
                     button.click(
                         timeout=10000
                     )
 
                     clicked = True
-
-                    print(
-                        "🟢 VOIR PLUS cliqué."
-                    )
 
                     break
 
@@ -799,7 +864,8 @@ def collect_changelog_listing():
             print(
                 f"Mises à jour actuellement "
                 f"trouvées : "
-                f"{len(listing)} (+{added})"
+                f"{len(listing)} "
+                f"(+{added})"
             )
 
             if added == 0:
@@ -818,12 +884,11 @@ def collect_changelog_listing():
 
 ########################################
 # DESCRIPTION ARTICLE
-#
-# Le titre et la date ne sont PAS
-# récupérés ici.
 ########################################
 
-def extract_article_description(page):
+def extract_article_description(
+    page
+):
 
     description = ""
 
@@ -880,10 +945,7 @@ def extract_article_description(page):
 # ARTICLE
 #
 # TITRE + DATE :
-#       LISTING PRIORITAIRE
-#
-# DESCRIPTION :
-#       ARTICLE
+# LISTING PRIORITAIRE
 ########################################
 
 def extract_article(
@@ -934,13 +996,12 @@ def extract_article(
     except Exception as exc:
 
         print(
-            f"   ⚠️ Page article : {exc}"
+            f"   ⚠️ Page article : "
+            f"{exc}"
         )
 
     ########################################
     # TITRE
-    #
-    # PRIORITÉ ABSOLUE AU LISTING
     ########################################
 
     title = listing_title
@@ -1008,24 +1069,27 @@ def extract_article(
             url
             .rstrip("/")
             .split("/")[-1]
-            .replace("-", " ")
+            .replace(
+                "-",
+                " "
+            )
             .strip()
             .title()
         )
 
     ########################################
     # DATE
-    #
-    # PRIORITÉ ABSOLUE AU LISTING
     ########################################
 
-    if listing_date is not None:
+    if listing_date:
 
         article_date = (
             listing_date
         )
 
-        date_source = "LISTING"
+        date_source = (
+            "LISTING"
+        )
 
     else:
 
@@ -1034,7 +1098,7 @@ def extract_article(
         date_source = None
 
         ########################################
-        # FALLBACK HEADER
+        # HEADER
         ########################################
 
         try:
@@ -1072,7 +1136,7 @@ def extract_article(
             pass
 
         ########################################
-        # FALLBACK META
+        # META
         ########################################
 
         if article_date is None:
@@ -1100,21 +1164,18 @@ def extract_article(
                     )
 
                     if locator.count() == 0:
-
                         continue
 
-                    value = locator.get_attribute(
-                        "content"
+                    value = (
+                        locator.get_attribute(
+                            "content"
+                        )
                     )
 
                     article_date = (
-                        parse_date(
-                            value
-                        )
+                        parse_date(value)
                         or
-                        parse_french_date(
-                            value
-                        )
+                        parse_french_date(value)
                     )
 
                     if article_date:
@@ -1128,51 +1189,7 @@ def extract_article(
                 pass
 
         ########################################
-        # FALLBACK TIME
-        ########################################
-
-        if article_date is None:
-
-            try:
-
-                times = page.locator(
-                    "time"
-                )
-
-                for i in range(
-                    times.count()
-                ):
-
-                    node = times.nth(
-                        i
-                    )
-
-                    article_date = (
-                        parse_any_date(
-                            [
-                                node.get_attribute(
-                                    "datetime"
-                                ),
-
-                                node.inner_text(
-                                    timeout=1000
-                                ),
-                            ]
-                        )
-                    )
-
-                    if article_date:
-
-                        date_source = "TIME"
-
-                        break
-
-            except Exception:
-
-                pass
-
-        ########################################
-        # FALLBACK CACHE
+        # CACHE
         ########################################
 
         if article_date is None:
@@ -1187,11 +1204,9 @@ def extract_article(
 
                 if article_date:
 
-                    date_source = "CACHE"
-
-    ########################################
-    # DATE INTRouvable
-    ########################################
+                    date_source = (
+                        "CACHE"
+                    )
 
     if article_date is None:
 
@@ -1201,17 +1216,9 @@ def extract_article(
 
         return None
 
-    ########################################
-    # DESCRIPTION
-    ########################################
-
     if not description:
 
         description = title
-
-    ########################################
-    # LOG
-    ########################################
 
     print(
         f"   🏷️ Titre trouvé via "
@@ -1243,7 +1250,7 @@ def extract_article(
 
 
 ########################################
-# CRÉATION RSS
+# RSS
 ########################################
 
 def create_rss(
@@ -1328,7 +1335,9 @@ def create_rss(
             item,
             "pubDate"
         ).text = format_pubdate(
-            article["date"]
+            article[
+                "date"
+            ]
         )
 
         SubElement(
@@ -1417,11 +1426,11 @@ def main():
         "########################################"
     )
 
-    articles = []
-
     ########################################
     # ARTICLES
     ########################################
+
+    articles = []
 
     with sync_playwright() as p:
 
@@ -1492,7 +1501,7 @@ def main():
         browser.close()
 
     ########################################
-    # UNE URL = UN ARTICLE
+    # DÉDOUBLONNAGE
     ########################################
 
     unique_articles = {}
@@ -1513,7 +1522,7 @@ def main():
 
     articles.sort(
         key=lambda article:
-            article["date"],
+        article["date"],
         reverse=True
     )
 
@@ -1626,7 +1635,7 @@ def main():
     )
 
     ########################################
-    # DERNIER CHANGELOG UNIQUEMENT
+    # DERNIER CHANGELOG
     ########################################
 
     if articles:
@@ -1660,27 +1669,10 @@ def main():
         )
 
         ########################################
-        # DÉJÀ ENVOYÉ
-        ########################################
-
-        if latest_url == last_sent_url:
-
-            print("")
-
-            print(
-                "ℹ️ Le dernier changelog DOFUS "
-                "a déjà été envoyé."
-            )
-
-            print(
-                "ℹ️ Aucun nouvel envoi Discord."
-            )
-
-        ########################################
         # NOUVEAU
         ########################################
 
-        else:
+        if latest_url != last_sent_url:
 
             print("")
 
@@ -1723,28 +1715,34 @@ def main():
                 "🟢 État Discord sauvegardé."
             )
 
-    else:
+        ########################################
+        # DÉJÀ ENVOYÉ
+        ########################################
 
-        print(
-            "⚠️ Aucun changelog disponible."
-        )
+        else:
+
+            print("")
+
+            print(
+                "ℹ️ Le dernier changelog DOFUS "
+                "a déjà été envoyé."
+            )
 
     ########################################
-    # SI PAS DE NOUVEAU CHANGELOG
+    # IMPORTANT :
     #
-    # On conserve le dernier article
-    # déjà envoyé dans le RSS Discord.
-    #
-    # On ne cherche JAMAIS un ancien
-    # changelog à rattraper.
+    # LE FLUX DISCORD NE DOIT JAMAIS
+    # ÊTRE VIDE APRÈS LE PREMIER ENVOI.
     ########################################
 
     if not discord_articles:
 
         state = load_discord_state()
 
-        previous_url = state.get(
-            "last_sent_url"
+        previous_url = (
+            state.get(
+                "last_sent_url"
+            )
         )
 
         previous_date = parse_date(
@@ -1792,8 +1790,12 @@ def main():
             ]
 
     ########################################
-    # GÉNÉRATION FLUX DISCORD
+    # TOUJOURS 1 SEUL ITEM MAXIMUM
     ########################################
+
+    discord_articles = (
+        discord_articles[:1]
+    )
 
     create_rss(
         DISCORD_OUTPUT,
@@ -1805,6 +1807,10 @@ def main():
 
         discord_articles
     )
+
+    ########################################
+    # LOG
+    ########################################
 
     if (
         discord_articles
@@ -1853,4 +1859,5 @@ def main():
 ########################################
 
 if __name__ == "__main__":
+
     main()
