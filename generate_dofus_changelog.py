@@ -2122,17 +2122,17 @@ def main():
             and
             previous_date
         ):
-
-           previous_item = {
+    
+            previous_item = {
                 "url":
                     previous_url,
-            
+
                 "title":
                     state.get(
                         "title",
                         "Changelog DOFUS"
                     ),
-            
+
                 "description":
                     state.get(
                         "description",
@@ -2142,7 +2142,7 @@ def main():
                 "date":
                     previous_date.isoformat(),
             }
-
+    
             build_discord_rss(
                 previous_item
             )
