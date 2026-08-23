@@ -85,6 +85,40 @@ def clean_text(value):
     ).strip()
 
 
+def is_invalid_news_title(title):
+    """
+    Détecte les textes génériques qui ne sont
+    pas de vrais titres d'articles.
+    """
+
+    if not title:
+        return True
+
+    normalized = clean_text(title).lower()
+
+    invalid_titles = {
+        "découvrir",
+        "decouvrir",
+        "voir plus",
+        "en savoir plus",
+        "lire la suite",
+        "actualités récentes",
+        "actualites recentes",
+        "actualités",
+        "actualites",
+        "news",
+        "loading",
+    }
+
+    if normalized in invalid_titles:
+        return True
+
+    if normalized.startswith("http"):
+        return True
+
+    return False
+
+
 def parse_date(value):
 
     if not value:
@@ -400,12 +434,27 @@ def collect_news_listing():
             if not is_valid_news_url(full_url):
                 return None
 
+            ########################################
+            # TEXTE DU LIEN
+            ########################################
+
             title = clean_text(
-                link.inner_text(timeout=2000)
+                link.inner_text(
+                    timeout=2000
+                )
             )
+
+            # "Découvrir", "Voir plus", etc.
+            # ne sont pas des titres.
+            if is_invalid_news_title(title):
+                title = ""
 
             listing_date = None
             card_text = ""
+
+            ########################################
+            # RECHERCHE DE LA CARTE
+            ########################################
 
             for level in range(1, 7):
 
@@ -417,65 +466,75 @@ def collect_news_listing():
                         node = node.locator("..")
 
                     text = clean_text(
-                        node.inner_text(timeout=2000)
+                        node.inner_text(
+                            timeout=2000
+                        )
                     )
 
                     if len(text) > len(card_text):
                         card_text = text
 
-                    candidate_date = parse_french_date(text)
+                    candidate_date = parse_french_date(
+                        text
+                    )
 
                     if candidate_date is not None:
-
                         listing_date = candidate_date
 
-                        for selector in (
-                            "h1",
-                            "h2",
-                            "h3",
-                            "h4"
-                        ):
+                    ########################################
+                    # RECHERCHE DU VRAI TITRE
+                    ########################################
 
-                            try:
+                    for selector in (
+                        "h1",
+                        "h2",
+                        "h3",
+                        "h4"
+                    ):
 
-                                headings = node.locator(
-                                    selector
+                        try:
+
+                            headings = node.locator(
+                                selector
+                            )
+
+                            for j in range(
+                                headings.count()
+                            ):
+
+                                candidate_title = clean_text(
+                                    headings.nth(j).inner_text(
+                                        timeout=1000
+                                    )
                                 )
 
-                                for j in range(
-                                    headings.count()
+                                if (
+                                    candidate_title
+                                    and not is_invalid_news_title(
+                                        candidate_title
+                                    )
                                 ):
 
-                                    candidate_title = clean_text(
-                                        headings.nth(j).inner_text(
-                                            timeout=1000
-                                        )
-                                    )
-
-                                    if candidate_title:
-
-                                        title = (
-                                            candidate_title
-                                        )
-
-                                        break
-
-                                if title:
+                                    title = candidate_title
                                     break
 
-                            except Exception:
-                                pass
+                            if not is_invalid_news_title(title):
+                                break
 
+                        except Exception:
+                            pass
+
+                    if listing_date is not None:
                         break
 
                 except Exception:
                     pass
 
-            if (
-                not title
-                or title.lower().startswith("http")
-                or title.lower().startswith("loading")
-            ):
+            ########################################
+            # DEUXIÈME RECHERCHE TITRE
+            ########################################
+
+            if is_invalid_news_title(title):
 
                 for level in range(1, 7):
 
@@ -507,22 +566,28 @@ def collect_news_listing():
                                     )
                                 )
 
-                                if candidate_title:
-
-                                    title = (
+                                if (
+                                    candidate_title
+                                    and not is_invalid_news_title(
                                         candidate_title
                                     )
+                                ):
 
+                                    title = candidate_title
                                     break
 
-                            if title:
+                            if not is_invalid_news_title(title):
                                 break
 
-                        if title:
+                        if not is_invalid_news_title(title):
                             break
 
                     except Exception:
                         pass
+
+            ########################################
+            # DATE FALLBACK
+            ########################################
 
             if listing_date is None:
 
@@ -530,8 +595,12 @@ def collect_news_listing():
                     card_text
                 )
 
-            if not title:
-                return None
+            ########################################
+            # SI LE TITRE RESTE INVALIDE
+            ########################################
+
+            if is_invalid_news_title(title):
+                title = ""
 
             return {
                 "title": title,
@@ -567,8 +636,7 @@ def collect_news_listing():
                         or (
                             entry["date"]
                             and (
-                                listing[url]["date"]
-                                is None
+                                listing[url]["date"] is None
                                 or entry["date"]
                                 > listing[url]["date"]
                             )
@@ -582,12 +650,20 @@ def collect_news_listing():
 
             return len(listing) - before
 
+        ########################################
+        # PREMIER LOT
+        ########################################
+
         collect_visible()
 
         print(
             f"Premier lot : "
             f"{len(listing)} actualités détectées."
         )
+
+        ########################################
+        # VOIR PLUS
+        ########################################
 
         for click_number in range(
             1,
@@ -660,7 +736,7 @@ def collect_news_listing():
 
 
 ########################################
-# EXTRACTION ARTICLE
+# EXTRACTION DATE ARTICLE
 ########################################
 
 def extract_date_from_html(html):
@@ -682,8 +758,11 @@ def extract_date_from_html(html):
         type="application/ld+json"
     ):
 
-        raw = script.string or script.get_text(
-            strip=True
+        raw = (
+            script.string
+            or script.get_text(
+                strip=True
+            )
         )
 
         if not raw:
@@ -721,6 +800,7 @@ def extract_date_from_html(html):
                     )
 
                     if dt:
+
                         return (
                             dt,
                             f"JSON-LD/{key}"
@@ -777,6 +857,7 @@ def extract_date_from_html(html):
             )
 
             if dt:
+
                 return (
                     dt,
                     f"meta/{attr}={value}"
@@ -800,6 +881,7 @@ def extract_date_from_html(html):
         )
 
         if dt:
+
             return (
                 dt,
                 "time/datetime"
@@ -816,6 +898,7 @@ def extract_date_from_html(html):
         )
 
         if dt:
+
             return (
                 dt,
                 "time/text"
@@ -862,6 +945,7 @@ def extract_date_from_html(html):
                 )
 
                 if dt:
+
                     return (
                         dt,
                         "texte publication"
@@ -872,6 +956,7 @@ def extract_date_from_html(html):
         )
 
         if dt:
+
             return (
                 dt,
                 "texte visible"
@@ -886,6 +971,7 @@ def extract_date_from_html(html):
     )
 
     if dt:
+
         return (
             dt,
             "HTML brut"
@@ -896,6 +982,10 @@ def extract_date_from_html(html):
         "introuvable"
     )
 
+
+########################################
+# EXTRACTION ARTICLE
+########################################
 
 def extract_article(
     url,
@@ -918,6 +1008,18 @@ def extract_article(
     listing_date = listing_entry.get(
         "date"
     )
+
+    ########################################
+    # SI LE LISTING A DONNÉ UN TITRE
+    # GÉNÉRIQUE, ON L'IGNORE.
+    ########################################
+
+    if is_invalid_news_title(title):
+        title = ""
+
+    ########################################
+    # PLAYWRIGHT
+    ########################################
 
     with sync_playwright() as p:
 
@@ -1003,8 +1105,19 @@ def extract_article(
 
     ########################################
     # TITRE
+    ########################################
+
+    # Si le titre du listing est valide,
+    # on le conserve.
     #
-    # Le listing reste prioritaire.
+    # Sinon on prend le vrai H1 de l'article.
+
+    if is_invalid_news_title(title):
+
+        title = ""
+
+    ########################################
+    # H1
     ########################################
 
     if not title:
@@ -1015,12 +1128,22 @@ def extract_article(
 
         if h1:
 
-            title = clean_text(
+            candidate_title = clean_text(
                 h1.get_text(
                     " ",
                     strip=True
                 )
             )
+
+            if not is_invalid_news_title(
+                candidate_title
+            ):
+
+                title = candidate_title
+
+    ########################################
+    # OG:TITLE
+    ########################################
 
     if not title:
 
@@ -1033,11 +1156,48 @@ def extract_article(
 
         if meta:
 
-            title = clean_text(
+            candidate_title = clean_text(
                 meta.get(
                     "content"
                 )
             )
+
+            if not is_invalid_news_title(
+                candidate_title
+            ):
+
+                title = candidate_title
+
+    ########################################
+    # TWITTER:TITLE
+    ########################################
+
+    if not title:
+
+        meta = soup.find(
+            "meta",
+            attrs={
+                "name": "twitter:title"
+            }
+        )
+
+        if meta:
+
+            candidate_title = clean_text(
+                meta.get(
+                    "content"
+                )
+            )
+
+            if not is_invalid_news_title(
+                candidate_title
+            ):
+
+                title = candidate_title
+
+    ########################################
+    # FALLBACK URL
+    ########################################
 
     if not title:
 
@@ -1133,6 +1293,10 @@ def extract_article(
     if not description:
 
         description = title
+
+    ########################################
+    # LOG
+    ########################################
 
     print(
         f"   🏷️ Titre : {title}"
@@ -1292,6 +1456,7 @@ print(
 
 articles = []
 
+
 ########################################
 # EXTRACTION
 ########################################
@@ -1305,6 +1470,7 @@ for index, (
 ):
 
     print("")
+
     print(
         f"[{index}/{len(listing)}] "
         f"{url}"
@@ -1366,7 +1532,6 @@ articles.sort(
     article["date"],
     reverse=True
 )
-
 
 articles = articles[
     :MAX_ARTICLES
@@ -1507,6 +1672,7 @@ if articles:
         f"{format_pubdate(latest_article['date'])}"
     )
 
+
     ########################################
     # NOUVELLE ACTUALITÉ
     ########################################
@@ -1564,7 +1730,9 @@ if articles:
 ########################################
 # CONSERVATION DU DERNIER ITEM
 #
-# Le flux Discord ne doit JAMAIS être vide.
+# Le flux Discord ne doit JAMAIS être
+# vide après qu'un premier article
+# ait été envoyé.
 ########################################
 
 if not discord_articles:
