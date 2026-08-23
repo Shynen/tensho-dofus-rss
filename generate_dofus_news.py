@@ -177,13 +177,12 @@ def extract_date_from_html(html):
             continue
 
         # Direct regex first: robust against malformed JSON-LD
-        for key in ("datePublished", "dateCreated", "dateModified"):
-            for value in re.findall(
-                rf'"{key}"\s*:\s*"([^"]+)"',
-                raw,
-                flags=re.IGNORECASE,
-            ):
-                dt = parse_date(value) or parse_french_date(value)
+            for key in ("datePublished", "dateCreated", "dateModified"):
+                    dt = (
+                        parse_date(obj.get(key))
+                        or parse_french_date(obj.get(key))
+                    ) if obj.get(key) else None
+            
                 if dt:
                     return dt, f"JSON-LD/{key}"
 
@@ -198,12 +197,11 @@ def extract_date_from_html(html):
                     continue
 
                 for key in ("datePublished", "dateCreated", "dateModified"):
-                    dt = (
+                        dt = (
                         parse_date(obj.get(key))
                         or parse_french_date(obj.get(key))
-                    )
-                    if obj.get(key)
-                    else None
+                    ) if obj.get(key) else None
+            
 
                     if dt:
                         return dt, f"JSON-LD/{key}"
