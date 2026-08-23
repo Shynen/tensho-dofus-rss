@@ -168,14 +168,14 @@ def parse_date_from_text(
     }
 
     match = re.search(
-        r"\\b"
-        r"(\\d{1,2})\\s+"
+        r"\b"
+        r"(\d{1,2})\s+"
         r"(janvier|février|fevrier|mars|avril|mai|juin|"
         r"juillet|août|aout|septembre|octobre|novembre|"
         r"décembre|decembre)"
-        r"\\s+"
-        r"(\\d{4})"
-        r"\\b",
+        r"\s+"
+        r"(\d{4})"
+        r"\b"
         text,
         flags=re.IGNORECASE
     )
@@ -334,11 +334,11 @@ def date_from_url(url):
     )[-1]
 
     matches = re.findall(
-        r"(?<!\\d)"
-        r"(\\d{1,2})-"
-        r"(\\d{1,2})-"
-        r"(\\d{4})"
-        r"(?!\\d)",
+        r"(?<!\d)"
+        r"(\d{1,2})-"
+        r"(\d{1,2})-"
+        r"(\d{4})"
+        r"(?!\d)",
         slug
     )
 
