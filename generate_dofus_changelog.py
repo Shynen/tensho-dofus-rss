@@ -1189,6 +1189,7 @@ def enrich_item(
 
     dt = None
     date_source = None
+    article_content = ""
 
     # ========================================================
     # OUVERTURE ARTICLE
@@ -1567,20 +1568,19 @@ def enrich_item(
     # RESULTAT
     # ========================================================
 
-        result = {
-            "url":
-                url,
-        
-            "title":
-                title,
-        
-            "description":
-                article_content,
-        
-            "date":
-                dt.isoformat(),
-        }
+    result = {
+        "url":
+            url,
 
+        "title":
+            title,
+
+        "description":
+            article_content,
+
+        "date":
+            dt.isoformat(),
+    }
     return result
 
 
@@ -2309,9 +2309,12 @@ def main():
                 ),
         
             "description":
-                state.get(
+                latest.get(
                     "description",
-                    ""
+                    state.get(
+                        "description",
+                        ""
+                    )
                 ),
         
             "date":
