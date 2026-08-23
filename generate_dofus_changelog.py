@@ -9,10 +9,13 @@ from datetime import datetime, timezone
 from email.utils import format_datetime, parsedate_to_datetime
 from urllib.parse import urljoin
 
-import requests
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
 
 BASE_URL = "https://www.dofus.com"
 LISTING_URL = f"{BASE_URL}/fr/mmorpg/actualites/maj"
@@ -31,7 +34,7 @@ USER_AGENT = (
 
 
 # ============================================================
-# OUTILS
+# NETTOYAGE
 # ============================================================
 
 def clean_text(value):
@@ -49,6 +52,7 @@ def normalize_url(url):
         return ""
 
     url = urljoin(BASE_URL, url)
+
     return url.split("#", 1)[0].rstrip("/")
 
 
@@ -76,6 +80,7 @@ FRENCH_MONTHS = {
 
 
 def parse_date(value):
+
     if not value:
         return None
 
@@ -86,9 +91,13 @@ def parse_date(value):
         dt = parsedate_to_datetime(value)
 
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(
+                tzinfo=timezone.utc
+            )
 
-        return dt.astimezone(timezone.utc)
+        return dt.astimezone(
+            timezone.utc
+        )
 
     except Exception:
         pass
@@ -96,13 +105,20 @@ def parse_date(value):
     # ISO
     try:
         dt = datetime.fromisoformat(
-            value.replace("Z", "+00:00")
+            value.replace(
+                "Z",
+                "+00:00",
+            )
         )
 
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(
+                tzinfo=timezone.utc
+            )
 
-        return dt.astimezone(timezone.utc)
+        return dt.astimezone(
+            timezone.utc
+        )
 
     except Exception:
         pass
@@ -115,11 +131,15 @@ def parse_date(value):
         "%d/%m/%Y %H:%M",
         "%Y-%m-%d %H:%M:%S",
     ):
+
         try:
+
             return datetime.strptime(
                 value,
-                fmt
-            ).replace(tzinfo=timezone.utc)
+                fmt,
+            ).replace(
+                tzinfo=timezone.utc
+            )
 
         except Exception:
             pass
@@ -128,14 +148,12 @@ def parse_date(value):
 
 
 def parse_french_date(value):
+
     if not value:
         return None
 
     text = clean_text(value).lower()
 
-    # Exemple :
-    # 23 Juin 2026
-    # 03 Mars 2026
     match = re.search(
         r"\b"
         r"(\d{1,2})"
@@ -152,30 +170,39 @@ def parse_french_date(value):
         return None
 
     try:
+
         return datetime(
             int(match.group(3)),
-            FRENCH_MONTHS[match.group(2)],
+            FRENCH_MONTHS[
+                match.group(2)
+            ],
             int(match.group(1)),
             tzinfo=timezone.utc,
         )
 
     except ValueError:
+
         return None
 
 
 def date_from_url(url):
+
     """
-    Fallback dynamique pour les patch notes.
+    Fallback dynamique.
 
     Exemple :
 
     patch-notes-3-6-10-10-18-08-2026
-    -> 18/08/2026
 
-    Aucun article n'est codé en dur.
+    -> 18/08/2026
     """
 
-    slug = normalize_url(url).rsplit("/", 1)[-1]
+    slug = normalize_url(
+        url
+    ).rsplit(
+        "/",
+        1,
+    )[-1]
 
     matches = re.findall(
         r"(?<!\d)"
@@ -190,6 +217,7 @@ def date_from_url(url):
     day, month, year = matches[-1]
 
     try:
+
         return datetime(
             int(year),
             int(month),
@@ -198,6 +226,7 @@ def date_from_url(url):
         )
 
     except ValueError:
+
         return None
 
 
@@ -205,13 +234,40 @@ def date_from_url(url):
 # TITRES
 # ============================================================
 
+INVALID_TITLES = {
+    "découvrir",
+    "decouvrir",
+    "voir plus",
+    "voir tous",
+    "voir tous les correctifs",
+    "la dernière mise à jour",
+    "la derniere mise a jour",
+}
+
+
 def clean_title(title):
+
     title = clean_text(title)
 
     if not title:
         return ""
 
-    # Supprime les éléments UI parasites.
+    # Supprimer suffixes du TITLE HTML
+    title = re.sub(
+        r"\s*-\s*Mises à jour\s*-\s*DOFUS.*$",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    )
+
+    title = re.sub(
+        r"\s*\|\s*DOFUS.*$",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    )
+
+    # Supprimer certains textes parasites
     title = re.sub(
         r"^\s*Découvrir\s*[:\-|]?\s*",
         "",
@@ -230,39 +286,43 @@ def clean_title(title):
 
 
 def is_valid_title(title):
-    title = clean_title(title)
+
+    title = clean_title(
+        title
+    )
 
     if not title:
         return False
 
-    invalid = {
-        "découvrir",
-        "decouvrir",
-        "voir plus",
-        "voir tous",
-        "voir tous les correctifs",
-    }
+    if title.lower() in INVALID_TITLES:
+        return False
 
-    if title.lower() in invalid:
+    # Textes génériques
+    if title.lower().startswith(
+        "la dernière mise à jour"
+    ):
+        return False
+
+    if title.lower().startswith(
+        "la derniere mise a jour"
+    ):
         return False
 
     return True
 
 
 def title_from_url(url):
+
     """
     Fallback dynamique pour les patch notes.
-
-    Exemple :
-
-    patch-notes-3-6-10-10-18-08-2026
-
-    devient :
-
-    MÀJ - Patch notes 3.6.10.10 du 18/08/2026
     """
 
-    slug = normalize_url(url).rsplit("/", 1)[-1]
+    slug = normalize_url(
+        url
+    ).rsplit(
+        "/",
+        1,
+    )[-1]
 
     match = re.search(
         r"patch-notes-"
@@ -273,17 +333,25 @@ def title_from_url(url):
     )
 
     if match:
-        version = match.group(1).replace("-", ".")
+
+        version = (
+            match.group(1)
+            .replace(
+                "-",
+                ".",
+            )
+        )
+
         day = match.group(2).zfill(2)
         month = match.group(3).zfill(2)
         year = match.group(4)
 
         return (
             f"MÀJ - Patch notes "
-            f"{version} du {day}/{month}/{year}"
+            f"{version} du "
+            f"{day}/{month}/{year}"
         )
 
-    # Fallback générique
     slug = re.sub(
         r"^\d+-",
         "",
@@ -291,51 +359,96 @@ def title_from_url(url):
     )
 
     return clean_title(
-        slug.replace("-", " ").title()
+        slug.replace(
+            "-",
+            " ",
+        ).title()
     )
 
 
 # ============================================================
-# JSON
+# EXTRACTION TITRE ARTICLE
 # ============================================================
 
-def load_json(path, default):
-    try:
-        if path.exists():
+def extract_title_from_soup(soup):
 
-            with path.open(
-                "r",
-                encoding="utf-8",
-            ) as file:
+    # --------------------------------------------------------
+    # 1. H1
+    # --------------------------------------------------------
 
-                data = json.load(file)
+    for selector in (
+        "h1",
+        '[data-testid="article-title"]',
+        ".article-title",
+        ".news-title",
+    ):
 
-                if isinstance(data, type(default)):
-                    return data
-
-    except Exception:
-        pass
-
-    return default
-
-
-def save_json(path, data):
-
-    with path.open(
-        "w",
-        encoding="utf-8",
-    ) as file:
-
-        json.dump(
-            data,
-            file,
-            ensure_ascii=False,
-            indent=2,
+        tags = soup.select(
+            selector
         )
 
+        for tag in tags:
+
+            title = clean_title(
+                tag.get_text(
+                    " ",
+                    strip=True,
+                )
+            )
+
+            if is_valid_title(
+                title
+            ):
+
+                return title
+
+    # --------------------------------------------------------
+    # 2. OG TITLE
+    # --------------------------------------------------------
+
+    tag = soup.find(
+        "meta",
+        property="og:title",
+    )
+
+    if tag:
+
+        title = clean_title(
+            tag.get(
+                "content"
+            )
+        )
+
+        if is_valid_title(
+            title
+        ):
+
+            return title
+
+    # --------------------------------------------------------
+    # 3. TITLE HTML
+    # --------------------------------------------------------
+
+    if soup.title:
+
+        title = clean_title(
+            soup.title.get_text(
+                " ",
+                strip=True,
+            )
+        )
+
+        if is_valid_title(
+            title
+        ):
+
+            return title
+
+    return ""
+
 
 # ============================================================
-# EXTRACTION ARTICLE
+# EXTRACTION DATE ARTICLE
 # ============================================================
 
 def extract_jsonld_date(soup):
@@ -354,20 +467,30 @@ def extract_jsonld_date(soup):
             continue
 
         try:
-            data = json.loads(raw)
+
+            data = json.loads(
+                raw
+            )
 
         except Exception:
+
             continue
 
         objects = (
             data
-            if isinstance(data, list)
+            if isinstance(
+                data,
+                list,
+            )
             else [data]
         )
 
         for obj in objects:
 
-            if not isinstance(obj, dict):
+            if not isinstance(
+                obj,
+                dict,
+            ):
                 continue
 
             for key in (
@@ -381,6 +504,7 @@ def extract_jsonld_date(soup):
                 )
 
                 if dt:
+
                     return dt
 
     return None
@@ -389,12 +513,30 @@ def extract_jsonld_date(soup):
 def extract_meta_date(soup):
 
     for attrs in (
-        {"property": "article:published_time"},
-        {"name": "article:published_time"},
-        {"property": "og:published_time"},
-        {"name": "date"},
-        {"name": "publishdate"},
-        {"name": "datePublished"},
+        {
+            "property":
+            "article:published_time"
+        },
+        {
+            "name":
+            "article:published_time"
+        },
+        {
+            "property":
+            "og:published_time"
+        },
+        {
+            "name":
+            "date"
+        },
+        {
+            "name":
+            "publishdate"
+        },
+        {
+            "name":
+            "datePublished"
+        },
     ):
 
         tag = soup.find(
@@ -404,14 +546,24 @@ def extract_meta_date(soup):
 
         if tag:
 
-            dt = parse_date(
-                tag.get("content")
+            value = tag.get(
+                "content"
+            )
+
+            dt = (
+                parse_date(value)
+                or parse_french_date(
+                    value
+                )
             )
 
             if dt:
+
                 return dt
 
-    for tag in soup.find_all("time"):
+    for tag in soup.find_all(
+        "time"
+    ):
 
         value = (
             tag.get("datetime")
@@ -427,73 +579,64 @@ def extract_meta_date(soup):
         )
 
         if dt:
+
             return dt
 
     return None
 
 
-def extract_title_from_soup(soup):
+# ============================================================
+# JSON
+# ============================================================
 
-    # OG TITLE
-    tag = soup.find(
-        "meta",
-        property="og:title",
-    )
+def load_json(
+    path,
+    default,
+):
 
-    if tag:
+    try:
 
-        title = clean_title(
-            tag.get("content")
-        )
+        if path.exists():
 
-        if is_valid_title(title):
-            return title
+            with path.open(
+                "r",
+                encoding="utf-8",
+            ) as file:
 
-    # H1
-    for selector in (
-        "h1",
-        '[data-testid="article-title"]',
-        ".article-title",
-        ".news-title",
-    ):
-
-        tag = soup.select_one(
-            selector
-        )
-
-        if tag:
-
-            title = clean_title(
-                tag.get_text(
-                    " ",
-                    strip=True,
+                data = json.load(
+                    file
                 )
-            )
 
-            if is_valid_title(title):
-                return title
+                if isinstance(
+                    data,
+                    type(default),
+                ):
 
-    # TITLE HTML
-    if soup.title:
+                    return data
 
-        title = clean_title(
-            soup.title.get_text(
-                " ",
-                strip=True,
-            )
+    except Exception:
+
+        pass
+
+    return default
+
+
+def save_json(
+    path,
+    data,
+):
+
+    with path.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
+
+        json.dump(
+            data,
+            file,
+            ensure_ascii=False,
+            indent=2,
         )
-
-        title = re.sub(
-            r"\s*\|\s*DOFUS.*$",
-            "",
-            title,
-            flags=re.IGNORECASE,
-        )
-
-        if is_valid_title(title):
-            return title
-
-    return ""
 
 
 # ============================================================
@@ -515,28 +658,32 @@ def extract_listing_items(page):
 
         try:
 
-            link = links.nth(index)
+            link = links.nth(
+                index
+            )
 
             href = normalize_url(
-                link.get_attribute("href")
+                link.get_attribute(
+                    "href"
+                )
             )
 
             if not href:
                 continue
 
-            # Page /maj elle-même
+            # Page principale
             if href == normalize_url(
                 LISTING_URL
             ):
                 continue
 
-            # Page de navigation des correctifs
+            # Page correctifs
             if href == normalize_url(
                 f"{LISTING_URL}/correctifs"
             ):
                 continue
 
-            # Doit être un véritable article
+            # Article réel
             if not re.search(
                 r"/maj/\d+-[^/]+",
                 href,
@@ -548,15 +695,7 @@ def extract_listing_items(page):
                 continue
 
             # ------------------------------------------------
-            # TEXTE DU LIEN
-            # ------------------------------------------------
-
-            link_text = clean_title(
-                link.inner_text()
-            )
-
-            # ------------------------------------------------
-            # TROUVER LE CONTENEUR
+            # CONTENEUR DE LA CARTE
             # ------------------------------------------------
 
             card = None
@@ -584,7 +723,9 @@ def extract_listing_items(page):
                     ):
 
                         parent_href = normalize_url(
-                            parent_links.nth(j).get_attribute(
+                            parent_links.nth(
+                                j
+                            ).get_attribute(
                                 "href"
                             )
                         )
@@ -606,21 +747,21 @@ def extract_listing_items(page):
                                     parent_href
                                 )
 
-                    # On veut le conteneur correspondant
-                    # à UN seul article.
                     if urls == {href}:
 
                         card = parent
                         break
 
                 except Exception:
+
                     continue
 
             if card is None:
+
                 card = link
 
             # ------------------------------------------------
-            # TEXTE DE LA CARTE
+            # TEXTE
             # ------------------------------------------------
 
             try:
@@ -631,7 +772,9 @@ def extract_listing_items(page):
 
             except Exception:
 
-                card_text = link_text
+                card_text = clean_text(
+                    link.inner_text()
+                )
 
             # ------------------------------------------------
             # TITRE
@@ -639,14 +782,19 @@ def extract_listing_items(page):
 
             title = ""
 
-            # Le texte du lien peut être le titre.
+            # On ne prend le texte du lien que s'il
+            # ressemble réellement à un titre.
+            link_text = clean_title(
+                link.inner_text()
+            )
+
             if is_valid_title(
                 link_text
             ):
 
                 title = link_text
 
-            # Sinon chercher dans les headings.
+            # Chercher les headings
             if not title:
 
                 try:
@@ -660,7 +808,9 @@ def extract_listing_items(page):
                     ):
 
                         candidate = clean_title(
-                            headings.nth(j).inner_text()
+                            headings.nth(
+                                j
+                            ).inner_text()
                         )
 
                         if is_valid_title(
@@ -671,6 +821,7 @@ def extract_listing_items(page):
                             break
 
                 except Exception:
+
                     pass
 
             # ------------------------------------------------
@@ -679,7 +830,7 @@ def extract_listing_items(page):
 
             dt = None
 
-            # 1. <time>
+            # <time>
             try:
 
                 times = card.locator(
@@ -691,11 +842,14 @@ def extract_listing_items(page):
                 ):
 
                     raw = (
-                        times.nth(j)
-                        .get_attribute(
+                        times.nth(
+                            j
+                        ).get_attribute(
                             "datetime"
                         )
-                        or times.nth(j).inner_text()
+                        or times.nth(
+                            j
+                        ).inner_text()
                     )
 
                     dt = (
@@ -707,16 +861,17 @@ def extract_listing_items(page):
                         break
 
             except Exception:
+
                 pass
 
-            # 2. Date française dans toute la carte
+            # Date française dans la carte
             if not dt:
 
                 dt = parse_french_date(
                     card_text
                 )
 
-            # 3. Date numérique
+            # Date numérique
             if not dt:
 
                 match = re.search(
@@ -750,17 +905,16 @@ def extract_listing_items(page):
                 }
             )
 
-            seen.add(href)
+            seen.add(
+                href
+            )
 
         except Exception:
+
             continue
 
     return items
 
-
-# ============================================================
-# COLLECTE LISTING
-# ============================================================
 
 def collect_listing(page):
 
@@ -783,7 +937,9 @@ def collect_listing(page):
         f"{len(items)} mises à jour détectées."
     )
 
-    for i in range(8):
+    for i in range(
+        8
+    ):
 
         print(
             f"🔄 Recherche du bouton VOIR PLUS "
@@ -805,13 +961,17 @@ def collect_listing(page):
 
             try:
 
-                button = buttons.nth(j)
+                button = buttons.nth(
+                    j
+                )
 
                 if button.is_visible():
+
                     visible_button = button
                     break
 
             except Exception:
+
                 continue
 
         if visible_button is None:
@@ -822,7 +982,9 @@ def collect_listing(page):
 
             break
 
-        before = len(items)
+        before = len(
+            items
+        )
 
         try:
 
@@ -865,7 +1027,7 @@ def collect_listing(page):
 
 
 # ============================================================
-# ENRICHISSEMENT
+# ENRICHISSEMENT ARTICLE
 # ============================================================
 
 def enrich_item(
@@ -893,8 +1055,11 @@ def enrich_item(
         url
     )
 
-    title = listing_title
-    dt = listing_date
+    title = ""
+
+    dt = None
+
+    date_source = None
 
     print(
         "🔎 Ouverture article avec Playwright..."
@@ -936,46 +1101,48 @@ def enrich_item(
         # TITRE
         # ====================================================
 
-        # CORRECTIFS :
-        # le site renvoie souvent le titre de la MÀJ
-        # parent dans le H1.
-        #
-        # On utilise donc le slug du patch pour obtenir
-        # son vrai titre dynamiquement.
+        # Pour les correctifs, le titre du patch est
+        # reconstruit depuis l'URL.
         if "/correctifs/" in url:
 
             title = title_from_url(
                 url
             )
 
-        elif is_valid_title(
-            listing_title
-        ):
-
-            title = listing_title
-
-        elif is_valid_title(
-            article_title
-        ):
-
-            title = article_title
-
         else:
 
-            title = title_from_url(
-                url
-            )
+            # Priorité au titre du listing.
+            if is_valid_title(
+                listing_title
+            ):
+
+                title = listing_title
+
+            # Sinon titre article nettoyé.
+            elif is_valid_title(
+                article_title
+            ):
+
+                title = article_title
+
+            else:
+
+                # Dernier fallback : cache.
+                cached_title = clean_title(
+                    cached.get(
+                        "title"
+                    )
+                )
+
+                if is_valid_title(
+                    cached_title
+                ):
+
+                    title = cached_title
 
         # ====================================================
         # DATE
         # ====================================================
-
-        # Priorité :
-        #
-        # 1. Listing
-        # 2. Article
-        # 3. URL
-        # 4. Cache
 
         if listing_date:
 
@@ -994,15 +1161,16 @@ def enrich_item(
 
         else:
 
-            dt = parse_date(
-                cached.get("date")
+            cached_date = parse_date(
+                cached.get(
+                    "date"
+                )
             )
 
-            date_source = (
-                "CACHE"
-                if dt
-                else None
-            )
+            if cached_date:
+
+                dt = cached_date
+                date_source = "CACHE"
 
     except Exception as exc:
 
@@ -1011,26 +1179,29 @@ def enrich_item(
             f"{exc}"
         )
 
-        date_source = None
+    # ========================================================
+    # FALLBACKS
+    # ========================================================
 
-    # Dernier fallback cache
     if not dt:
 
-        dt = parse_date(
-            cached.get("date")
-        )
+        if url_date:
 
-        if dt:
-            date_source = "CACHE"
+            dt = url_date
+            date_source = "URL"
 
-    # Dernier fallback titre
-    if not is_valid_title(
-        title
-    ):
+        else:
 
-        title = clean_title(
-            cached.get("title")
-        )
+            cached_date = parse_date(
+                cached.get(
+                    "date"
+                )
+            )
+
+            if cached_date:
+
+                dt = cached_date
+                date_source = "CACHE"
 
     if not is_valid_title(
         title
@@ -1040,7 +1211,6 @@ def enrich_item(
             url
         )
 
-    # Impossible de publier sans date.
     if not dt:
 
         print(
@@ -1067,7 +1237,7 @@ def enrich_item(
 
     print(
         f"   📅 Date trouvée via "
-        f"{date_source or 'FALLBACK'}: "
+        f"{date_source}: "
         f"{format_datetime(dt)}"
     )
 
@@ -1098,7 +1268,9 @@ def build_rss(
 ):
 
     now = format_datetime(
-        datetime.now(timezone.utc),
+        datetime.now(
+            timezone.utc
+        ),
         usegmt=True,
     )
 
@@ -1107,7 +1279,11 @@ def build_rss(
         '<rss version="2.0">',
         "<channel>",
         f"<title>{html.escape(title)}</title>",
-        f"<link>{BASE_URL}/fr/mmorpg/actualites/maj</link>",
+        (
+            f"<link>"
+            f"{BASE_URL}/fr/mmorpg/actualites/maj"
+            f"</link>"
+        ),
         "<description>Changelogs DOFUS</description>",
         f"<lastBuildDate>{now}</lastBuildDate>",
     ]
@@ -1129,8 +1305,16 @@ def build_rss(
         chunks.extend(
             [
                 "<item>",
-                f"<title>{html.escape(item['title'])}</title>",
-                f"<link>{html.escape(item['url'])}</link>",
+                (
+                    f"<title>"
+                    f"{html.escape(item['title'])}"
+                    f"</title>"
+                ),
+                (
+                    f"<link>"
+                    f"{html.escape(item['url'])}"
+                    f"</link>"
+                ),
                 (
                     f"<guid isPermaLink=\"true\">"
                     f"{html.escape(item['url'])}"
@@ -1154,30 +1338,29 @@ def build_rss(
     )
 
     path.write_text(
-        "\n".join(chunks) + "\n",
+        "\n".join(chunks)
+        + "\n",
         encoding="utf-8",
     )
 
 
 # ============================================================
-# RSS DISCORD / READYBOT
+# RSS DISCORD
 # ============================================================
 
-def build_discord_rss(item):
+def build_discord_rss(
+    item
+):
 
     """
-    Flux volontairement minimal :
+    Flux minimal volontairement.
 
-    RSS 2.0
-    1 seul item
+    1 seul item.
     title
     link
     guid
     description
     pubDate
-
-    C'est le format utilisé pour éviter les problèmes
-    de parsing Readybot / Discord.
     """
 
     if not item:
@@ -1195,6 +1378,7 @@ def build_discord_rss(item):
     )
 
     if not dt:
+
         return
 
     pub = format_datetime(
@@ -1208,11 +1392,27 @@ def build_discord_rss(item):
             '<rss version="2.0">',
             "<channel>",
             "<title>DOFUS Changelog Discord</title>",
-            f"<link>{html.escape(item['url'])}</link>",
-            "<description>Dernier changelog DOFUS</description>",
+            (
+                f"<link>"
+                f"{html.escape(item['url'])}"
+                f"</link>"
+            ),
+            (
+                "<description>"
+                "Dernier changelog DOFUS"
+                "</description>"
+            ),
             "<item>",
-            f"<title>{html.escape(item['title'])}</title>",
-            f"<link>{html.escape(item['url'])}</link>",
+            (
+                f"<title>"
+                f"{html.escape(item['title'])}"
+                f"</title>"
+            ),
+            (
+                f"<link>"
+                f"{html.escape(item['url'])}"
+                f"</link>"
+            ),
             (
                 f"<guid isPermaLink=\"true\">"
                 f"{html.escape(item['url'])}"
@@ -1312,14 +1512,18 @@ def main():
                 f"{item['url']}"
             )
 
-            if item.get("title"):
+            if item.get(
+                "title"
+            ):
 
                 print(
                     f"   🏷️ Titre trouvé dans le listing: "
                     f"{item['title']}"
                 )
 
-            if item.get("date"):
+            if item.get(
+                "date"
+            ):
 
                 listing_dt = parse_date(
                     item["date"]
@@ -1339,6 +1543,7 @@ def main():
             )
 
             if enriched:
+
                 results.append(
                     enriched
                 )
@@ -1362,7 +1567,7 @@ def main():
     )
 
     # ========================================================
-    # TRI PAR DATE
+    # TRI DYNAMIQUE PAR DATE
     # ========================================================
 
     results.sort(
@@ -1377,7 +1582,10 @@ def main():
         reverse=True,
     )
 
-    # Maximum 20 articles dans le RSS complet
+    # ========================================================
+    # MAXIMUM RSS
+    # ========================================================
+
     results = results[:20]
 
     # ========================================================
@@ -1402,14 +1610,18 @@ def main():
         1,
     ):
 
+        dt = parse_date(
+            item["date"]
+        )
+
         print(
             f"{index:02d}. "
-            f"{format_datetime(parse_date(item['date']))} "
+            f"{format_datetime(dt)} "
             f"- {item['title']}"
         )
 
         print(
-            f"    {item['url']}"
+            item["url"]
         )
 
     # ========================================================
@@ -1429,7 +1641,8 @@ def main():
     # ========================================================
 
     print(
-        "\nGénération de dofus-changelog.xml..."
+        "\nGénération de "
+        "dofus-changelog.xml..."
     )
 
     build_rss(
@@ -1467,9 +1680,10 @@ def main():
 
         return
 
-    # IMPORTANT :
-    # le premier élément est TOUJOURS
-    # le plus récent grâce au tri dynamique.
+    # ========================================================
+    # LE PLUS RÉCENT
+    # ========================================================
+
     latest = results[0]
 
     latest_date = parse_date(
@@ -1503,15 +1717,19 @@ def main():
     )
 
     last_url = normalize_url(
-        state.get("url")
+        state.get(
+            "url"
+        )
     )
 
     last_date = parse_date(
-        state.get("date")
+        state.get(
+            "date"
+        )
     )
 
     # ========================================================
-    # NOUVEAUTÉ
+    # NOUVEAU ?
     # ========================================================
 
     is_new = (
