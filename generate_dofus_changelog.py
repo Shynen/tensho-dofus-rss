@@ -1030,7 +1030,78 @@ def collect_listing(
     )
 
     return items
+# ============================================================
+# CONTENU ARTICLE DOFUS
+# ============================================================
 
+def extract_article_content(page):
+    """
+    Récupère uniquement le contenu principal
+    de l'article DOFUS.
+
+    On évite volontairement le <body> complet
+    afin de ne pas récupérer :
+    - menus
+    - navigation
+    - boutons
+    - sidebar
+    - publicité
+    - footer
+    """
+
+    selectors = [
+        "article",
+        ".article-content",
+        ".news-content",
+        ".article-body",
+        ".content-article",
+        ".ak-container",
+        "main",
+    ]
+
+    for selector in selectors:
+
+        try:
+
+            locator = page.locator(
+                selector
+            ).first
+
+            if locator.count() == 0:
+                continue
+
+            text = locator.inner_text(
+                timeout=5000
+            )
+
+            text = text.strip()
+
+            if len(text) < 100:
+                continue
+
+            # Nettoyage des lignes
+            lines = []
+
+            for line in text.splitlines():
+
+                line = line.strip()
+
+                if not line:
+                    continue
+
+                lines.append(line)
+
+            text = "\n".join(
+                lines
+            )
+
+            if len(text) >= 100:
+                return text
+
+        except Exception:
+            continue
+
+    return ""
 
 # ============================================================
 # ENRICHISSEMENT ARTICLE
