@@ -1034,20 +1034,93 @@ def collect_listing(
 # CONTENU ARTICLE DOFUS
 # ============================================================
 
+def _clean_article_text_from_html(html_content):
+    """
+    Transforme le HTML d'un conteneur DOFUS en texte de changelog.
+
+    Point important : on ne renvoie JAMAIS le conteneur brut.
+    Pour éviter que la navigation de la page (titre de la MÀJ, liste des
+    patch notes, "Retour à la liste", etc.) parte dans le RSS Discord,
+    l'extraction doit trouver un marqueur de début du contenu réel.
+    """
+
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    for unwanted in soup.select(
+        "script, style, nav, header, footer, form, button, aside, "
+        "[class*='share'], [class*='social'], [class*='breadcrumb'], "
+        "[class*='navigation'], [class*='sidebar']"
+    ):
+        unwanted.decompose()
+
+    text = soup.get_text("\n", strip=True)
+
+    lines = []
+    for line in text.splitlines():
+        line = clean_text(line)
+        if line:
+            lines.append(line)
+
+    if len(lines) < 3:
+        return ""
+
+    # Le contenu d'un correctif DOFUS commence actuellement par l'un de
+    # ces titres. On coupe tout ce qui précède, même si le sélecteur DOM
+    # englobe toute la page.
+    start_markers = (
+        "Corrections de bugs",
+        "Modifications",
+        "Nouveautés",
+        "Améliorations",
+        "Équilibrage",
+    )
+
+    start_index = next(
+        (i for i, line in enumerate(lines) if line in start_markers),
+        None,
+    )
+
+    # Sécurité : un conteneur générique (article/main) sans marqueur
+    # de contenu ne doit surtout pas être envoyé tel quel dans le RSS.
+    if start_index is None:
+        return ""
+
+    lines = lines[start_index:]
+
+    # Le contenu utile s'arrête avant les outils de partage / footer.
+    end_markers = {
+        "Partager",
+        "Tweet",
+        "Partager sur",
+        "Facebook",
+        "X",
+    }
+
+    cleaned_lines = []
+    for line in lines:
+        if line in end_markers:
+            break
+        cleaned_lines.append(line)
+
+    text = "\n".join(cleaned_lines).strip()
+
+    # Un changelog sans contenu réel ne doit pas être considéré comme
+    # valide. Le seuil évite notamment de retourner uniquement un titre.
+    if len(text) < 100:
+        return ""
+
+    return text
+
+
 def extract_article_content(page):
     """
     Récupère uniquement le contenu principal du changelog DOFUS.
 
-    Pour les patch notes / correctifs :
-    - ignore la navigation
-    - ignore le titre de la MÀJ principale
-    - ignore la liste des patch notes
-    - ignore "Partager / Tweet"
-    - conserve le vrai contenu du changelog
+    Les sélecteurs spécifiques sont essayés avant les fallbacks génériques.
+    Un fallback générique n'est accepté que s'il contient un marqueur de
+    début du vrai contenu : cela empêche la navigation de contaminer le RSS.
     """
 
-    # On privilégie les conteneurs réellement dédiés au contenu.
-    # "article" et "main" restent des fallbacks.
     selectors = [
         ".article-content",
         ".news-content",
@@ -1062,112 +1135,27 @@ def extract_article_content(page):
     ]
 
     for selector in selectors:
-
         try:
             locator = page.locator(selector).first
 
             if locator.count() == 0:
                 continue
 
-            # On récupère le DOM du conteneur pour pouvoir supprimer
-            # les éléments parasites avant extraction du texte.
             html_content = locator.evaluate(
                 """element => {
                     const clone = element.cloneNode(true);
-
                     clone.querySelectorAll(
-                        'script, style, nav, header, footer, form, '
-                        'button, aside, [class*="share"], '
-                        '[class*="social"], [class*="breadcrumb"], '
-                        '[class*="navigation"], [class*="sidebar"]'
+                        'script, style, nav, header, footer, form, button, aside, '
+                        '[class*="share"], [class*="social"], '
+                        '[class*="breadcrumb"], [class*="navigation"], '
+                        '[class*="sidebar"]'
                     ).forEach(el => el.remove());
-
                     return clone.innerHTML;
                 }"""
             )
 
-            soup = BeautifulSoup(
-                html_content,
-                "html.parser"
-            )
-
-            # Suppression supplémentaire des éléments parasites.
-            for unwanted in soup.select(
-                "script, style, nav, header, footer, form, "
-                "button, aside"
-            ):
-                unwanted.decompose()
-
-            text = soup.get_text(
-                "\n",
-                strip=True
-            )
-
-            # Nettoyage des lignes.
-            lines = []
-
-            for line in text.splitlines():
-
-                line = clean_text(line)
-
-                if not line:
-                    continue
-
-                lines.append(line)
-
-            if len(lines) < 3:
-                continue
-
-            # ----------------------------------------------------
-            # Suppression de l'en-tête/navigation du changelog
-            # ----------------------------------------------------
-
-            start_markers = (
-                "Corrections de bugs",
-                "Modifications",
-                "Nouveautés",
-                "Améliorations",
-                "Équilibrage",
-            )
-
-            start_index = None
-
-            for i, line in enumerate(lines):
-
-                if line in start_markers:
-
-                    start_index = i
-                    break
-
-            if start_index is not None:
-                lines = lines[start_index:]
-
-            # ----------------------------------------------------
-            # Suppression de la fin de page
-            # ----------------------------------------------------
-
-            end_markers = (
-                "Partager",
-                "Tweet",
-                "Partager sur",
-                "Facebook",
-                "X",
-            )
-
-            cleaned_lines = []
-
-            for line in lines:
-
-                if line in end_markers:
-                    break
-
-                cleaned_lines.append(line)
-
-            lines = cleaned_lines
-
-            text = "\n".join(lines).strip()
-
-            if len(text) >= 100:
+            text = _clean_article_text_from_html(html_content)
+            if text:
                 return text
 
         except Exception:
