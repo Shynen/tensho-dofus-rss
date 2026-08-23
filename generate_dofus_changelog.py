@@ -339,14 +339,25 @@ def save_discord_state(state):
 
 def is_valid_url(url):
 
-    value = url.lower()
+    value = url.lower().rstrip("/")
 
-    return (
-        "dofus.com" in value
-        and "/fr/mmorpg/actualites/maj/" in value
-        and value.rstrip("/")
-        != SOURCE_URL.rstrip("/")
-    )
+    if "dofus.com" not in value:
+        return False
+
+    if "/fr/mmorpg/actualites/maj/" not in value:
+        return False
+
+    if value == SOURCE_URL.lower().rstrip("/"):
+        return False
+
+    # Exclure la page d'index "Voir tous les correctifs"
+    if value == (
+        BASE_URL
+        + "/fr/mmorpg/actualites/maj/correctifs"
+    ).lower().rstrip("/"):
+        return False
+
+    return True
 
 
 ########################################
