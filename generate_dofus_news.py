@@ -30,6 +30,7 @@ HEADERS = {
     "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
 }
 
+
 FRENCH_MONTHS = {
     "janvier": 1, "février": 2, "fevrier": 2, "mars": 3,
     "avril": 4, "mai": 5, "juin": 6, "juillet": 7,
@@ -45,14 +46,20 @@ def clean_text(value):
 def parse_date(value):
     if not value:
         return None
+
     try:
         value = clean_text(value)
+
         if value.endswith("Z"):
             value = value[:-1] + "+00:00"
+
         dt = datetime.fromisoformat(value)
+
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
+
         return dt
+
     except Exception:
         return None
 
@@ -86,7 +93,11 @@ def parse_french_date(value):
         except ValueError:
             return None
 
-    match = re.search(r"\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b", text)
+    match = re.search(
+        r"\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b",
+        text,
+    )
+
     if match:
         try:
             return datetime(
@@ -113,10 +124,17 @@ def load_cache():
     try:
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
+
         if not isinstance(data, dict):
             return {}
-        print(f"Cache Actualités Dofus chargé : {len(data)} articles.")
+
+        print(
+            f"Cache Actualités Dofus chargé : "
+            f"{len(data)} articles."
+        )
+
         return data
+
     except Exception as exc:
         print(f"⚠️ Erreur lecture cache : {exc}")
         return {}
@@ -124,22 +142,31 @@ def load_cache():
 
 def save_cache(cache):
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(cache, f, ensure_ascii=False, indent=2)
+        json.dump(
+            cache,
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
 
 def is_valid_news_url(url):
     value = url.lower()
+
     return (
         "dofus.com" in value
         and "/fr/mmorpg/actualites/news/" in value
         and value.rstrip("/") != SOURCE_URL.rstrip("/")
     )
+
+
 def collect_news_urls_google_news():
     """
     Fallback lorsque Dofus bloque le rendu de la page des actualités.
     Utilise Google News RSS pour retrouver les dernières URLs
     officielles Dofus.
     """
+
     google_rss = (
         "https://news.google.com/rss/search"
         "?q=site%3Adofus.com%2Ffr%2Fmmorpg%2Factualites%2Fnews%2F"
@@ -158,6 +185,7 @@ def collect_news_urls_google_news():
             headers=HEADERS,
             timeout=30,
         )
+
         response.raise_for_status()
 
         soup = BeautifulSoup(
@@ -168,7 +196,8 @@ def collect_news_urls_google_news():
         items = soup.find_all("item")
 
         print(
-            f"📰 Google News : {len(items)} résultats trouvés."
+            f"📰 Google News : "
+            f"{len(items)} résultats trouvés."
         )
 
         for item in items:
@@ -222,6 +251,7 @@ def collect_news_urls_google_news():
 
     return list(urls)
 
+
 def collect_news_urls():
     print("")
     print("========================================")
@@ -232,8 +262,12 @@ def collect_news_urls():
     # URL -> date trouvée directement sur la page de listing.
     news_data = {}
 
+    # URL -> titre éditorial complet trouvé directement sur la page de listing.
+    news_titles = {}
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
+
         page = browser.new_page(
             locale="fr-FR",
             user_agent=HEADERS["User-Agent"],
@@ -245,14 +279,17 @@ def collect_news_urls():
                 wait_until="domcontentloaded",
                 timeout=60000,
             )
+
             page.wait_for_timeout(4000)
+
         except Exception as exc:
             print(f"❌ Erreur ouverture page : {exc}")
             browser.close()
-            return {}
+            return {}, {}
 
         def collect_visible_urls():
             before = len(news_data)
+
             links = page.locator(
                 'a[href*="/fr/mmorpg/actualites/news/"]'
             )
@@ -260,18 +297,133 @@ def collect_news_urls():
             for i in range(links.count()):
                 try:
                     link = links.nth(i)
+
                     href = link.get_attribute("href")
 
                     if not href:
                         continue
 
-                    full_url = urljoin(BASE_URL, href)
+                    full_url = urljoin(
+                        BASE_URL,
+                        href,
+                    )
+
                     full_url = (
-                        full_url.split("#", 1)[0].rstrip("/")
+                        full_url
+                        .split("#", 1)[0]
+                        .rstrip("/")
                     )
 
                     if not is_valid_news_url(full_url):
                         continue
+
+                    # -------------------------------------------------
+                    # RÉCUPÉRATION DU TITRE DEPUIS LE LISTING
+                    # -------------------------------------------------
+
+                    listing_title = None
+
+                    for level in range(1, 7):
+                        try:
+                            parent = link.locator(
+                                "xpath=" + "/.." * level
+                            )
+
+                            # On privilégie les titres HTML présents
+                            # dans la carte de l'actualité.
+                            for selector in (
+                                "h1",
+                                "h2",
+                                "h3",
+                                "h4",
+                                "h5",
+                                "h6",
+                            ):
+                                headings = parent.locator(
+                                    selector
+                                )
+
+                                for j in range(
+                                    headings.count()
+                                ):
+                                    candidate = clean_text(
+                                        headings.nth(j).inner_text(
+                                            timeout=2000
+                                        )
+                                    )
+
+                                    if not candidate:
+                                        continue
+
+                                    # On ne veut surtout pas prendre
+                                    # une date comme titre.
+                                    if (
+                                        parse_french_date(
+                                            candidate
+                                        )
+                                        is not None
+                                    ):
+                                        continue
+
+                                    if (
+                                        len(candidate) < 5
+                                        or len(candidate) > 250
+                                    ):
+                                        continue
+
+                                    # Évite les intitulés génériques
+                                    # de navigation.
+                                    if candidate.upper() in {
+                                        "ACTUALITÉS",
+                                        "NEWS",
+                                        "VOIR PLUS",
+                                        "LIRE LA SUITE",
+                                    }:
+                                        continue
+
+                                    listing_title = candidate
+                                    break
+
+                                if listing_title:
+                                    break
+
+                            # Fallback : texte directement présent
+                            # dans le lien.
+                            if not listing_title:
+                                try:
+                                    candidate = clean_text(
+                                        link.inner_text(
+                                            timeout=2000
+                                        )
+                                    )
+
+                                    if (
+                                        candidate
+                                        and parse_french_date(
+                                            candidate
+                                        )
+                                        is None
+                                        and 5
+                                        <= len(candidate)
+                                        <= 250
+                                    ):
+                                        listing_title = candidate
+
+                                except Exception:
+                                    pass
+
+                            if listing_title:
+                                break
+
+                        except Exception:
+                            continue
+
+                    if listing_title:
+                        news_titles[full_url] = listing_title
+
+                    # -------------------------------------------------
+                    # RÉCUPÉRATION DE LA DATE DEPUIS LE LISTING
+                    # -------------------------------------------------
 
                     # La page de listing contient normalement la date
                     # dans la carte qui englobe le lien. On remonte
@@ -284,6 +436,7 @@ def collect_news_urls():
                             parent = link.locator(
                                 "xpath=" + "/.." * level
                             )
+
                             card_text = parent.inner_text(
                                 timeout=2000
                             )
@@ -303,6 +456,7 @@ def collect_news_urls():
                     # la page individuelle puis le cache.
                     if full_url not in news_data:
                         news_data[full_url] = listing_date
+
                     elif (
                         news_data[full_url] is None
                         and listing_date is not None
@@ -323,8 +477,10 @@ def collect_news_urls():
         )
 
         print(
-            f"Premier lot : {len(news_data)} actualités détectées."
+            f"Premier lot : "
+            f"{len(news_data)} actualités détectées."
         )
+
         print(
             f"📅 Dates trouvées dans la liste : "
             f"{dated}/{len(news_data)}"
@@ -346,6 +502,7 @@ def collect_news_urls():
                 "VOIR PLUS",
                 exact=True,
             )
+
             clicked = False
 
             for i in range(buttons.count()):
@@ -356,17 +513,26 @@ def collect_news_urls():
                         continue
 
                     button.scroll_into_view_if_needed()
-                    button.click(timeout=10000)
+
+                    button.click(
+                        timeout=10000
+                    )
 
                     clicked = True
-                    print("🟢 VOIR PLUS cliqué.")
+
+                    print(
+                        "🟢 VOIR PLUS cliqué."
+                    )
+
                     break
 
                 except Exception:
                     pass
 
             if not clicked:
-                print("ℹ️ Plus de bouton VOIR PLUS.")
+                print(
+                    "ℹ️ Plus de bouton VOIR PLUS."
+                )
                 break
 
             page.wait_for_timeout(2500)
@@ -376,6 +542,7 @@ def collect_news_urls():
                     "networkidle",
                     timeout=10000,
                 )
+
             except PlaywrightTimeoutError:
                 pass
 
@@ -391,6 +558,7 @@ def collect_news_urls():
                 f"Actualités actuellement trouvées : "
                 f"{len(news_data)} (+{added})"
             )
+
             print(
                 f"📅 Dates trouvées dans la liste : "
                 f"{dated}/{len(news_data)}"
@@ -407,6 +575,7 @@ def collect_news_urls():
         print(
             "⚠️ Aucune actualité trouvée directement."
         )
+
         print(
             "➡️ Activation du fallback Google News..."
         )
@@ -421,12 +590,15 @@ def collect_news_urls():
         f"{len(news_data)}"
     )
 
-    return news_data
+    return news_data, news_titles
 
 
 def extract_date_from_soup(soup):
     # 1. JSON-LD, sans syntaxe conditionnelle ambiguë.
-    for script in soup.find_all("script", type="application/ld+json"):
+    for script in soup.find_all(
+        "script",
+        type="application/ld+json",
+    ):
         raw = script.string or script.get_text()
 
         if not raw:
@@ -435,63 +607,132 @@ def extract_date_from_soup(soup):
         # JSON-LD valide.
         try:
             data = json.loads(raw)
+
         except Exception:
             data = None
 
         if data is not None:
-            objects = data if isinstance(data, list) else [data]
+            objects = (
+                data
+                if isinstance(data, list)
+                else [data]
+            )
 
             for obj in objects:
                 if not isinstance(obj, dict):
                     continue
 
-                for key in ("datePublished", "dateCreated", "dateModified"):
+                for key in (
+                    "datePublished",
+                    "dateCreated",
+                    "dateModified",
+                ):
                     value = obj.get(key)
 
                     if value:
                         dt = parse_date(value)
+
                         if dt is None:
-                            dt = parse_french_date(value)
+                            dt = parse_french_date(
+                                value
+                            )
 
                         if dt is not None:
-                            return dt, f"JSON-LD/{key}"
+                            return (
+                                dt,
+                                f"JSON-LD/{key}",
+                            )
 
     # 2. Meta tags.
     selectors = [
-        ("property", "article:published_time"),
-        ("property", "og:published_time"),
-        ("name", "date"),
-        ("name", "published"),
-        ("name", "datePublished"),
-        ("property", "og:date"),
+        (
+            "property",
+            "article:published_time",
+        ),
+        (
+            "property",
+            "og:published_time",
+        ),
+        (
+            "name",
+            "date",
+        ),
+        (
+            "name",
+            "published",
+        ),
+        (
+            "name",
+            "datePublished",
+        ),
+        (
+            "property",
+            "og:date",
+        ),
     ]
 
     for attr, value in selectors:
-        meta = soup.find("meta", attrs={attr: value})
+        meta = soup.find(
+            "meta",
+            attrs={attr: value},
+        )
+
         if meta:
-            raw_value = meta.get("content")
-            dt = parse_date(raw_value)
+            raw_value = meta.get(
+                "content"
+            )
+
+            dt = parse_date(
+                raw_value
+            )
+
             if dt is None:
-                dt = parse_french_date(raw_value)
+                dt = parse_french_date(
+                    raw_value
+                )
+
             if dt is not None:
-                return dt, f"META/{value}"
+                return (
+                    dt,
+                    f"META/{value}",
+                )
 
     # 3. <time>.
     for node in soup.find_all("time"):
-        raw_value = node.get("datetime")
-        dt = parse_date(raw_value)
-        if dt is None:
-            dt = parse_french_date(raw_value)
+        raw_value = node.get(
+            "datetime"
+        )
+
+        dt = parse_date(
+            raw_value
+        )
 
         if dt is None:
-            visible = node.get_text(" ", strip=True)
-            dt = parse_french_date(visible)
+            dt = parse_french_date(
+                raw_value
+            )
+
+        if dt is None:
+            visible = node.get_text(
+                " ",
+                strip=True,
+            )
+
+            dt = parse_french_date(
+                visible
+            )
 
         if dt is not None:
-            return dt, "TIME"
+            return (
+                dt,
+                "TIME",
+            )
 
     # 4. Texte visible.
-    visible_text = soup.get_text(" ", strip=True)
+    visible_text = soup.get_text(
+        " ",
+        strip=True,
+    )
 
     pattern = (
         r"\b\d{1,2}\s+"
@@ -506,36 +747,88 @@ def extract_date_from_soup(soup):
         visible_text,
         flags=re.IGNORECASE,
     ):
-        dt = parse_french_date(match.group(0))
+        dt = parse_french_date(
+            match.group(0)
+        )
+
         if dt is not None:
-            return dt, "VISIBLE-TEXT"
+            return (
+                dt,
+                "VISIBLE-TEXT",
+            )
 
     return None, None
 
 
-def extract_article(url, cache, listing_date=None):
+def extract_article(
+    url,
+    cache,
+    listing_date=None,
+    listing_title=None,
+):
     session = requests.Session()
-    session.headers.update(HEADERS)
+    session.headers.update(
+        HEADERS
+    )
 
     try:
-        response = session.get(url, timeout=30)
+        response = session.get(
+            url,
+            timeout=30,
+        )
+
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
+
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser",
+        )
+
     except Exception as exc:
-        print(f"⚠️ Impossible de charger : {exc}")
+        print(
+            f"⚠️ Impossible de charger : {exc}"
+        )
+
         return None
 
-    title = ""
+    # -------------------------------------------------
+    # TITRE
+    # -------------------------------------------------
 
-    h1 = soup.find("h1")
-    if h1:
-        title = clean_text(h1.get_text(" ", strip=True))
+    # Le titre trouvé sur le listing officiel est
+    # prioritaire. Il correspond au vrai titre
+    # éditorial affiché par Dofus.
+    title = clean_text(
+        listing_title
+    )
 
+    # Fallback : titre de la page individuelle.
     if not title:
-        meta = soup.find("meta", attrs={"property": "og:title"})
-        if meta:
-            title = clean_text(meta.get("content"))
+        h1 = soup.find("h1")
 
+        if h1:
+            title = clean_text(
+                h1.get_text(
+                    " ",
+                    strip=True,
+                )
+            )
+
+    # Fallback : OpenGraph.
+    if not title:
+        meta = soup.find(
+            "meta",
+            attrs={
+                "property": "og:title"
+            },
+        )
+
+        if meta:
+            title = clean_text(
+                meta.get("content")
+            )
+
+    # Dernier fallback : slug de l'URL.
     if not title:
         title = (
             url.rstrip("/")
@@ -545,35 +838,71 @@ def extract_article(url, cache, listing_date=None):
             .title()
         )
 
-    dt, date_source = extract_date_from_soup(soup)
+    # -------------------------------------------------
+    # DATE
+    # -------------------------------------------------
 
-    # Les pages individuelles peuvent parfois masquer leur date.
-    # La page de listing officielle fournit déjà cette date.
+    dt, date_source = extract_date_from_soup(
+        soup
+    )
+
+    # Les pages individuelles peuvent parfois masquer
+    # leur date. La page de listing officielle fournit
+    # déjà cette date.
     if dt is None and listing_date is not None:
         dt = listing_date
         date_source = "LISTING"
 
     # Cache seulement en dernier recours.
     if dt is None and url in cache:
-        cached_date = cache[url].get("pubDate")
-        dt = parse_date(cached_date)
+        cached_date = cache[url].get(
+            "pubDate"
+        )
+
+        dt = parse_date(
+            cached_date
+        )
+
         if dt is not None:
             date_source = "CACHE"
 
     if dt is None:
-        print("⚠️ Date introuvable.")
+        print(
+            "⚠️ Date introuvable."
+        )
+
         return None
+
+    # -------------------------------------------------
+    # DESCRIPTION
+    # -------------------------------------------------
 
     description = ""
 
-    meta = soup.find("meta", attrs={"name": "description"})
+    meta = soup.find(
+        "meta",
+        attrs={
+            "name": "description"
+        },
+    )
+
     if meta:
-        description = clean_text(meta.get("content"))
+        description = clean_text(
+            meta.get("content")
+        )
 
     if not description:
-        meta = soup.find("meta", attrs={"property": "og:description"})
+        meta = soup.find(
+            "meta",
+            attrs={
+                "property": "og:description"
+            },
+        )
+
         if meta:
-            description = clean_text(meta.get("content"))
+            description = clean_text(
+                meta.get("content")
+            )
 
     if not description:
         description = title
@@ -591,29 +920,84 @@ def extract_article(url, cache, listing_date=None):
     }
 
 
-def create_rss(filename, title, description, articles):
-    rss = Element("rss", {"version": "2.0"})
-    channel = SubElement(rss, "channel")
+def create_rss(
+    filename,
+    title,
+    description,
+    articles,
+):
+    rss = Element(
+        "rss",
+        {
+            "version": "2.0"
+        },
+    )
 
-    SubElement(channel, "title").text = title
-    SubElement(channel, "link").text = SOURCE_URL
-    SubElement(channel, "description").text = description
+    channel = SubElement(
+        rss,
+        "channel",
+    )
+
+    SubElement(
+        channel,
+        "title",
+    ).text = title
+
+    SubElement(
+        channel,
+        "link",
+    ).text = SOURCE_URL
+
+    SubElement(
+        channel,
+        "description",
+    ).text = description
 
     for article in articles:
-        item = SubElement(channel, "item")
+        item = SubElement(
+            channel,
+            "item",
+        )
 
-        SubElement(item, "title").text = article["title"]
-        SubElement(item, "link").text = article["url"]
+        SubElement(
+            item,
+            "title",
+        ).text = article["title"]
+
+        SubElement(
+            item,
+            "link",
+        ).text = article["url"]
+
         SubElement(
             item,
             "guid",
-            {"isPermaLink": "true"},
+            {
+                "isPermaLink": "true"
+            },
         ).text = article["url"]
-        SubElement(item, "pubDate").text = format_pubdate(article["date"])
-        SubElement(item, "description").text = article["description"]
 
-    tree = ElementTree(rss)
-    indent(tree, space="  ")
+        SubElement(
+            item,
+            "pubDate",
+        ).text = format_pubdate(
+            article["date"]
+        )
+
+        SubElement(
+            item,
+            "description",
+        ).text = article["description"]
+
+    tree = ElementTree(
+        rss
+    )
+
+    indent(
+        tree,
+        space="  ",
+    )
+
     tree.write(
         filename,
         encoding="utf-8",
@@ -628,88 +1012,148 @@ print("# ACTUALITÉS FRANÇAISES")
 print("########################################")
 
 cache = load_cache()
-news_data = collect_news_urls()
+news_data, news_titles = collect_news_urls()
 
 print("")
 print("########################################")
 print(
-    f"# URLs Actualités Dofus trouvées : {len(news_data)}"
+    f"# URLs Actualités Dofus trouvées : "
+    f"{len(news_data)}"
 )
 print("########################################")
 
 articles = []
 
-for index, (url, listing_date) in enumerate(
+for index, (
+    url,
+    listing_date,
+) in enumerate(
     news_data.items(),
     start=1,
 ):
-    print(f"[{index}/{len(news_data)}] {url}")
+    print(
+        f"[{index}/{len(news_data)}] "
+        f"{url}"
+    )
+
+    listing_title = news_titles.get(
+        url
+    )
+
+    if listing_title:
+        print(
+            f"   🏷️ Titre trouvé via LISTING: "
+            f"{listing_title}"
+        )
 
     article = extract_article(
         url,
         cache,
         listing_date=listing_date,
+        listing_title=listing_title,
     )
 
     if article is not None:
-        articles.append(article)
-        print(
-            f"🟢 {format_pubdate(article['date'])} "
-            f"- {article['title']}"
+        articles.append(
+            article
         )
+
+        print(
+            f"🟢 "
+            f"{format_pubdate(article['date'])} "
+            f"- "
+            f"{article['title']}"
+        )
+
 
 # Une URL = un article.
 unique_articles = {}
-for article in articles:
-    unique_articles[article["url"]] = article
 
-articles = list(unique_articles.values())
+for article in articles:
+    unique_articles[
+        article["url"]
+    ] = article
+
+articles = list(
+    unique_articles.values()
+)
+
 articles.sort(
     key=lambda article: article["date"],
     reverse=True,
 )
-articles = articles[:MAX_ARTICLES]
+
+articles = articles[
+    :MAX_ARTICLES
+]
 
 print("")
 print("########################################")
-print(f"# {len(articles)} Actualités Dofus retenues")
+print(
+    f"# {len(articles)} "
+    f"Actualités Dofus retenues"
+)
 print("########################################")
 
-for index, article in enumerate(articles, start=1):
+for index, article in enumerate(
+    articles,
+    start=1,
+):
     print(
         f"{index:02d}. "
         f"{format_pubdate(article['date'])} "
-        f"- {article['title']}"
+        f"- "
+        f"{article['title']}"
     )
 
+
 for article in articles:
-    cache[article["url"]] = {
+    cache[
+        article["url"]
+    ] = {
         "title": article["title"],
         "description": article["description"],
-        "pubDate": format_pubdate(article["date"]),
+        "pubDate": format_pubdate(
+            article["date"]
+        ),
     }
 
-save_cache(cache)
+
+save_cache(
+    cache
+)
 
 print("")
-print("Génération de dofus-news.xml...")
+print(
+    "Génération de dofus-news.xml..."
+)
+
 create_rss(
     OUTPUT,
     "DOFUS — Actualités",
     "Actualités officielles françaises de DOFUS.",
     articles,
 )
-print("🟢 dofus-news.xml généré.")
+
+print(
+    "🟢 dofus-news.xml généré."
+)
 
 print("")
-print("Génération de dofus-news-discord.xml...")
+print(
+    "Génération de dofus-news-discord.xml..."
+)
+
 create_rss(
     DISCORD_OUTPUT,
     "DOFUS — Actualités",
     "Dernière actualité officielle française de DOFUS.",
     articles[:1],
 )
-print("🟢 dofus-news-discord.xml généré.")
+
+print(
+    "🟢 dofus-news-discord.xml généré."
+)
 
 print("")
 print("########################################")
