@@ -491,9 +491,11 @@ def save_discord_state_atomic(state):
         f.flush()
 
         try:
+
             os.fsync(
                 f.fileno()
             )
+
         except Exception:
             pass
 
@@ -1995,10 +1997,13 @@ def main():
     ########################################
     # HISTORIQUE DISCORD
     #
-    # sent_urls = toutes les URLs déjà envoyées.
+    # On conserve l'historique des URLs déjà
+    # envoyées uniquement pour savoir si LE
+    # dernier article actuel a déjà été envoyé.
     #
-    # Migration automatique de l'ancien système :
-    # last_sent_url
+    # IMPORTANT :
+    # On ne parcourt jamais cet historique pour
+    # rechercher un ancien article à envoyer.
     ########################################
 
     sent_discord_urls = discord_state.get(
@@ -2293,10 +2298,18 @@ def main():
     ########################################
     # IMPORTANT
     #
-    # UN SEUL ARTICLE MAXIMUM.
+    # ON NE CHERCHE PAS UN ANCIEN ARTICLE
+    # NON ENVOYÉ.
     #
-    # Même s'il y a 15 nouvelles actualités,
-    # UNE SEULE est sélectionnée par run.
+    # Discord doit uniquement regarder le
+    # tout dernier article publié actuellement
+    # sur DOFUS.
+    #
+    # Si ce dernier article a déjà été envoyé :
+    # RIEN.
+    #
+    # Sinon :
+    # ENVOI DE CELUI-LÀ UNIQUEMENT.
     ########################################
 
     discord_articles = []
@@ -2306,41 +2319,39 @@ def main():
     if articles:
 
         ########################################
-        # CHERCHE LA PLUS RÉCENTE NON ENVOYÉE
+        # DERNIER ARTICLE PUBLIÉ UNIQUEMENT
         ########################################
 
-        for article in articles:
+        latest_article = articles[0]
 
-            article_url = (
-                article["url"]
+        latest_url = latest_article[
+            "url"
+        ]
+
+        if latest_url in sent_discord_urls:
+
+            print(
+                "ℹ️ Le dernier article DOFUS "
+                "a déjà été envoyé."
             )
 
-            if (
-                article_url
-                not in sent_discord_urls
-            ):
+            print(
+                f"   {latest_article['title']}"
+            )
 
-                selected_discord_article = (
-                    article
-                )
+            print(
+                f"   {latest_url}"
+            )
 
-                break
+        else:
 
-        ########################################
-        # NOUVEL ARTICLE
-        ########################################
-
-        if selected_discord_article is not None:
+            selected_discord_article = (
+                latest_article
+            )
 
             discord_articles = [
                 selected_discord_article
             ]
-
-            selected_url = (
-                selected_discord_article[
-                    "url"
-                ]
-            )
 
             print(
                 "🆕 Nouvelle actualité Discord :"
@@ -2353,29 +2364,20 @@ def main():
 
             print(
                 f"   "
-                f"{selected_url}"
+                f"{latest_url}"
             )
 
             ########################################
             # ENREGISTREMENT IMMÉDIAT
             #
-            # L'article est ajouté à l'historique
-            # AVANT la génération du XML.
-            #
-            # Ainsi, même si le workflow rencontre
-            # ensuite un timeout, le prochain run
-            # ne doit pas le sélectionner à nouveau
-            # si le JSON est conservé.
+            # On mémorise uniquement cet article.
+            # Il sera considéré comme envoyé au
+            # prochain run.
             ########################################
 
-            if (
-                selected_url
-                not in sent_discord_urls
-            ):
-
-                sent_discord_urls.append(
-                    selected_url
-                )
+            sent_discord_urls.append(
+                latest_url
+            )
 
             ########################################
             # LIMITE HISTORIQUE
@@ -2390,7 +2392,7 @@ def main():
             discord_state = {
 
                 "last_sent_url":
-                    selected_url,
+                    latest_url,
 
                 "last_sent_pubDate":
                     format_pubdate(
@@ -2420,13 +2422,6 @@ def main():
 
             save_discord_state_atomic(
                 discord_state
-            )
-
-        else:
-
-            print(
-                "ℹ️ Aucune nouvelle actualité "
-                "pour Discord."
             )
 
     ########################################
