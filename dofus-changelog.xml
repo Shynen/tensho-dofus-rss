@@ -4,53 +4,25 @@
 <title>DOFUS Changelogs</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj</link>
 <description>Changelogs DOFUS</description>
-<lastBuildDate>Sun, 23 Aug 2026 22:10:18 GMT</lastBuildDate>
+<lastBuildDate>Sun, 23 Aug 2026 22:17:55 GMT</lastBuildDate>
 <item>
 <title>MÀJ - Patch notes 3.6.10.10 du 18/08/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771366-patch-notes-3-6-10-10-18-08-2026</guid>
-<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
-Retour à la liste
-Présentation
-3.6
-Patch Notes
-+
-Vous regardez le :
-Patch notes 3.6.10.10 du 18/08/2026
-Patch notes 3.6.9.9 du 04/08/2026
-Patch notes 3.6.6.7 du 21/07/2026
-Patch Notes 3.6.6.5 du 07/07/2026
-Patch Notes 3.6.5.4 du 30/06/2026
-Patch Notes 3.6.4.3 du 24/06/2026
-Corrections de bugs
+<description>Corrections de bugs
 Les bugs suivants sont corrigés
 Songes
 En songes, les statistiques des Krokilles invoquées par Grasmera sont trop élevées.
 En songes, l&#x27;effet réduisant la portée minimale des sorts (bonus &quot;Souplesse&quot;) affiche anormalement &quot;???&quot;.
 Divers
-Dans certains cas, il arrive qu&#x27;un joueur soit téléporté devant le boss d&#x27;anomalie après l&#x27;avoir vaincu.
-Partager
-Tweet</description>
+Dans certains cas, il arrive qu&#x27;un joueur soit téléporté devant le boss d&#x27;anomalie après l&#x27;avoir vaincu.</description>
 <pubDate>Tue, 18 Aug 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ - Patch notes 3.6.9.9 du 04/08/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771222-patch-notes-3-6-9-9-04-08-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771222-patch-notes-3-6-9-9-04-08-2026</guid>
-<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
-Retour à la liste
-Présentation
-3.6
-Patch Notes
-+
-Vous regardez le :
-Patch notes 3.6.10.10 du 18/08/2026
-Patch notes 3.6.9.9 du 04/08/2026
-Patch notes 3.6.6.7 du 21/07/2026
-Patch Notes 3.6.6.5 du 07/07/2026
-Patch Notes 3.6.5.4 du 30/06/2026
-Patch Notes 3.6.4.3 du 24/06/2026
-Corrections de bugs
+<description>Corrections de bugs
 Les bugs suivants sont corrigés
 Raids
 Sur l&#x27;interface de récompense de Raid, la barre permettant de faire défiler horizontalement la frise ne fonctionne pas.
@@ -80,29 +52,14 @@ Modifications
 Raids
 Dans le Sanctuaire des Jardins Eternels, la Fleur maudite se désenvoûte à présent avant de se soigner.
 Objets
-Les cautions des dragodindes n&#x27;étant plus fabricables, elles mentionnent à présent leur suppression du jeu lors de la mise à jour 3.7.
-Partager
-Tweet</description>
+Les cautions des dragodindes n&#x27;étant plus fabricables, elles mentionnent à présent leur suppression du jeu lors de la mise à jour 3.7.</description>
 <pubDate>Tue, 04 Aug 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ - Patch notes 3.6.6.7 du 21/07/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771109-patch-notes-3-6-6-7-21-07-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1771109-patch-notes-3-6-6-7-21-07-2026</guid>
-<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
-Retour à la liste
-Présentation
-3.6
-Patch Notes
-+
-Vous regardez le :
-Patch notes 3.6.10.10 du 18/08/2026
-Patch notes 3.6.9.9 du 04/08/2026
-Patch notes 3.6.6.7 du 21/07/2026
-Patch Notes 3.6.6.5 du 07/07/2026
-Patch Notes 3.6.5.4 du 30/06/2026
-Patch Notes 3.6.4.3 du 24/06/2026
-Corrections de bugs
+<description>Corrections de bugs
 Les bugs suivants sont corrigés
 Performances / Crashs
 Depuis la mise à jour 3.6, il arrive parfois que le client ait des pertes de FPS. Le problème vient d&#x27;une refonte technique du chat. Une seconde modification est apportée pour tenter de corriger le problème.
@@ -149,29 +106,14 @@ Raids
 Ajout de marqueurs sur la carte du Gouffre du Gigalodon pour bien voir les points de passage.
 Le titre obtenable dans les succès &quot;Gouffre du Gigalodon&quot; n&#x27;est obtenable que par le premier personnage à valider le succès alors qu&#x27;il devrait être déblocable par tous.
 Objets
-Les critères d&#x27;équipement des ornements de guilde sont retirés (une fois qu&#x27;ils ont été débloqués, ils peuvent être équipés sans condition).
-Partager
-Tweet</description>
+Les critères d&#x27;équipement des ornements de guilde sont retirés (une fois qu&#x27;ils ont été débloqués, ils peuvent être équipés sans condition).</description>
 <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.6 - Patch Notes 3.6.6.5 du 07/07/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770949-patch-notes-3-6-6-5-07-07-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770949-patch-notes-3-6-6-5-07-07-2026</guid>
-<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
-Retour à la liste
-Présentation
-3.6
-Patch Notes
-+
-Vous regardez le :
-Patch notes 3.6.10.10 du 18/08/2026
-Patch notes 3.6.9.9 du 04/08/2026
-Patch notes 3.6.6.7 du 21/07/2026
-Patch Notes 3.6.6.5 du 07/07/2026
-Patch Notes 3.6.5.4 du 30/06/2026
-Patch Notes 3.6.4.3 du 24/06/2026
-Corrections de bugs
+<description>Corrections de bugs
 Les bugs suivants sont corrigés
 Raids
 Dans le raid du Gouffre du Gigalodon, l&#x27;animation de dépôt de trésor se joue même si le personnage n&#x27;a rien à déposer.
@@ -226,29 +168,14 @@ Il est désormais possible d&#x27;abandonner dans le combat de Maître Darm.
 Objets
 L&#x27;utilisation multiple sur les coffres du mercenaire est retirée.
 Cartes
-Ajout sur la carte d&#x27;une icone spécifique à l&#x27;atelier pyrotechnique du village des Brigantins.
-Partager
-Tweet</description>
+Ajout sur la carte d&#x27;une icone spécifique à l&#x27;atelier pyrotechnique du village des Brigantins.</description>
 <pubDate>Tue, 07 Jul 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.6 - Patch Notes 3.6.5.4 du 30/06/2026</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770776-patch-notes-3-6-5-4-30-06-2026</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1770516-raid-not-dead/correctifs/1770776-patch-notes-3-6-5-4-30-06-2026</guid>
-<description>MÀJ 3.6 - Raid is not dead 23 Juin 2026
-Retour à la liste
-Présentation
-3.6
-Patch Notes
-+
-Vous regardez le :
-Patch notes 3.6.10.10 du 18/08/2026
-Patch notes 3.6.9.9 du 04/08/2026
-Patch notes 3.6.6.7 du 21/07/2026
-Patch Notes 3.6.6.5 du 07/07/2026
-Patch Notes 3.6.5.4 du 30/06/2026
-Patch Notes 3.6.4.3 du 24/06/2026
-Corrections de bugs
+<description>Corrections de bugs
 Les bugs suivants sont corrigés
 Performances / Crashs
 Depuis la mise à jour 3.6, il arrive parfois que le client ait des pertes de FPS.
@@ -314,9 +241,7 @@ La tourmaline repasse à 0 pod.
 Options
 Une nouvelle option de notifications est ajoutée, retrouvable dans la section &quot;Notifications internes : Quêtes et succès&quot;, permettant d&#x27;administrer les notifications pour les missions de guilde terminées.
 Chat
-Mise en place d&#x27;un bouton permettant de déplier ou replier tous les contenus pliables dans le chat d&#x27;un coup.
-Partager
-Tweet</description>
+Mise en place d&#x27;un bouton permettant de déplier ou replier tous les contenus pliables dans le chat d&#x27;un coup.</description>
 <pubDate>Tue, 30 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
@@ -360,9 +285,7 @@ Et ce n&#x27;est pas tout...
 Les Songes Infinis, des monstres, des équipements, des classes, des quêtes de guilde, des corrections de bugs et bien d&#x27;autres améliorations font également partie de la mise à jour 3.6 de DOFUS.
 Retrouvez tous les détails dans le Patch Notes complet et connectez-vous pour découvrir toutes les nouveautés !
 Lisez le Patch Notes
-Suivant ›
-Partager
-Tweet</description>
+Suivant ›</description>
 <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
@@ -397,9 +320,7 @@ Pour en savoir plus, lisez les devblogs dédiés :
 Huppermage Montures
 Songes Infinis HDV Interface cosmétique
 ‹ Précédent
-Suivant ›
-Partager
-Tweet</description>
+Suivant ›</description>
 <pubDate>Tue, 03 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
@@ -424,9 +345,7 @@ Evolution des Songes Infinis
 Pour en savoir plus, lisez les devblogs dédiés :
 Guildes Songes Infinis Confort de jeu
 ‹ Précédent
-Suivant ›
-Partager
-Tweet</description>
+Suivant ›</description>
 <pubDate>Tue, 09 Dec 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
@@ -454,9 +373,7 @@ Ladders accessibles en jeu : Songes, XP, Succès, Kolizéum, désormais, tous le
 L&#x27;Initiative n&#x27;est plus liée à la Vitalité.
 Une quinzaine de quêtes liées aux dalles et horaires ont été modifiées pour faciliter leur accomplissement.
 ‹ Précédent
-Suivant ›
-Partager
-Tweet</description>
+Suivant ›</description>
 <pubDate>Tue, 23 Sep 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
@@ -476,24 +393,14 @@ Star de l’année des univers Ankama, l’Osamodas devait absolument bénéfici
 Calendrier, hôtels de vente, ladders et notifications : des améliorations et de toutes nouvelles interfaces font leur apparition. De quoi reprendre du poil de la bête !
 OSAVORA Refonte Osamodas Interfaces
 ‹ Précédent
-Suivant ›
-Partager
-Tweet</description>
+Suivant ›</description>
 <pubDate>Tue, 22 Jul 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
 <title>MÀJ 3.1 - Opération Consolidation 22 Avril 2025</title>
 <link>https://www.dofus.com/fr/mmorpg/actualites/maj/1762717-operation-consolidation</link>
 <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/maj/1762717-operation-consolidation</guid>
-<description>MÀJ 3.1 - Opération Consolidation 22 Avril 2025
-Retour à la liste
-Présentation
-3.1
-Patch Notes
-+
-Sommaire
-Quoi de neuf avec Opération Consolidation ?
-Corrections de bugs
+<description>Corrections de bugs
 Confort de jeu : options d’accessibilité, info‑bulles enrichies, repères visuels repensés.
 Équilibrages : ajustements de classes, de sorts, de monstres, et d&#x27;objets.
 Modifications sur les recettes d&#x27;équipement.
@@ -501,9 +408,7 @@ Et ce n’est qu’un aperçu !
 Devblog MaJ 3.1
 Vous avez manqué le live de présentation de la mise à jour qui a eu lieu le 1 avril ? Petite séance de rattrapage avec le replay, disponible ici :
 ‹ Précédent
-Suivant ›
-Partager
-Tweet</description>
+Suivant ›</description>
 <pubDate>Tue, 22 Apr 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
