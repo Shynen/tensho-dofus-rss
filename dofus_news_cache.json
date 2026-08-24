@@ -105,13 +105,18 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771404-ankama-live-equipe-ankama-face-terrakourial",
-    "title": "Ankama Live : l’équipe Ankama face à Terrakourial !",
-    "pubDate": "Thu, 20 Aug 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771334-dofus-cup-inscriptions-ouvertes",
+    "title": "DOFUS Cup : les inscriptions sont ouvertes !",
+    "pubDate": "Mon, 24 Aug 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
     "description": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
     "pubDate": "Thu, 20 Aug 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771334-dofus-cup-inscriptions-ouvertes": {
+    "title": "DOFUS Cup : les inscriptions sont ouvertes !",
+    "description": "DOFUS Cup : les inscriptions sont ouvertes !",
+    "pubDate": "Mon, 24 Aug 2026 00:00:00 GMT"
   }
 }
