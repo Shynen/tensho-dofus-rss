@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771334-dofus-cup-inscriptions-ouvertes",
-    "title": "DOFUS Cup : les inscriptions sont ouvertes !",
-    "pubDate": "Mon, 24 Aug 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771376-season-talk-avez-questions-reponses",
+    "title": "Season Talk : vous avez les questions, on a les réponses !",
+    "pubDate": "Wed, 26 Aug 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -123,5 +123,10 @@
     "title": "Krosmoz Corner : l'histoire continue !",
     "description": "Krosmoz Corner : l'histoire continue !",
     "pubDate": "Mon, 24 Aug 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771376-season-talk-avez-questions-reponses": {
+    "title": "Season Talk : vous avez les questions, on a les réponses !",
+    "description": "Season Talk : vous avez les questions, on a les réponses !",
+    "pubDate": "Wed, 26 Aug 2026 00:00:00 GMT"
   }
 }
