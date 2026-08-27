@@ -5,6 +5,13 @@
     <link>https://www.dofus.com/fr/mmorpg/actualites/news</link>
     <description>Actualités officielles françaises de DOFUS.</description>
     <item>
+      <title>-30 % sur les services !</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771145-30-services</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771145-30-services</guid>
+      <pubDate>Thu, 27 Aug 2026 00:00:00 GMT</pubDate>
+      <description>-30 % sur les services !</description>
+    </item>
+    <item>
       <title>Season Talk : vous avez les questions, on a les réponses !</title>
       <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771376-season-talk-avez-questions-reponses</link>
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771376-season-talk-avez-questions-reponses</guid>
@@ -136,13 +143,6 @@
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1770300-tribu-tofoune-cadeau</guid>
       <pubDate>Thu, 09 Jul 2026 00:00:00 GMT</pubDate>
       <description>Une Tribu Tofoune en cadeau !</description>
-    </item>
-    <item>
-      <title>Ankama Live : on vit la saison Ocre avec vous</title>
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1770964-ankama-live-vit-saison-ocre</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1770964-ankama-live-vit-saison-ocre</guid>
-      <pubDate>Wed, 08 Jul 2026 00:00:00 GMT</pubDate>
-      <description>Ankama Live : on vit la saison Ocre avec vous</description>
     </item>
   </channel>
 </rss>
