@@ -4,5 +4,12 @@
     <title>DOFUS — Actualités</title>
     <link>https://www.dofus.com/fr/mmorpg/actualites/news</link>
     <description>Dernière actualité officielle française de DOFUS.</description>
+    <item>
+      <title>-30 % sur les services !</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771145-30-services</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771145-30-services</guid>
+      <pubDate>Thu, 27 Aug 2026 00:00:00 GMT</pubDate>
+      <description>-30 % sur les services !</description>
+    </item>
   </channel>
 </rss>
