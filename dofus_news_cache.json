@@ -1,8 +1,8 @@
 {
   "https://www.dofus.com/fr/mmorpg/actualites/news/1770807-saison-ocre-prenez-temps-souvenir": {
-    "title": "Saison Ocre : prenez le temps de vous souvenir…",
-    "description": "Saison Ocre : prenez le temps de vous souvenir…",
-    "pubDate": "Tue, 07 Jul 2026 00:00:00 GMT"
+    "title": "",
+    "description": "",
+    "pubDate": "Thu, 03 Sep 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771404-ankama-live-equipe-ankama-face-terrakourial": {
     "title": "Ankama Live : l’équipe Ankama face à Terrakourial !",
@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771145-30-services",
-    "title": "-30 % sur les services !",
-    "pubDate": "Thu, 27 Aug 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771542-saison-ocre-bons-souvenirs",
+    "title": "Saison Ocre : de bons souvenirs…",
+    "pubDate": "Thu, 03 Sep 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -133,5 +133,15 @@
     "title": "-30 % sur les services !",
     "description": "-30 % sur les services !",
     "pubDate": "Thu, 27 Aug 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771542-saison-ocre-bons-souvenirs": {
+    "title": "Saison Ocre : de bons souvenirs…",
+    "description": "Saison Ocre : de bons souvenirs…",
+    "pubDate": "Thu, 03 Sep 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771517-maintinale-rendez-8-septembre-8-h-30-ankamalive": {
+    "title": "Maintinale : rendez-vous le 8 septembre à 8 h 30 sur AnkamaLive !",
+    "description": "Maintinale : rendez-vous le 8 septembre à 8 h 30 sur AnkamaLive !",
+    "pubDate": "Thu, 03 Sep 2026 00:00:00 GMT"
   }
 }
