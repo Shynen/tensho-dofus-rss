@@ -19,13 +19,6 @@
       <description>Maintinale : rendez-vous le 8 septembre à 8 h 30 sur AnkamaLive !</description>
     </item>
     <item>
-      <title />
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1770807-saison-ocre-prenez-temps-souvenir</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1770807-saison-ocre-prenez-temps-souvenir</guid>
-      <pubDate>Thu, 03 Sep 2026 00:00:00 GMT</pubDate>
-      <description />
-    </item>
-    <item>
       <title>-30 % sur les services !</title>
       <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771145-30-services</link>
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771145-30-services</guid>
@@ -143,6 +136,13 @@
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1770989-ankama-convention-conference-rater</guid>
       <pubDate>Thu, 09 Jul 2026 00:00:00 GMT</pubDate>
       <description>Ankama Convention : la conférence à ne pas rater…</description>
+    </item>
+    <item>
+      <title>Les Bellaphones s’éveillent : une nouvelle classe arrive fin 2026</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1770890-bellaphones-eveillent-nouvelle-classe-arrive-fin-2026</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1770890-bellaphones-eveillent-nouvelle-classe-arrive-fin-2026</guid>
+      <pubDate>Thu, 09 Jul 2026 00:00:00 GMT</pubDate>
+      <description>Les Bellaphones s’éveillent : une nouvelle classe arrive fin 2026</description>
     </item>
   </channel>
 </rss>
