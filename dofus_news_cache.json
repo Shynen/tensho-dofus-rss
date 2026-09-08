@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771542-saison-ocre-bons-souvenirs",
-    "title": "Saison Ocre : de bons souvenirs…",
-    "pubDate": "Thu, 03 Sep 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771519-saison-ivoire-dofus",
+    "title": "Saison Ivoire : DOFUS",
+    "pubDate": "Tue, 08 Sep 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -143,5 +143,15 @@
     "title": "Maintinale : rendez-vous le 8 septembre à 8 h 30 sur AnkamaLive !",
     "description": "Maintinale : rendez-vous le 8 septembre à 8 h 30 sur AnkamaLive !",
     "pubDate": "Thu, 03 Sep 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771519-saison-ivoire-dofus": {
+    "title": "Saison Ivoire : DOFUS",
+    "description": "Saison Ivoire : DOFUS",
+    "pubDate": "Tue, 08 Sep 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde": {
+    "title": "Saison Ivoire : vers un équilibre du monde… ?",
+    "description": "Saison Ivoire : vers un équilibre du monde… ?",
+    "pubDate": "Tue, 08 Sep 2026 00:00:00 GMT"
   }
 }
