@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771519-saison-ivoire-dofus",
-    "title": "Saison Ivoire : DOFUS",
-    "pubDate": "Tue, 08 Sep 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771555-ankama-live-rassemblez-saison-ivoire",
+    "title": "Ankama Live : rassemblez-vous autour de la saison Ivoire !",
+    "pubDate": "Wed, 09 Sep 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -153,5 +153,10 @@
     "title": "Saison Ivoire : vers un équilibre du monde… ?",
     "description": "Saison Ivoire : vers un équilibre du monde… ?",
     "pubDate": "Tue, 08 Sep 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771555-ankama-live-rassemblez-saison-ivoire": {
+    "title": "Ankama Live : rassemblez-vous autour de la saison Ivoire !",
+    "description": "Ankama Live : rassemblez-vous autour de la saison Ivoire !",
+    "pubDate": "Wed, 09 Sep 2026 00:00:00 GMT"
   }
 }
