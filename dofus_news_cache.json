@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771555-ankama-live-rassemblez-saison-ivoire",
-    "title": "Ankama Live : rassemblez-vous autour de la saison Ivoire !",
-    "pubDate": "Wed, 09 Sep 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771286-boutique-retour-costumes-manchic-bastortue",
+    "title": "[Boutique] Le retour des costumes Manchic et Bastortue !",
+    "pubDate": "Thu, 10 Sep 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -158,5 +158,10 @@
     "title": "Ankama Live : rassemblez-vous autour de la saison Ivoire !",
     "description": "Ankama Live : rassemblez-vous autour de la saison Ivoire !",
     "pubDate": "Wed, 09 Sep 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771286-boutique-retour-costumes-manchic-bastortue": {
+    "title": "[Boutique] Le retour des costumes Manchic et Bastortue !",
+    "description": "[Boutique] Le retour des costumes Manchic et Bastortue !",
+    "pubDate": "Thu, 10 Sep 2026 00:00:00 GMT"
   }
 }
