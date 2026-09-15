@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771768-ankamalive-rendez-16-septembre-decouvrir-mise-jour-3-7",
-    "title": "AnkamaLive : rendez-vous le 16 septembre pour découvrir la mise à jour 3.7",
-    "pubDate": "Mon, 14 Sep 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771719-ankama-launcher-2-participez-beta-fermee",
+    "title": "Ankama Launcher 2 : participez à la bêta fermée !",
+    "pubDate": "Tue, 15 Sep 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -168,5 +168,10 @@
     "title": "AnkamaLive : rendez-vous le 16 septembre pour découvrir la mise à jour 3.7",
     "description": "AnkamaLive : rendez-vous le 16 septembre pour découvrir la mise à jour 3.7",
     "pubDate": "Mon, 14 Sep 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771719-ankama-launcher-2-participez-beta-fermee": {
+    "title": "Ankama Launcher 2 : participez à la bêta fermée !",
+    "description": "Ankama Launcher 2 : participez à la bêta fermée !",
+    "pubDate": "Tue, 15 Sep 2026 00:00:00 GMT"
   }
 }
