@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771685-maitres-zaaps-rescousse",
-    "title": "Maîtres des zaaps à la rescousse !",
-    "pubDate": "Fri, 18 Sep 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771964-dofus-cup-felicitations-thysdrus",
+    "title": "DOFUS Cup : félicitations à Thysdrus !",
+    "pubDate": "Thu, 01 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -183,5 +183,10 @@
     "title": "Maîtres des zaaps à la rescousse !",
     "description": "Maîtres des zaaps à la rescousse !",
     "pubDate": "Fri, 18 Sep 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771964-dofus-cup-felicitations-thysdrus": {
+    "title": "DOFUS Cup : félicitations à Thysdrus !",
+    "description": "DOFUS Cup : félicitations à Thysdrus !",
+    "pubDate": "Thu, 01 Oct 2026 00:00:00 GMT"
   }
 }
