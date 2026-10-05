@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771964-dofus-cup-felicitations-thysdrus",
-    "title": "DOFUS Cup : félicitations à Thysdrus !",
-    "pubDate": "Thu, 01 Oct 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771886-season-talk-vos-questions-welsh-shedar",
+    "title": "Season Talk : vos questions sur Welsh & Shedar",
+    "pubDate": "Mon, 05 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -193,5 +193,10 @@
     "title": "Welsh & Shedar : bientôt disponible gratuitement sur YouTube",
     "description": "Welsh & Shedar : bientôt disponible gratuitement sur YouTube",
     "pubDate": "Thu, 01 Oct 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771886-season-talk-vos-questions-welsh-shedar": {
+    "title": "Season Talk : vos questions sur Welsh & Shedar",
+    "description": "Season Talk : vos questions sur Welsh & Shedar",
+    "pubDate": "Mon, 05 Oct 2026 00:00:00 GMT"
   }
 }
