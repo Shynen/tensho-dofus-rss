@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772041-mise-jour-3-7-ligne",
-    "title": "La mise à jour 3.7 est en ligne !",
-    "pubDate": "Tue, 06 Oct 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771798-dofus-ivoire-statue-collection-tsume-precommande",
+    "title": "Dofus Ivoire : statue de collection Tsume en précommande !",
+    "pubDate": "Wed, 07 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -208,5 +208,10 @@
     "title": "Packs Maudits : prêt(e) pour le carnage ?",
     "description": "Packs Maudits : prêt(e) pour le carnage ?",
     "pubDate": "Tue, 06 Oct 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771798-dofus-ivoire-statue-collection-tsume-precommande": {
+    "title": "Dofus Ivoire : statue de collection Tsume en précommande !",
+    "description": "Dofus Ivoire : statue de collection Tsume en précommande !",
+    "pubDate": "Wed, 07 Oct 2026 00:00:00 GMT"
   }
 }
