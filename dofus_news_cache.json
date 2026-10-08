@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771798-dofus-ivoire-statue-collection-tsume-precommande",
-    "title": "Dofus Ivoire : statue de collection Tsume en précommande !",
-    "pubDate": "Wed, 07 Oct 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771513-pack-porcelune-restaurez-votre-honneur",
+    "title": "Pack Porcelune : restaurez votre honneur !",
+    "pubDate": "Thu, 08 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -213,5 +213,10 @@
     "title": "Dofus Ivoire : statue de collection Tsume en précommande !",
     "description": "Dofus Ivoire : statue de collection Tsume en précommande !",
     "pubDate": "Wed, 07 Oct 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771513-pack-porcelune-restaurez-votre-honneur": {
+    "title": "Pack Porcelune : restaurez votre honneur !",
+    "description": "Pack Porcelune : restaurez votre honneur !",
+    "pubDate": "Thu, 08 Oct 2026 00:00:00 GMT"
   }
 }
