@@ -5,11 +5,18 @@
     <link>https://www.dofus.com/fr/mmorpg/actualites/news</link>
     <description>Actualités officielles françaises de DOFUS.</description>
     <item>
-      <title>Ankama à la PGW : découvrez les premières mécaniques des Bellaphones ! Info - 08/10/2026 - 18h00</title>
+      <title>Pack anniversaire Ankama 25 ans</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771858-pack-anniversaire-ankama-25-ans</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771858-pack-anniversaire-ankama-25-ans</guid>
+      <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Pack anniversaire Ankama 25 ans</description>
+    </item>
+    <item>
+      <title>Ankama à la PGW : découvrez les premières mécaniques des Bellaphones !</title>
       <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771947-ankama-pgw-decouvrez-premieres-mecaniques-bellaphones</link>
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771947-ankama-pgw-decouvrez-premieres-mecaniques-bellaphones</guid>
       <pubDate>Thu, 08 Oct 2026 00:00:00 GMT</pubDate>
-      <description>Ankama à la PGW : découvrez les premières mécaniques des Bellaphones ! Info - 08/10/2026 - 18h00</description>
+      <description>Ankama à la PGW : découvrez les premières mécaniques des Bellaphones !</description>
     </item>
     <item>
       <title>Pack Porcelune : restaurez votre honneur !</title>
@@ -136,13 +143,6 @@
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771145-30-services</guid>
       <pubDate>Thu, 27 Aug 2026 00:00:00 GMT</pubDate>
       <description>-30 % sur les services !</description>
-    </item>
-    <item>
-      <title>Season Talk : vous avez les questions, on a les réponses !</title>
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771376-season-talk-avez-questions-reponses</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771376-season-talk-avez-questions-reponses</guid>
-      <pubDate>Wed, 26 Aug 2026 00:00:00 GMT</pubDate>
-      <description>Season Talk : vous avez les questions, on a les réponses !</description>
     </item>
   </channel>
 </rss>

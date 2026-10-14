@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771947-ankama-pgw-decouvrez-premieres-mecaniques-bellaphones",
-    "title": "Ankama à la PGW : découvrez les premières mécaniques des Bellaphones !",
-    "pubDate": "Thu, 08 Oct 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771858-pack-anniversaire-ankama-25-ans",
+    "title": "Pack anniversaire Ankama 25 ans",
+    "pubDate": "Wed, 14 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -220,8 +220,13 @@
     "pubDate": "Thu, 08 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771947-ankama-pgw-decouvrez-premieres-mecaniques-bellaphones": {
-    "title": "Ankama à la PGW : découvrez les premières mécaniques des Bellaphones ! Info - 08/10/2026 - 18h00",
-    "description": "Ankama à la PGW : découvrez les premières mécaniques des Bellaphones ! Info - 08/10/2026 - 18h00",
+    "title": "Ankama à la PGW : découvrez les premières mécaniques des Bellaphones !",
+    "description": "Ankama à la PGW : découvrez les premières mécaniques des Bellaphones !",
     "pubDate": "Thu, 08 Oct 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1771858-pack-anniversaire-ankama-25-ans": {
+    "title": "Pack anniversaire Ankama 25 ans",
+    "description": "Pack anniversaire Ankama 25 ans",
+    "pubDate": "Wed, 14 Oct 2026 00:00:00 GMT"
   }
 }
