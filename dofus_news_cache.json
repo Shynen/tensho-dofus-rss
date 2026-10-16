@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772059-familier-glorificus-cadeau-notre-boutique",
-    "title": "Le familier Glorificus en cadeau dans notre boutique !",
-    "pubDate": "Thu, 15 Oct 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772171-bellaphones-fin-annee-ankamalive-20-octobre",
+    "title": "Bellaphones et fin d’année : l’AnkamaLive du 20 octobre",
+    "pubDate": "Fri, 16 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -233,5 +233,10 @@
     "title": "Le familier Glorificus en cadeau dans notre boutique !",
     "description": "Le familier Glorificus en cadeau dans notre boutique !",
     "pubDate": "Thu, 15 Oct 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1772171-bellaphones-fin-annee-ankamalive-20-octobre": {
+    "title": "Bellaphones et fin d’année : l’AnkamaLive du 20 octobre",
+    "description": "Bellaphones et fin d’année : l’AnkamaLive du 20 octobre",
+    "pubDate": "Fri, 16 Oct 2026 00:00:00 GMT"
   }
 }
