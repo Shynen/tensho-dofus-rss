@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772171-bellaphones-fin-annee-ankamalive-20-octobre",
-    "title": "Bellaphones et fin d’année : l’AnkamaLive du 20 octobre",
-    "pubDate": "Fri, 16 Oct 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772206-jeton-ivoire-premium-obtenir-boutiques",
+    "title": "Un jeton Ivoire Premium à obtenir dans nos boutiques !",
+    "pubDate": "Mon, 19 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -243,5 +243,10 @@
     "title": "DOFUS – Livre I : Julith est disponible sur Krosmoz !",
     "description": "DOFUS – Livre I : Julith est disponible sur Krosmoz !",
     "pubDate": "Fri, 16 Oct 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1772206-jeton-ivoire-premium-obtenir-boutiques": {
+    "title": "Un jeton Ivoire Premium à obtenir dans nos boutiques !",
+    "description": "Un jeton Ivoire Premium à obtenir dans nos boutiques !",
+    "pubDate": "Mon, 19 Oct 2026 00:00:00 GMT"
   }
 }
