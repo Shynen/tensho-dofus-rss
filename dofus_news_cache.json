@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772206-jeton-ivoire-premium-obtenir-boutiques",
-    "title": "Un jeton Ivoire Premium à obtenir dans nos boutiques !",
-    "pubDate": "Mon, 19 Oct 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772305-bellaphones-fin-annee-dofus-resume-ankamalive",
+    "title": "Bellaphones et fin d’année sur DOFUS : résumé de l'Ankamalive",
+    "pubDate": "Tue, 20 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -253,5 +253,10 @@
     "title": "Welsh & Shedar : dates, trailer… et cadeaux !",
     "description": "Welsh & Shedar : dates, trailer… et cadeaux !",
     "pubDate": "Mon, 19 Oct 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1772305-bellaphones-fin-annee-dofus-resume-ankamalive": {
+    "title": "Bellaphones et fin d’année sur DOFUS : résumé de l'Ankamalive",
+    "description": "Bellaphones et fin d’année sur DOFUS : résumé de l'Ankamalive",
+    "pubDate": "Tue, 20 Oct 2026 00:00:00 GMT"
   }
 }
