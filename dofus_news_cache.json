@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772073-envie-boutique-offre-godron-poisseux-cadeau",
-    "title": "Une envie en boutique ? On vous offre un Godron Poisseux en cadeau !",
-    "pubDate": "Thu, 22 Oct 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772417-halouine-bonbons-ou-frissons",
+    "title": "Halouine : des bonbons ou des frissons !",
+    "pubDate": "Wed, 28 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -152,7 +152,7 @@
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde": {
     "title": "",
     "description": "",
-    "pubDate": "Thu, 22 Oct 2026 00:00:00 GMT"
+    "pubDate": "Wed, 28 Oct 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771555-ankama-live-rassemblez-saison-ivoire": {
     "title": "Ankama Live : rassemblez-vous autour de la saison Ivoire !",
@@ -273,5 +273,10 @@
     "title": "Une envie en boutique ? On vous offre un Godron Poisseux en cadeau !",
     "description": "Une envie en boutique ? On vous offre un Godron Poisseux en cadeau !",
     "pubDate": "Thu, 22 Oct 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1772417-halouine-bonbons-ou-frissons": {
+    "title": "Halouine : des bonbons ou des frissons !",
+    "description": "Halouine : des bonbons ou des frissons !",
+    "pubDate": "Wed, 28 Oct 2026 00:00:00 GMT"
   }
 }
