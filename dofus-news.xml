@@ -5,6 +5,20 @@
     <link>https://www.dofus.com/fr/mmorpg/actualites/news</link>
     <description>Actualités officielles françaises de DOFUS.</description>
     <item>
+      <title>Saison Ivoire : c’est la fin... mais restez sage !</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1772175-saison-ivoire-fin-restez-sage</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772175-saison-ivoire-fin-restez-sage</guid>
+      <pubDate>Thu, 29 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Saison Ivoire : c’est la fin... mais restez sage !</description>
+    </item>
+    <item>
+      <title />
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde</guid>
+      <pubDate>Thu, 29 Oct 2026 00:00:00 GMT</pubDate>
+      <description />
+    </item>
+    <item>
       <title>Halouine : des bonbons ou des frissons !</title>
       <link>https://www.dofus.com/fr/mmorpg/actualites/news/1772417-halouine-bonbons-ou-frissons</link>
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772417-halouine-bonbons-ou-frissons</guid>
@@ -17,13 +31,6 @@
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772301-nouveau-concert-ankama-hivernal-festival-annecy</guid>
       <pubDate>Wed, 28 Oct 2026 00:00:00 GMT</pubDate>
       <description>Nouveau concert d’Ankama à l’Hivernal Festival d’Annecy !</description>
-    </item>
-    <item>
-      <title />
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde</guid>
-      <pubDate>Wed, 28 Oct 2026 00:00:00 GMT</pubDate>
-      <description />
     </item>
     <item>
       <title>Une envie en boutique ? On vous offre un Godron Poisseux en cadeau !</title>
@@ -136,13 +143,6 @@
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771886-season-talk-vos-questions-welsh-shedar</guid>
       <pubDate>Mon, 05 Oct 2026 00:00:00 GMT</pubDate>
       <description>Season Talk : vos questions sur Welsh &amp; Shedar</description>
-    </item>
-    <item>
-      <title>DOFUS Cup : félicitations à Thysdrus !</title>
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771964-dofus-cup-felicitations-thysdrus</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771964-dofus-cup-felicitations-thysdrus</guid>
-      <pubDate>Thu, 01 Oct 2026 00:00:00 GMT</pubDate>
-      <description>DOFUS Cup : félicitations à Thysdrus !</description>
     </item>
   </channel>
 </rss>
