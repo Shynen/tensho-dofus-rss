@@ -5,6 +5,13 @@
     <link>https://www.dofus.com/fr/mmorpg/actualites/news</link>
     <description>Actualités officielles françaises de DOFUS.</description>
     <item>
+      <title>Lutte contre les bots : où nous en sommes</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1772557-lutte-bots-ou-sommes</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772557-lutte-bots-ou-sommes</guid>
+      <pubDate>Fri, 30 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Lutte contre les bots : où nous en sommes</description>
+    </item>
+    <item>
       <title>Packs Gardien des Âmes : la peur change de cran.</title>
       <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771979-packs-gardien-ames-peur-change-cran</link>
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771979-packs-gardien-ames-peur-change-cran</guid>
@@ -136,13 +143,6 @@
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772041-mise-jour-3-7-ligne</guid>
       <pubDate>Tue, 06 Oct 2026 00:00:00 GMT</pubDate>
       <description>La mise à jour 3.7 est en ligne !</description>
-    </item>
-    <item>
-      <title>Packs Maudits : prêt(e) pour le carnage ?</title>
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771631-packs-maudits-pret-carnage</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771631-packs-maudits-pret-carnage</guid>
-      <pubDate>Tue, 06 Oct 2026 00:00:00 GMT</pubDate>
-      <description>Packs Maudits : prêt(e) pour le carnage ?</description>
     </item>
   </channel>
 </rss>
