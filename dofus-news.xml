@@ -5,18 +5,25 @@
     <link>https://www.dofus.com/fr/mmorpg/actualites/news</link>
     <description>Actualités officielles françaises de DOFUS.</description>
     <item>
-      <title>Saison Ivoire : c’est la fin... mais restez sage !</title>
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1772175-saison-ivoire-fin-restez-sage</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772175-saison-ivoire-fin-restez-sage</guid>
-      <pubDate>Thu, 29 Oct 2026 00:00:00 GMT</pubDate>
-      <description>Saison Ivoire : c’est la fin... mais restez sage !</description>
+      <title>Packs Gardien des Âmes : la peur change de cran.</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771979-packs-gardien-ames-peur-change-cran</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771979-packs-gardien-ames-peur-change-cran</guid>
+      <pubDate>Fri, 30 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Packs Gardien des Âmes : la peur change de cran.</description>
     </item>
     <item>
       <title />
       <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde</link>
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde</guid>
-      <pubDate>Thu, 29 Oct 2026 00:00:00 GMT</pubDate>
+      <pubDate>Fri, 30 Oct 2026 00:00:00 GMT</pubDate>
       <description />
+    </item>
+    <item>
+      <title>Saison Ivoire : c’est la fin... mais restez sage !</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1772175-saison-ivoire-fin-restez-sage</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772175-saison-ivoire-fin-restez-sage</guid>
+      <pubDate>Thu, 29 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Saison Ivoire : c’est la fin... mais restez sage !</description>
     </item>
     <item>
       <title>Halouine : des bonbons ou des frissons !</title>
@@ -136,13 +143,6 @@
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771631-packs-maudits-pret-carnage</guid>
       <pubDate>Tue, 06 Oct 2026 00:00:00 GMT</pubDate>
       <description>Packs Maudits : prêt(e) pour le carnage ?</description>
-    </item>
-    <item>
-      <title>Season Talk : vos questions sur Welsh &amp; Shedar</title>
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771886-season-talk-vos-questions-welsh-shedar</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771886-season-talk-vos-questions-welsh-shedar</guid>
-      <pubDate>Mon, 05 Oct 2026 00:00:00 GMT</pubDate>
-      <description>Season Talk : vos questions sur Welsh &amp; Shedar</description>
     </item>
   </channel>
 </rss>
