@@ -5,18 +5,25 @@
     <link>https://www.dofus.com/fr/mmorpg/actualites/news</link>
     <description>Actualités officielles françaises de DOFUS.</description>
     <item>
+      <title>Saison Ébène : DOFUS</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1772444-saison-ebene-dofus</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772444-saison-ebene-dofus</guid>
+      <pubDate>Tue, 03 Nov 2026 00:00:00 GMT</pubDate>
+      <description>Saison Ébène : DOFUS</description>
+    </item>
+    <item>
+      <title>Saison Ébène : le temps est venu… de tout vous révéler !</title>
+      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1772238-saison-ebene-temps-venu-reveler</link>
+      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772238-saison-ebene-temps-venu-reveler</guid>
+      <pubDate>Tue, 03 Nov 2026 00:00:00 GMT</pubDate>
+      <description>Saison Ébène : le temps est venu… de tout vous révéler !</description>
+    </item>
+    <item>
       <title>Season Talk : les réponses à vos questions sur Welsh &amp; Shedar !</title>
       <link>https://www.dofus.com/fr/mmorpg/actualites/news/1772410-season-talk-reponses-vos-questions-welsh-shedar</link>
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1772410-season-talk-reponses-vos-questions-welsh-shedar</guid>
       <pubDate>Mon, 02 Nov 2026 00:00:00 GMT</pubDate>
       <description>Season Talk : les réponses à vos questions sur Welsh &amp; Shedar !</description>
-    </item>
-    <item>
-      <title />
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771409-saison-ivoire-vers-equilibre-monde</guid>
-      <pubDate>Mon, 02 Nov 2026 00:00:00 GMT</pubDate>
-      <description />
     </item>
     <item>
       <title>Lutte contre les bots : où nous en sommes</title>
@@ -136,13 +143,6 @@
       <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771513-pack-porcelune-restaurez-votre-honneur</guid>
       <pubDate>Thu, 08 Oct 2026 00:00:00 GMT</pubDate>
       <description>Pack Porcelune : restaurez votre honneur !</description>
-    </item>
-    <item>
-      <title>Dofus Ivoire : statue de collection Tsume en précommande !</title>
-      <link>https://www.dofus.com/fr/mmorpg/actualites/news/1771798-dofus-ivoire-statue-collection-tsume-precommande</link>
-      <guid isPermaLink="true">https://www.dofus.com/fr/mmorpg/actualites/news/1771798-dofus-ivoire-statue-collection-tsume-precommande</guid>
-      <pubDate>Wed, 07 Oct 2026 00:00:00 GMT</pubDate>
-      <description>Dofus Ivoire : statue de collection Tsume en précommande !</description>
     </item>
   </channel>
 </rss>
