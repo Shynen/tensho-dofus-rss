@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772444-saison-ebene-dofus",
-    "title": "Saison Ébène : DOFUS",
-    "pubDate": "Tue, 03 Nov 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772383-ankama-live-annee-acheve-beaute-saison-ebene",
+    "title": "Ankama Live : l’année s’achève en beauté avec la saison Ébène !",
+    "pubDate": "Wed, 04 Nov 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -313,5 +313,10 @@
     "title": "Saison Ébène : le temps est venu… de tout vous révéler !",
     "description": "Saison Ébène : le temps est venu… de tout vous révéler !",
     "pubDate": "Tue, 03 Nov 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1772383-ankama-live-annee-acheve-beaute-saison-ebene": {
+    "title": "Ankama Live : l’année s’achève en beauté avec la saison Ébène !",
+    "description": "Ankama Live : l’année s’achève en beauté avec la saison Ébène !",
+    "pubDate": "Wed, 04 Nov 2026 00:00:00 GMT"
   }
 }
