@@ -105,9 +105,9 @@
     "pubDate": "Thu, 02 Jul 2026 18:00:00 GMT"
   },
   "_discord_last_sent": {
-    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1771761-pack-jade-retrouvez-votre-equilibre",
-    "title": "Pack Jade : retrouvez votre équilibre !",
-    "pubDate": "Thu, 12 Nov 2026 00:00:00 GMT"
+    "url": "https://www.dofus.com/fr/mmorpg/actualites/news/1772891-nuit-arts-roubaix-2026-serons",
+    "title": "Nuit des Arts de Roubaix 2026 : nous y serons !",
+    "pubDate": "Tue, 17 Nov 2026 00:00:00 GMT"
   },
   "https://www.dofus.com/fr/mmorpg/actualites/news/1771339-zevent-2026-plusieurs-createurs-reunis-chez-ankama": {
     "title": "ZEVENT 2026 : plusieurs créateurs réunis chez Ankama !",
@@ -348,5 +348,10 @@
     "title": "Pack Jade : retrouvez votre équilibre !",
     "description": "Pack Jade : retrouvez votre équilibre !",
     "pubDate": "Thu, 12 Nov 2026 00:00:00 GMT"
+  },
+  "https://www.dofus.com/fr/mmorpg/actualites/news/1772891-nuit-arts-roubaix-2026-serons": {
+    "title": "Nuit des Arts de Roubaix 2026 : nous y serons !",
+    "description": "Nuit des Arts de Roubaix 2026 : nous y serons !",
+    "pubDate": "Tue, 17 Nov 2026 00:00:00 GMT"
   }
 }
